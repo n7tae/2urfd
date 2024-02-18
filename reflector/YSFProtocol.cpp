@@ -302,65 +302,71 @@ void CYsfProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header, 
 ////////////////////////////////////////////////////////////////////////////////////////
 // queue helper
 
-void CYsfProtocol::HandlePacket(std::unique_ptr<CPacket> packet)
+void CYsfProtocol::HandleQueue(void)
 {
-	// get our sender's id
-	const auto mod = packet->GetPacketModule();
-
-	// encode
-	CBuffer buffer;
-
-	// check if it's header
-	if ( packet->IsDvHeader() )
+	while (! m_Queue.IsEmpty())
 	{
-		// update local stream cache
-		// this relies on queue feeder setting valid module id
-		m_StreamsCache[mod].m_dvHeader = CDvHeaderPacket((CDvHeaderPacket &)*packet.get());
+		// get the packet
+		auto packet = m_Queue.Pop();
 
-		// encode it
-		EncodeYSFHeaderPacket((CDvHeaderPacket &)*packet.get(), &buffer);
-	}
-	// check if it's a last frame
-	else if ( packet->IsLastPacket() )
-	{
-		// encode it
-		EncodeLastYSFPacket(m_StreamsCache[mod].m_dvHeader, &buffer);
-	}
-	// otherwise, just a regular DV frame
-	else
-	{
-		// update local stream cache or send triplet when needed
-		uint8_t sid = packet->GetYsfPacketSubId();
-		if (sid <= 4)
+		// get our sender's id
+		const auto mod = packet->GetPacketModule();
+
+		// encode
+		CBuffer buffer;
+
+		// check if it's header
+		if ( packet->IsDvHeader() )
 		{
-			//std::cout << (int)sid;
-			m_StreamsCache[mod].m_dvFrames[sid] = CDvFramePacket((CDvFramePacket &)*packet.get());
-			if ( sid == 4 )
-			{
+			// update local stream cache
+			// this relies on queue feeder setting valid module id
+			m_StreamsCache[mod].m_dvHeader = CDvHeaderPacket((CDvHeaderPacket &)*packet.get());
 
-				EncodeYSFPacket(m_StreamsCache[mod].m_dvHeader, m_StreamsCache[mod].m_dvFrames, &buffer);
+			// encode it
+			EncodeYSFHeaderPacket((CDvHeaderPacket &)*packet.get(), &buffer);
+		}
+		// check if it's a last frame
+		else if ( packet->IsLastPacket() )
+		{
+			// encode it
+			EncodeLastYSFPacket(m_StreamsCache[mod].m_dvHeader, &buffer);
+		}
+		// otherwise, just a regular DV frame
+		else
+		{
+			// update local stream cache or send triplet when needed
+			uint8_t sid = packet->GetYsfPacketSubId();
+			if (sid <= 4)
+			{
+				//std::cout << (int)sid;
+				m_StreamsCache[mod].m_dvFrames[sid] = CDvFramePacket((CDvFramePacket &)*packet.get());
+				if ( sid == 4 )
+				{
+
+					EncodeYSFPacket(m_StreamsCache[mod].m_dvHeader, m_StreamsCache[mod].m_dvFrames, &buffer);
+				}
 			}
 		}
-	}
 
-	// send it
-	if ( buffer.size() > 0 )
-	{
-		// and push it to all our clients linked to the module and who are not streaming in
-		CClients *clients = g_Reflector.GetClients();
-		auto it = clients->begin();
-		std::shared_ptr<CClient>client = nullptr;
-		while ( (client = clients->FindNextClient(EProtocol::ysf, it)) != nullptr )
+		// send it
+		if ( buffer.size() > 0 )
 		{
-			// is this client busy ?
-			if ( !client->IsAMaster() && (client->GetReflectorModule() == packet->GetPacketModule()) )
+			// and push it to all our clients linked to the module and who are not streaming in
+			CClients *clients = g_Reflector.GetClients();
+			auto it = clients->begin();
+			std::shared_ptr<CClient>client = nullptr;
+			while ( (client = clients->FindNextClient(EProtocol::ysf, it)) != nullptr )
 			{
-				// no, send the packet
-				Send(buffer, client->GetIp());
+				// is this client busy ?
+				if ( !client->IsAMaster() && (client->GetReflectorModule() == packet->GetPacketModule()) )
+				{
+					// no, send the packet
+					Send(buffer, client->GetIp());
 
+				}
 			}
+			g_Reflector.ReleaseClients();
 		}
-		g_Reflector.ReleaseClients();
 	}
 }
 

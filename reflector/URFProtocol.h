@@ -40,7 +40,7 @@ public:
 
 protected:
 	// queue helper
-	void HandlePacket(std::unique_ptr<CPacket> packet);
+	void HandleQueue(void);
 
 	// keepalive helpers
 	void HandlePeerLinks(void);

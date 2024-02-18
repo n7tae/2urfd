@@ -55,7 +55,7 @@ public:
 
 protected:
 	// queue helper
-	void HandlePacket(std::unique_ptr<CPacket> packet);
+	void HandleQueue(void);
 	void HandleKeepalives(void);
 
 	// stream helpers

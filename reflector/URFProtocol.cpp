@@ -85,7 +85,7 @@ void CURFProtocol::Task(void)
 		else if ( IsValidDvHeaderPacket(Buffer, Header) )
 		{
 			// callsign allowed?
-			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::dcs) )
+			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::urf) )
 			{
 				OnDvHeaderPacketIn(Header, Ip);
 			}
@@ -198,35 +198,41 @@ void CURFProtocol::Task(void)
 ////////////////////////////////////////////////////////////////////////////////////////
 // queue helper
 
-void CURFProtocol::HandlePacket(std::unique_ptr<CPacket> packet)
+void CURFProtocol::HandleQueue(void)
 {
-	// check if origin of packet is local
-	// if not, do not stream it out as it will cause
-	// network loop between linked URF peers
-	if ( packet->IsLocalOrigin() )
+	while (! m_Queue.IsEmpty())
 	{
-		// encode it
-		CBuffer buffer;
-		if ( EncodeDvPacket(*packet, buffer) )
+		// get the packet
+		auto packet = m_Queue.Pop();
+
+		// check if origin of packet is local
+		// if not, do not stream it out as it will cause
+		// network loop between linked URF peers
+		if ( packet->IsLocalOrigin() )
 		{
-			// and push it to all our clients linked to the module and who are not streaming in
-			CClients *clients = g_Reflector.GetClients();
-			auto it = clients->begin();
-			std::shared_ptr<CClient>client = nullptr;
-			while ( (client = clients->FindNextClient(EProtocol::urf, it)) != nullptr )
+			// encode it
+			CBuffer buffer;
+			if ( EncodeDvPacket(*packet, buffer) )
 			{
-				// is this client busy ?
-				if ( !client->IsAMaster() && (client->GetReflectorModule() == packet->GetPacketModule()) )
+				// and push it to all our clients linked to the module and who are not streaming in
+				CClients *clients = g_Reflector.GetClients();
+				auto it = clients->begin();
+				std::shared_ptr<CClient>client = nullptr;
+				while ( (client = clients->FindNextClient(EProtocol::urf, it)) != nullptr )
 				{
-					// no, send the packet
-					// this is protocol revision dependent
-					if (EProtoRev::original == client->GetProtocolRevision())
+					// is this client busy ?
+					if ( !client->IsAMaster() && (client->GetReflectorModule() == packet->GetPacketModule()) )
 					{
-						Send(buffer, client->GetIp());
+						// no, send the packet
+						// this is protocol revision dependent
+						if (EProtoRev::original == client->GetProtocolRevision())
+						{
+							Send(buffer, client->GetIp());
+						}
 					}
 				}
+				g_Reflector.ReleaseClients();
 			}
-			g_Reflector.ReleaseClients();
 		}
 	}
 }

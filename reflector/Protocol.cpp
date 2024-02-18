@@ -68,17 +68,19 @@ bool CProtocol::Initialize(const char *type, const EProtocol ptype, const uint16
 		}
 	}
 
-	const auto hasIPv6Bind = g_Configure.IsString(g_Keys.ip.ipv6bind);
-	if (hasIPv6Bind && has_ipv6)
+	if (g_Configure.IsString(g_Keys.ip.ipv6bind))
 	{
-		const std::string ipv6binding(g_Configure.GetString(g_Keys.ip.ipv6bind));
-		CIp ip6(AF_INET6, port, ipv6binding.c_str());
-		if ( ip6.IsSet() )
+		if (has_ipv6)
 		{
-			if (! m_Socket6.Open(ip6))
+			const std::string ipv6binding(g_Configure.GetString(g_Keys.ip.ipv6bind));
+			CIp ip6(AF_INET6, port, ipv6binding.c_str());
+			if ( ip6.IsSet() )
 			{
-				m_Socket4.Close();
-				return false;
+				if (! m_Socket6.Open(ip6))
+				{
+					m_Socket4.Close();
+					return false;
+				}
 			}
 		}
 	}
@@ -99,11 +101,11 @@ bool CProtocol::Initialize(const char *type, const EProtocol ptype, const uint16
 	if (has_ipv4)
 	{
 		stacks.assign("IPv4");
-		if (has_ipv6 && hasIPv6Bind)
+		if (has_ipv6)
 			stacks.append(" and IPv6");
 	}
 	else
-		stacks.assign("IPv6");
+		stacks.assign("IPv4");
 
 	std::cout << m_Name << " using Port " << port << " listening on " << stacks << std::endl;
 
@@ -153,18 +155,6 @@ void CProtocol::OnDvFramePacketIn(std::unique_ptr<CDvFramePacket> &Frame, const 
 #endif
 }
 
-void CProtocol::HandleQueue(void)
-{
-	while(! m_Queue.IsEmpty())
-	{
-		// get the next packet
-		auto packet = m_Queue.Pop();
-
-		HandlePacket(std::move(packet)); // protocol specific handling, i.e., it will be endcoded and sent to clients
-
-	}
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////
 // stream handle helpers
 
@@ -192,7 +182,6 @@ void CProtocol::CheckStreamsTimeout(void)
 		// time out ?
 		if ( it->second->IsExpired() )
 		{
-			std::cout << "Stream Timout from " << it->second->GetOwnerClient()->GetCallsign() << " user: " << it->second->GetUserCallsign() << std::endl;
 			// yes, close it
 			g_Reflector.CloseStream(it->second);
 			// and remove it from the m_Streams map

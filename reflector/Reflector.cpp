@@ -685,24 +685,24 @@ void CReflector::PutDHTConfig()
 	std::ostringstream ss;
 	ss << g_Version;
 	cfg.version.assign(ss.str());
-	cfg.almod[toUType(EUrfdAlMod::nxdn)]   = g_Configure.GetString(g_Keys.nxdn.autolinkmod).at(0);
+	cfg.almod[toUType(EUrfdAlMod::nxdn)]   = ' ';
 	cfg.almod[toUType(EUrfdAlMod::p25)]    = g_Configure.GetString(g_Keys.p25.autolinkmod).at(0);
 	cfg.almod[toUType(EUrfdAlMod::ysf)]    = g_Configure.GetString(g_Keys.ysf.autolinkmod).at(0);
 	cfg.ysffreq[toUType(EUrfdTxRx::rx)]    = g_Configure.GetUnsigned(g_Keys.ysf.defaultrxfreq);
 	cfg.ysffreq[toUType(EUrfdTxRx::tx)]    = g_Configure.GetUnsigned(g_Keys.ysf.defaulttxfreq);
-	cfg.refid[toUType(EUrfdRefId::nxdn)]   = g_Configure.GetUnsigned(g_Keys.nxdn.reflectorid);
+	cfg.refid[toUType(EUrfdRefId::nxdn)]   = 0;
 	cfg.refid[toUType(EUrfdRefId::p25)]    = g_Configure.GetUnsigned(g_Keys.p25.reflectorid);
 	cfg.port[toUType(EUrfdPorts::dcs)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.dcs.port);
 	cfg.port[toUType(EUrfdPorts::dextra)]  = (uint16_t)g_Configure.GetUnsigned(g_Keys.dextra.port);
-	cfg.port[toUType(EUrfdPorts::dmrplus)] = (uint16_t)g_Configure.GetUnsigned(g_Keys.dmrplus.port);
-	cfg.port[toUType(EUrfdPorts::dplus)]   = (uint16_t)g_Configure.GetUnsigned(g_Keys.dplus.port);
+	cfg.port[toUType(EUrfdPorts::dmrplus)] = (uint16_t)0;
+	cfg.port[toUType(EUrfdPorts::dplus)]   = (uint16_t)0;
 	cfg.port[toUType(EUrfdPorts::m17)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.m17.port);
 	cfg.port[toUType(EUrfdPorts::mmdvm)]   = (uint16_t)g_Configure.GetUnsigned(g_Keys.mmdvm.port);
-	cfg.port[toUType(EUrfdPorts::nxdn)]    = (uint16_t)g_Configure.GetUnsigned(g_Keys.nxdn.port);
+	cfg.port[toUType(EUrfdPorts::nxdn)]    = (uint16_t)0;
 	cfg.port[toUType(EUrfdPorts::p25)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.p25.port);
 	cfg.port[toUType(EUrfdPorts::urf)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.urf.port);
 	cfg.port[toUType(EUrfdPorts::ysf)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.ysf.port);
-	cfg.g3enabled = g_Configure.GetBoolean(g_Keys.g3.enable);
+	cfg.g3enabled = false;
 	for (const auto m : cfg.modules)
 		cfg.description[m] = g_Configure.GetString(g_Keys.modules.descriptor[m-'A']);
 

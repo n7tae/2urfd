@@ -227,46 +227,52 @@ void CP25Protocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header, 
 ////////////////////////////////////////////////////////////////////////////////////////
 // queue helper
 
-void CP25Protocol::HandlePacket(std::unique_ptr<CPacket> packet)
+void CP25Protocol::HandleQueue(void)
 {
-	// get our sender's id
-	const auto module = packet->GetPacketModule();
+	while (! m_Queue.IsEmpty())
+	{
+		// get the packet
+		auto packet = m_Queue.Pop();
 
-	// check if it's header and update cache
-	if ( packet->IsDvHeader() )
-	{
-		// this relies on queue feeder setting valid module id
-		// m_StreamsCache[module] will be created if it doesn't exist
-		m_StreamsCache[module].m_dvHeader = CDvHeaderPacket((const CDvHeaderPacket &)*packet.get());
-		m_StreamsCache[module].m_iSeqCounter = 0;
-	}
-	else
-	{
-		// encode it
-		CBuffer buffer;
-		if ( packet->IsDvFrame() )
+		// get our sender's id
+		const auto module = packet->GetPacketModule();
+
+		// check if it's header and update cache
+		if ( packet->IsDvHeader() )
 		{
-			EncodeP25Packet(m_StreamsCache[module].m_dvHeader, (const CDvFramePacket &)*packet.get(), m_StreamsCache[module].m_iSeqCounter++, buffer, packet->IsLastPacket());
+			// this relies on queue feeder setting valid module id
+			// m_StreamsCache[module] will be created if it doesn't exist
+			m_StreamsCache[module].m_dvHeader = CDvHeaderPacket((const CDvHeaderPacket &)*packet.get());
+			m_StreamsCache[module].m_iSeqCounter = 0;
 		}
-
-		// send it
-		if ( buffer.size() > 0 )
+		else
 		{
-			// and push it to all our clients linked to the module and who are not streaming in
-			CClients *clients = g_Reflector.GetClients();
-			auto it = clients->begin();
-			std::shared_ptr<CClient>client = nullptr;
-			while ( (client = clients->FindNextClient(EProtocol::p25, it)) != nullptr )
+			// encode it
+			CBuffer buffer;
+			if ( packet->IsDvFrame() )
 			{
-				// is this client busy ?
-				if ( !client->IsAMaster() && (client->GetReflectorModule() == module) )
-				{
-					// no, send the packet
-					Send(buffer, client->GetIp());
-
-				}
+				EncodeP25Packet(m_StreamsCache[module].m_dvHeader, (const CDvFramePacket &)*packet.get(), m_StreamsCache[module].m_iSeqCounter++, buffer, packet->IsLastPacket());
 			}
-			g_Reflector.ReleaseClients();
+
+			// send it
+			if ( buffer.size() > 0 )
+			{
+				// and push it to all our clients linked to the module and who are not streaming in
+				CClients *clients = g_Reflector.GetClients();
+				auto it = clients->begin();
+				std::shared_ptr<CClient>client = nullptr;
+				while ( (client = clients->FindNextClient(EProtocol::p25, it)) != nullptr )
+				{
+					// is this client busy ?
+					if ( !client->IsAMaster() && (client->GetReflectorModule() == module) )
+					{
+						// no, send the packet
+						Send(buffer, client->GetIp());
+
+					}
+				}
+				g_Reflector.ReleaseClients();
+			}
 		}
 	}
 }

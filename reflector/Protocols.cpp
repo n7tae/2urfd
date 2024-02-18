@@ -42,20 +42,16 @@ bool CProtocols::Init(void)
 {
 	m_Mutex.lock();
 	{
-		m_Protocols.emplace_back(std::make_unique<CDextraProtocol>("DExtra"));
-		if (! m_Protocols.back()->Initialize("XRF", EProtocol::dextra, uint16_t(g_Configure.GetUnsigned(g_Keys.dextra.port)), DSTAR_IPV4, DSTAR_IPV6))
-			return false;
-
 		m_Protocols.emplace_back(std::make_unique<CDcsProtocol>("DCS"));
 		if (! m_Protocols.back()->Initialize("DCS", EProtocol::dcs, uint16_t(g_Configure.GetUnsigned(g_Keys.dcs.port)), DSTAR_IPV4, DSTAR_IPV6))
 			return false;
 
-		m_Protocols.emplace_back(std::make_unique<CDmrmmdvmProtocol>("DMRMMDVM"));
-		if (! m_Protocols.back()->Initialize(nullptr, EProtocol::mmdvm, uint16_t(g_Configure.GetUnsigned(g_Keys.mmdvm.port)), DMR_IPV4, DMR_IPV6))
+		m_Protocols.emplace_back(std::make_unique<CDextraProtocol>("DExtra"));
+		if (! m_Protocols.back()->Initialize("XRF", EProtocol::dextra, uint16_t(g_Configure.GetUnsigned(g_Keys.dextra.port)), DSTAR_IPV4, DSTAR_IPV6))
 			return false;
 
-		m_Protocols.emplace_back(std::make_unique<CYsfProtocol>("YSF"));
-		if (! m_Protocols.back()->Initialize("YSF", EProtocol::ysf, uint16_t(g_Configure.GetUnsigned(g_Keys.ysf.port)), YSF_IPV4, YSF_IPV6))
+		m_Protocols.emplace_back(std::make_unique<CDmrmmdvmProtocol>("MMDVM"));
+		if (! m_Protocols.back()->Initialize(nullptr, EProtocol::mmdvm, uint16_t(g_Configure.GetUnsigned(g_Keys.mmdvm.port)), DMR_IPV4, DMR_IPV6))
 			return false;
 
 		m_Protocols.emplace_back(std::make_unique<CM17Protocol>("M17"));
@@ -70,6 +66,9 @@ bool CProtocols::Init(void)
 		if (! m_Protocols.back()->Initialize("URF", EProtocol::urf, uint16_t(g_Configure.GetUnsigned(g_Keys.urf.port)), URF_IPV4, URF_IPV6))
 			return false;
 
+		m_Protocols.emplace_back(std::make_unique<CYsfProtocol>("YSF"));
+		if (! m_Protocols.back()->Initialize("YSF", EProtocol::ysf, uint16_t(g_Configure.GetUnsigned(g_Keys.ysf.port)), YSF_IPV4, YSF_IPV6))
+			return false;
 	}
 	m_Mutex.unlock();
 
