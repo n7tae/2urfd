@@ -32,12 +32,12 @@ public:
 	void Lock(void)   { m_Mutex.lock(); }
 	void Unlock(void) { m_Mutex.unlock(); }
 
-	// pass-through
-	std::list<std::unique_ptr<CProtocol>>::iterator begin() { return m_Protocols.begin(); }
-	std::list<std::unique_ptr<CProtocol>>::iterator end()   { return m_Protocols.end(); }
+	std::unique_ptr<CProtocol> &Get(EProtocol type) { return m_Protocols[toUType(type)]; }
+	std::unique_ptr<CProtocol> &Get(unsigned int i) { return m_Protocols[i]; }
 
 protected:
+	auto indx(EProtocol type) { return toUType(type); }
 	// data
 	std::mutex m_Mutex;
-	std::list<std::unique_ptr<CProtocol>> m_Protocols;
+	std::unique_ptr<CProtocol> m_Protocols[toUType(EProtocol::SIZE)];
 };

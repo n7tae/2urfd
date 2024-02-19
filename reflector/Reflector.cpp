@@ -341,7 +341,7 @@ void CReflector::ModuleThread(const char ThisModule)
 
 		// iterate on all protocols
 		m_Protocols.Lock();
-		for ( auto it=m_Protocols.begin(); it!=m_Protocols.end(); it++ )
+		for ( unsigned int i=0; i<toUType(EProtocol::SIZE); i++ )
 		{
 			auto copy = packet->Copy();
 
@@ -349,13 +349,13 @@ void CReflector::ModuleThread(const char ThisModule)
 			if ( copy->IsDvHeader() )
 			{
 				// make the protocol-patched reflector callsign
-				CCallsign csRPT = (*it)->GetReflectorCallsign();
+				CCallsign csRPT = m_Protocols.Get(i)->GetReflectorCallsign();
 				csRPT.SetCSModule(ThisModule);
 				// and put it in the copy
 				(dynamic_cast<CDvHeaderPacket *>(copy.get()))->SetRpt2Callsign(csRPT);
 			}
 
-			(*it)->Push(std::move(copy));
+			m_Protocols.Get(i)->Push(std::move(copy));
 		}
 		m_Protocols.Unlock();
 	}

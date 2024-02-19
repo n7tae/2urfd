@@ -42,32 +42,32 @@ bool CProtocols::Init(void)
 {
 	m_Mutex.lock();
 	{
-		m_Protocols.emplace_back(std::make_unique<CDcsProtocol>("DCS"));
-		if (! m_Protocols.back()->Initialize("DCS", EProtocol::dcs, uint16_t(g_Configure.GetUnsigned(g_Keys.dcs.port)), DSTAR_IPV4, DSTAR_IPV6))
+		Get(EProtocol::dcs) = std::make_unique<CDcsProtocol>("DCS");
+		if (! Get(EProtocol::dcs)->Initialize("DCS", EProtocol::dcs, uint16_t(g_Configure.GetUnsigned(g_Keys.dcs.port)), DSTAR_IPV4, DSTAR_IPV6))
 			return false;
 
-		m_Protocols.emplace_back(std::make_unique<CDextraProtocol>("DExtra"));
-		if (! m_Protocols.back()->Initialize("XRF", EProtocol::dextra, uint16_t(g_Configure.GetUnsigned(g_Keys.dextra.port)), DSTAR_IPV4, DSTAR_IPV6))
+		Get(EProtocol::dextra) = std::make_unique<CDextraProtocol>("DExtra");
+		if (! Get(EProtocol::dextra)->Initialize("XRF", EProtocol::dextra, uint16_t(g_Configure.GetUnsigned(g_Keys.dextra.port)), DSTAR_IPV4, DSTAR_IPV6))
 			return false;
 
-		m_Protocols.emplace_back(std::make_unique<CDmrmmdvmProtocol>("MMDVM"));
-		if (! m_Protocols.back()->Initialize(nullptr, EProtocol::mmdvm, uint16_t(g_Configure.GetUnsigned(g_Keys.mmdvm.port)), DMR_IPV4, DMR_IPV6))
+		Get(EProtocol::mmdvm) = std::make_unique<CDmrmmdvmProtocol>("MMDVM");
+		if (! Get(EProtocol::mmdvm)->Initialize(nullptr, EProtocol::mmdvm, uint16_t(g_Configure.GetUnsigned(g_Keys.mmdvm.port)), DMR_IPV4, DMR_IPV6))
 			return false;
 
-		m_Protocols.emplace_back(std::make_unique<CM17Protocol>("M17"));
-		if (! m_Protocols.back()->Initialize("URF", EProtocol::m17, uint16_t(g_Configure.GetUnsigned(g_Keys.m17.port)), M17_IPV4, M17_IPV6))
+		Get(EProtocol::m17) = std::make_unique<CM17Protocol>("M17");
+		if (! Get(EProtocol::m17)->Initialize("URF", EProtocol::m17, uint16_t(g_Configure.GetUnsigned(g_Keys.m17.port)), M17_IPV4, M17_IPV6))
 			return false;
 
-		m_Protocols.emplace_back(std::make_unique<CP25Protocol>("P25"));
-		if (! m_Protocols.back()->Initialize("P25", EProtocol::p25, uint16_t(g_Configure.GetUnsigned(g_Keys.p25.port)), P25_IPV4, P25_IPV6))
+		Get(EProtocol::p25) = std::make_unique<CP25Protocol>("P25");
+		if (! Get(EProtocol::p25)->Initialize("P25", EProtocol::p25, uint16_t(g_Configure.GetUnsigned(g_Keys.p25.port)), P25_IPV4, P25_IPV6))
 			return false;
 
-		m_Protocols.emplace_back(std::make_unique<CURFProtocol>("URF"));
-		if (! m_Protocols.back()->Initialize("URF", EProtocol::urf, uint16_t(g_Configure.GetUnsigned(g_Keys.urf.port)), URF_IPV4, URF_IPV6))
+		Get(EProtocol::urf) = std::make_unique<CURFProtocol>("URF");
+		if (! Get(EProtocol::urf)->Initialize("URF", EProtocol::urf, uint16_t(g_Configure.GetUnsigned(g_Keys.urf.port)), URF_IPV4, URF_IPV6))
 			return false;
 
-		m_Protocols.emplace_back(std::make_unique<CYsfProtocol>("YSF"));
-		if (! m_Protocols.back()->Initialize("YSF", EProtocol::ysf, uint16_t(g_Configure.GetUnsigned(g_Keys.ysf.port)), YSF_IPV4, YSF_IPV6))
+		Get(EProtocol::urf) = std::make_unique<CYsfProtocol>("YSF");
+		if (! Get(EProtocol::urf)->Initialize("YSF", EProtocol::ysf, uint16_t(g_Configure.GetUnsigned(g_Keys.ysf.port)), YSF_IPV4, YSF_IPV6))
 			return false;
 	}
 	m_Mutex.unlock();
@@ -79,10 +79,7 @@ bool CProtocols::Init(void)
 void CProtocols::Close(void)
 {
 	m_Mutex.lock();
-	while (m_Protocols.size())
-	{
-		m_Protocols.front()->Close();
-		m_Protocols.pop_front();
-	}
+	for (unsigned int i=0; i<toUType(EProtocol::SIZE); i++)
+		m_Protocols[i].reset();
 	m_Mutex.unlock();
 }

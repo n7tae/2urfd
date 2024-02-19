@@ -39,6 +39,8 @@
 #include <algorithm>
 #include <arpa/inet.h>
 
+#include "TTypes.h"
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // defines
 
@@ -61,7 +63,8 @@
 
 // protocols ---------------------------------------------------
 
-enum class EProtocol : unsigned { dcs, dextra, dsd, m17, mmdvm, p25, urf, ysf, SIZE };
+// SIZE always has to be the last element!
+enum class EProtocol : unsigned { dcs, dextra, m17, mmdvm, p25, urf, ysf, SIZE };
 
 // DExtra
 #define DEXTRA_KEEPALIVE_PERIOD         3                                   // in seconds

@@ -1,0 +1,148 @@
+#!/bin/bash
+#
+# Copyright (c) 2021 by Thomas A. Early N7TAE
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+trap ControlC INT
+
+ControlC () {
+	echo "caught SIGINT"
+}
+
+UninstallReflector () {
+	if [ -e $urfserv ]; then
+		pushd reflector
+		sudo make uninstall
+		popd
+	fi
+	if [ -e $tcdserv ]; then
+		pushd ../tcd
+		sudo make uninstall
+		popd
+	fi
+}
+
+InstallReflector () {
+	if [ "$tcaddress" != none ]; then
+		pushd ../tcd
+		sudo make install || read -p "<Enter> to continue: " ans
+		popd
+	fi
+	pushd reflector
+	if [ ! -e urfd.whitelist ]; then
+		cp ../config/urfd.whitelist .
+	fi
+	if [ ! -e urfd.blacklist ]; then
+		cp ../config/urfd.blacklist .
+	fi
+	if [ ! -e urfd.interlink ]; then
+		cp ../config/urfd.interlink .
+	fi
+	if [ ! -e urfd.terminal ]; then
+		cp ../config/urfd.terminal .
+	fi
+	sudo make install || read -p "<Enter> to continue: " ans
+	popd
+}
+
+# Execution starts here!
+
+# service file locations
+urfserv='/etc/systemd/system/urfd.service'
+tcdserv='/etc/systemd/system/tcd.service'
+
+# default values, we only need a few
+tcaddress='none'
+
+if [[ $# -eq 1 ]]; then
+	if [ -e $1 ]; then
+		echo $1 found
+		callsign=$(awk '$1 == "Callsign"{print $3}' $1)
+		tcaddress=$(awk '$1 == "Transcoder"{print $3}' $1)
+	else
+		echo "$1 not found"
+		exit 1
+	fi
+else
+	if [[ -e reflector/urfd.ini ]]; then
+		callsign=$(awk '$1 == "Callsign"{print $3}' reflector/urfd.ini)
+		tcaddress=$(awk '$1 == "Transcoder"{print $3}' reflector/urfd.ini)
+	else
+		echo "ERROR: could not find reflector/urfd.ini! You'll have to specify it."
+		echo "Usage: ./radmin PATH-TO-INI-FILE"
+		exit 1
+	fi
+fi
+key='x'
+# main loop
+while [[ "$key" != q* ]]
+do
+	clear
+	pcount=$(ps -aux | grep -e urfd -e tcd | wc -l)
+	if [ "$pcount" -gt 1 ]; then
+		echo
+		ps -aux | head -1
+		ps -aux | grep -e urfd -e tcd | grep -vE 'grep|journalctl'
+	fi
+	echo
+	echo "        Reflector Administration, Version #240214"
+	echo
+	git status | head -1
+	echo
+	if [ -e $urfserv ]; then
+		if [ -e $urfserv ]; then
+			echo "us : Uninstall the URF reflector"
+			echo "rl : Reflector log"
+			if [ -e $tcdserv ]; then
+				echo "tl : Transcoder log"
+			fi
+		fi
+		echo "rr : Reflector restart"
+		if [ -e $tcdserv ]; then
+			echo "tr : Transcoder restart"
+		fi
+	else
+		if [[ "$callsign" == URF* ]]; then
+			if [ -e reflector/urfd ]; then
+				if [[ "$tcaddress" == none ]]; then
+					echo "is : Install URF reflector without transcoder"
+				else
+					if [ -e ../tcd/tcd ]; then
+						echo "is : Install URF reflector and transcoder"
+					fi
+				fi
+			fi
+		fi
+	fi
+	echo
+	echo    "q  : Quit"
+	echo
+	read -p "Please input <key> <value> - omit value to toggle a true/false : " key value garbage
+
+	if   [[ "$key" == us* ]]; then
+		if   [ -e $urfserv ]; then
+			UninstallReflector
+		fi
+	elif [[ "$key" == is* ]]; then
+		if [ -e reflector/urfd ] && [ ! -e $urfserv ]; then
+			InstallReflector
+		fi
+	elif [[ "$key" == rr* ]] && [ -e $urfserv ]; then sudo systemctl restart urfd
+	elif [[ "$key" == tr* ]] && [ -e $tcdserv ]; then sudo systemctl restart tcd
+	elif [[ "$key" == tl* ]] && [ -e $tcdserv ]; then sudo journalctl -u tcd -f
+	elif [[ "$key" == rl* ]] && [ -e $urfserv ]; then sudo journalctl -u urfd -f
+	fi
+done
+exit 0
