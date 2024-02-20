@@ -101,7 +101,7 @@ bool CGateKeeper::MayLink(const CCallsign &callsign, const CIp &ip, EProtocol pr
 	// report
 	if ( ! ok )
 	{
-		std::cout << "Gatekeeper blocking linking of " << callsign << " @ " << ip << std::endl;
+		std::cout << "Gatekeeper blocking linking of " << callsign << " @ " << ip << " using protocol " << g_Reflector.GetProtocolName(protocol) << std::endl;
 	}
 
 	// done
@@ -141,7 +141,7 @@ bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EP
 	// report
 	if ( !ok )
 	{
-		std::cout << "Gatekeeper blocking transmitting of " << callsign << " @ " << ip << " using protocol " << std::endl;
+		std::cout << "Gatekeeper blocking transmitting of " << callsign << " @ " << ip << " using protocol " << g_Reflector.GetProtocolName(protocol) << std::endl;
 	}
 
 	// done

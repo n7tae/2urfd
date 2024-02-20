@@ -73,8 +73,9 @@ public:
 	virtual void Close(void);
 
 	// get
-	const CCallsign &GetReflectorCallsign(void)const { return m_ReflectorCallsign; }
+	const CCallsign &GetReflectorCallsign(void) const { return m_ReflectorCallsign; }
 	uint16_t GetPort(void) const { return m_Port; }
+	const std::string &GetName() const { return m_Name; }
 
 	// task
 	void Thread(void);

@@ -33,6 +33,7 @@ public:
 	void Unlock(void) { m_Mutex.unlock(); }
 
 	std::unique_ptr<CProtocol> &Get(EProtocol type) { return m_Protocols[toUType(type)]; }
+	const std::unique_ptr<CProtocol> &Get(EProtocol type) const { return m_Protocols[toUType(type)]; }
 	std::unique_ptr<CProtocol> &Get(unsigned int i) { return m_Protocols[i]; }
 
 protected:

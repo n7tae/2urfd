@@ -80,6 +80,9 @@ void CProtocols::Close(void)
 {
 	m_Mutex.lock();
 	for (unsigned int i=0; i<toUType(EProtocol::SIZE); i++)
+	{
+		m_Protocols[i]->Close();
 		m_Protocols[i].reset();
+	}
 	m_Mutex.unlock();
 }

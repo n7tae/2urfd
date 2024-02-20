@@ -69,6 +69,7 @@ public:
 	const CCallsign &GetCallsign(void) const        { return m_Callsign; }
 	CUsers  *GetUsers(void)                         { m_Users.Lock(); return &m_Users; }
 	void    ReleaseUsers(void)                      { m_Users.Unlock(); }
+	const std::string &GetProtocolName(EProtocol type) const { return m_Protocols.Get(type)->GetName(); }
 
 	// check
 	bool IsValidModule(char c) const                { return m_Modules.npos!=m_Modules.find(c); }
