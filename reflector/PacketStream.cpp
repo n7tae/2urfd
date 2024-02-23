@@ -85,7 +85,7 @@ void CPacketStream::ClosePacketStream(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-// push & pop
+// pass-thru
 
 void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 {
@@ -110,6 +110,16 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 		// no, just bypass transcoder
 		m_Queue.Push(std::move(Packet));
 	}
+}
+
+bool CPacketStream::IsCompletelyEmpty() const
+{
+	if (m_CodecStream)
+	{
+		if (! m_CodecStream->IsEmpty())
+			return false;
+	}
+	return m_Queue.IsEmpty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

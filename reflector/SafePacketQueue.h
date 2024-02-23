@@ -70,7 +70,7 @@ public:
 		return val;
 	}
 
-	bool IsEmpty(void)
+	bool IsEmpty(void) const
 	{
 		std::unique_lock<std::mutex> lock(m);
 		return q.empty();

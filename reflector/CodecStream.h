@@ -52,6 +52,7 @@ public:
 	void Task(void);
 
 	// pass-through
+	bool IsEmpty() const { return m_LocalQueue.IsEmpty() && m_Queue.IsEmpty(); }
 	void Push(std::unique_ptr<CPacket> p) { m_Queue.Push(std::move(p)); }
 
 protected:
