@@ -76,16 +76,21 @@ const unsigned int INTERLEAVE_TABLE_5_20[] =
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 #define READ_BIT1(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
 
-bool CYSFPayload::processHeaderData(unsigned char* data)
+CYSFPayload::~CYSFPayload()
+{
+	delete[] m_source, m_dest, m_uplink, m_downlink;
+}
+
+bool CYSFPayload::processHeaderData(uint8_t* data)
 {
 	assert(data != nullptr);
 
 	data += YSF_SYNC_LENGTH_BYTES + YSF_FICH_LENGTH_BYTES;
 
-	unsigned char dch[45U];
+	uint8_t dch[45U];
 
-	unsigned char* p1 = data;
-	unsigned char* p2 = dch;
+	uint8_t* p1 = data;
+	uint8_t* p2 = dch;
 	for (unsigned int i = 0U; i < 5U; i++)
 	{
 		memcpy(p2, p1, 9U);
@@ -107,7 +112,7 @@ bool CYSFPayload::processHeaderData(unsigned char* data)
 		conv.decode(s0, s1);
 	}
 
-	unsigned char output[23U];
+	uint8_t output[23U];
 	conv.chainback(output, 176U);
 
 	bool valid1 = CCRC::checkCCITT162(output, 22U);
@@ -118,14 +123,14 @@ bool CYSFPayload::processHeaderData(unsigned char* data)
 
 		if (m_dest == nullptr)
 		{
-			m_dest = std::unique_ptr<unsigned char[]>(new unsigned char[YSF_CALLSIGN_LENGTH]);
-			memcpy(m_dest.get(), output, YSF_CALLSIGN_LENGTH);
+			m_dest = new uint8_t[YSF_CALLSIGN_LENGTH];
+			memcpy(m_dest, output, YSF_CALLSIGN_LENGTH);
 		}
 
 		if (m_source == nullptr)
 		{
-			m_source = std::unique_ptr<unsigned char[]>(new unsigned char[YSF_CALLSIGN_LENGTH]);
-			memcpy(m_source.get(), output + YSF_CALLSIGN_LENGTH, YSF_CALLSIGN_LENGTH);
+			m_source = new uint8_t[YSF_CALLSIGN_LENGTH];
+			memcpy(m_source, output + YSF_CALLSIGN_LENGTH, YSF_CALLSIGN_LENGTH);
 		}
 
 		for (unsigned int i = 0U; i < 20U; i++)
@@ -134,10 +139,10 @@ bool CYSFPayload::processHeaderData(unsigned char* data)
 		CCRC::addCCITT162(output, 22U);
 		output[22U] = 0x00U;
 
-		unsigned char convolved[45U];
+		uint8_t convolved[45U];
 		conv.encode(output, convolved, 180U);
 
-		unsigned char bytes[45U];
+		uint8_t bytes[45U];
 		unsigned int j = 0U;
 		for (unsigned int i = 0U; i < 180U; i++)
 		{
@@ -196,10 +201,10 @@ bool CYSFPayload::processHeaderData(unsigned char* data)
 			output[i] ^= WHITENING_DATA[i];
 
 		if (m_downlink)
-			memcpy(output + 0U, m_downlink.get(), YSF_CALLSIGN_LENGTH);
+			memcpy(output + 0U, m_downlink, YSF_CALLSIGN_LENGTH);
 
 		if (m_uplink)
-			memcpy(output + YSF_CALLSIGN_LENGTH, m_uplink.get(), YSF_CALLSIGN_LENGTH);
+			memcpy(output + YSF_CALLSIGN_LENGTH, m_uplink, YSF_CALLSIGN_LENGTH);
 
 		for (unsigned int i = 0U; i < 20U; i++)
 			output[i] ^= WHITENING_DATA[i];
@@ -207,10 +212,10 @@ bool CYSFPayload::processHeaderData(unsigned char* data)
 		CCRC::addCCITT162(output, 22U);
 		output[22U] = 0x00U;
 
-		unsigned char convolved[45U];
+		uint8_t convolved[45U];
 		conv.encode(output, convolved, 180U);
 
-		unsigned char bytes[45U];
+		uint8_t bytes[45U];
 		unsigned int j = 0U;
 		for (unsigned int i = 0U; i < 180U; i++)
 		{
@@ -241,7 +246,7 @@ bool CYSFPayload::processHeaderData(unsigned char* data)
 	return valid1;
 }
 
-bool CYSFPayload::readDataFRModeData1(const unsigned char* data, unsigned char* dt)
+bool CYSFPayload::readDataFRModeData1(const uint8_t* data, uint8_t* dt)
 {
 	assert(data != nullptr);
 	assert(dt != nullptr);
@@ -250,10 +255,10 @@ bool CYSFPayload::readDataFRModeData1(const unsigned char* data, unsigned char* 
 
 	data += YSF_SYNC_LENGTH_BYTES + YSF_FICH_LENGTH_BYTES;
 
-	unsigned char dch[45U];
+	uint8_t dch[45U];
 
-	const unsigned char* p1 = data;
-	unsigned char* p2 = dch;
+	const uint8_t* p1 = data;
+	uint8_t* p2 = dch;
 	for (unsigned int i = 0U; i < 5U; i++)
 	{
 		memcpy(p2, p1, 9U);
@@ -275,7 +280,7 @@ bool CYSFPayload::readDataFRModeData1(const unsigned char* data, unsigned char* 
 		conv.decode(s0, s1);
 	}
 
-	unsigned char output[23U];
+	uint8_t output[23U];
 	conv.chainback(output, 176U);
 
 	bool ret = CCRC::checkCCITT162(output, 22U);
@@ -292,7 +297,7 @@ bool CYSFPayload::readDataFRModeData1(const unsigned char* data, unsigned char* 
 	return ret;
 }
 
-bool CYSFPayload::readDataFRModeData2(const unsigned char* data, unsigned char* dt)
+bool CYSFPayload::readDataFRModeData2(const uint8_t* data, uint8_t* dt)
 {
 	assert(data != nullptr);
 	assert(dt != nullptr);
@@ -301,10 +306,10 @@ bool CYSFPayload::readDataFRModeData2(const unsigned char* data, unsigned char* 
 
 	data += YSF_SYNC_LENGTH_BYTES + YSF_FICH_LENGTH_BYTES;
 
-	unsigned char dch[45U];
+	uint8_t dch[45U];
 
-	const unsigned char* p1 = data + 9U;
-	unsigned char* p2 = dch;
+	const uint8_t* p1 = data + 9U;
+	uint8_t* p2 = dch;
 	for (unsigned int i = 0U; i < 5U; i++)
 	{
 		memcpy(p2, p1, 9U);
@@ -326,7 +331,7 @@ bool CYSFPayload::readDataFRModeData2(const unsigned char* data, unsigned char* 
 		conv.decode(s0, s1);
 	}
 
-	unsigned char output[23U];
+	uint8_t output[23U];
 	conv.chainback(output, 176U);
 
 	bool ret = CCRC::checkCCITT162(output, 22U);
@@ -343,11 +348,11 @@ bool CYSFPayload::readDataFRModeData2(const unsigned char* data, unsigned char* 
 	return ret;
 }
 
-void CYSFPayload::writeVDMode2Data(unsigned char* data, const unsigned char* dt)
+void CYSFPayload::writeVDMode2Data(uint8_t* data, const uint8_t* dt)
 {
 	data += YSF_SYNC_LENGTH_BYTES + YSF_FICH_LENGTH_BYTES;
 
-	unsigned char dt_tmp[13];
+	uint8_t dt_tmp[13];
 	memcpy(dt_tmp, dt, YSF_CALLSIGN_LENGTH);
 
 	for (unsigned int i = 0U; i < 10U; i++)
@@ -356,12 +361,12 @@ void CYSFPayload::writeVDMode2Data(unsigned char* data, const unsigned char* dt)
 	CCRC::addCCITT162(dt_tmp, 12U);
 	dt_tmp[12U] = 0x00U;
 
-	unsigned char convolved[25U];
+	uint8_t convolved[25U];
 	CYSFConvolution conv;
 	conv.start();
 	conv.encode(dt_tmp, convolved, 100U);
 
-	unsigned char bytes[25U];
+	uint8_t bytes[25U];
 	unsigned int j = 0U;
 	for (unsigned int i = 0U; i < 100U; i++)
 	{
@@ -379,8 +384,8 @@ void CYSFPayload::writeVDMode2Data(unsigned char* data, const unsigned char* dt)
 		WRITE_BIT1(bytes, n, s1);
 	}
 
-	unsigned char* p1 = data;
-	unsigned char* p2 = bytes;
+	uint8_t* p1 = data;
+	uint8_t* p2 = bytes;
 	for (unsigned int i = 0U; i < 5U; i++)
 	{
 		memcpy(p1, p2, 5U);
@@ -390,17 +395,17 @@ void CYSFPayload::writeVDMode2Data(unsigned char* data, const unsigned char* dt)
 }
 
 
-bool CYSFPayload::readVDMode1Data(const unsigned char* data, unsigned char* dt)
+bool CYSFPayload::readVDMode1Data(const uint8_t* data, uint8_t* dt)
 {
 	assert(data != nullptr);
 	assert(dt != nullptr);
 
 	data += YSF_SYNC_LENGTH_BYTES + YSF_FICH_LENGTH_BYTES;
 
-	unsigned char dch[45U];
+	uint8_t dch[45U];
 
-	const unsigned char* p1 = data;
-	unsigned char* p2 = dch;
+	const uint8_t* p1 = data;
+	uint8_t* p2 = dch;
 	for (unsigned int i = 0U; i < 5U; i++)
 	{
 		memcpy(p2, p1, 9U);
@@ -422,7 +427,7 @@ bool CYSFPayload::readVDMode1Data(const unsigned char* data, unsigned char* dt)
 		conv.decode(s0, s1);
 	}
 
-	unsigned char output[23U];
+	uint8_t output[23U];
 	conv.chainback(output, 176U);
 
 	bool ret = CCRC::checkCCITT162(output, 22U);
@@ -440,17 +445,17 @@ bool CYSFPayload::readVDMode1Data(const unsigned char* data, unsigned char* dt)
 }
 
 
-bool CYSFPayload::readVDMode2Data(const unsigned char* data, unsigned char* dt)
+bool CYSFPayload::readVDMode2Data(const uint8_t* data, uint8_t* dt)
 {
 	assert(data != nullptr);
 	assert(dt != nullptr);
 
 	data += YSF_SYNC_LENGTH_BYTES + YSF_FICH_LENGTH_BYTES;
 
-	unsigned char dch[25U];
+	uint8_t dch[25U];
 
-	const unsigned char* p1 = data;
-	unsigned char* p2 = dch;
+	const uint8_t* p1 = data;
+	uint8_t* p2 = dch;
 	for (unsigned int i = 0U; i < 5U; i++)
 	{
 		memcpy(p2, p1, 5U);
@@ -472,7 +477,7 @@ bool CYSFPayload::readVDMode2Data(const unsigned char* data, unsigned char* dt)
 		conv.decode(s0, s1);
 	}
 
-	unsigned char output[13U];
+	uint8_t output[13U];
 	conv.chainback(output, 96U);
 
 	bool ret = CCRC::checkCCITT162(output, 12U);
@@ -489,7 +494,7 @@ bool CYSFPayload::readVDMode2Data(const unsigned char* data, unsigned char* dt)
 	return ret;
 }
 
-void CYSFPayload::writeHeader(unsigned char* data, const unsigned char* csd1, const unsigned char* csd2)
+void CYSFPayload::writeHeader(uint8_t* data, const uint8_t* csd1, const uint8_t* csd2)
 {
 	assert(data != nullptr);
 	assert(csd1 != nullptr);
@@ -500,26 +505,26 @@ void CYSFPayload::writeHeader(unsigned char* data, const unsigned char* csd1, co
 	writeDataFRModeData2(csd2, data);
 }
 
-void CYSFPayload::writeDataFRModeData1(const unsigned char* dt, unsigned char* data)
+void CYSFPayload::writeDataFRModeData1(const uint8_t* dt, uint8_t* data)
 {
 	assert(dt != nullptr);
 	assert(data != nullptr);
 
 	data += YSF_SYNC_LENGTH_BYTES + YSF_FICH_LENGTH_BYTES;
 
-	unsigned char output[25U];
+	uint8_t output[25U];
 	for (unsigned int i = 0U; i < 20U; i++)
 		output[i] = dt[i] ^ WHITENING_DATA[i];
 
 	CCRC::addCCITT162(output, 22U);
 	output[22U] = 0x00U;
 
-	unsigned char convolved[45U];
+	uint8_t convolved[45U];
 
 	CYSFConvolution conv;
 	conv.encode(output, convolved, 180U);
 
-	unsigned char bytes[45U];
+	uint8_t bytes[45U];
 	unsigned int j = 0U;
 	for (unsigned int i = 0U; i < 180U; i++)
 	{
@@ -537,8 +542,8 @@ void CYSFPayload::writeDataFRModeData1(const unsigned char* dt, unsigned char* d
 		WRITE_BIT1(bytes, n, s1);
 	}
 
-	unsigned char* p1 = data;
-	unsigned char* p2 = bytes;
+	uint8_t* p1 = data;
+	uint8_t* p2 = bytes;
 	for (unsigned int i = 0U; i < 5U; i++)
 	{
 		memcpy(p1, p2, 9U);
@@ -547,26 +552,26 @@ void CYSFPayload::writeDataFRModeData1(const unsigned char* dt, unsigned char* d
 	}
 }
 
-void CYSFPayload::writeDataFRModeData2(const unsigned char* dt, unsigned char* data)
+void CYSFPayload::writeDataFRModeData2(const uint8_t* dt, uint8_t* data)
 {
 	assert(dt != nullptr);
 	assert(data != nullptr);
 
 	data += YSF_SYNC_LENGTH_BYTES + YSF_FICH_LENGTH_BYTES;
 
-	unsigned char output[25U];
+	uint8_t output[25U];
 	for (unsigned int i = 0U; i < 20U; i++)
 		output[i] = dt[i] ^ WHITENING_DATA[i];
 
 	CCRC::addCCITT162(output, 22U);
 	output[22U] = 0x00U;
 
-	unsigned char convolved[45U];
+	uint8_t convolved[45U];
 
 	CYSFConvolution conv;
 	conv.encode(output, convolved, 180U);
 
-	unsigned char bytes[45U];
+	uint8_t bytes[45U];
 	unsigned int j = 0U;
 	for (unsigned int i = 0U; i < 180U; i++)
 	{
@@ -584,8 +589,8 @@ void CYSFPayload::writeDataFRModeData2(const unsigned char* dt, unsigned char* d
 		WRITE_BIT1(bytes, n, s1);
 	}
 
-	unsigned char* p1 = data + 9U;
-	unsigned char* p2 = bytes;
+	uint8_t* p1 = data + 9U;
+	uint8_t* p2 = bytes;
 	for (unsigned int i = 0U; i < 5U; i++)
 	{
 		memcpy(p1, p2, 9U);
@@ -596,7 +601,7 @@ void CYSFPayload::writeDataFRModeData2(const unsigned char* dt, unsigned char* d
 
 void CYSFPayload::setUplink(const std::string& callsign)
 {
-	m_uplink = std::unique_ptr<unsigned char[]>(new unsigned char[YSF_CALLSIGN_LENGTH]);
+	m_uplink = new uint8_t[YSF_CALLSIGN_LENGTH];
 
 	std::string uplink = callsign;
 	uplink.resize(YSF_CALLSIGN_LENGTH, ' ');
@@ -607,7 +612,7 @@ void CYSFPayload::setUplink(const std::string& callsign)
 
 void CYSFPayload::setDownlink(const std::string& callsign)
 {
-	m_downlink = std::unique_ptr<unsigned char[]>(new unsigned char[YSF_CALLSIGN_LENGTH]);
+	m_downlink = new uint8_t[YSF_CALLSIGN_LENGTH];
 
 	std::string downlink = callsign;
 	downlink.resize(YSF_CALLSIGN_LENGTH, ' ');
@@ -621,7 +626,7 @@ std::string CYSFPayload::getSource()
 	std::string tmp;
 
 	if (m_dest)
-		tmp.assign((const char *)m_source.get(), YSF_CALLSIGN_LENGTH);
+		tmp.assign((const char *)m_source, YSF_CALLSIGN_LENGTH);
 	else
 		tmp = "";
 
@@ -633,7 +638,7 @@ std::string CYSFPayload::getDest()
 	std::string tmp;
 
 	if (m_dest)
-		tmp.assign((const char *)m_dest.get(), YSF_CALLSIGN_LENGTH);
+		tmp.assign((const char *)m_dest, YSF_CALLSIGN_LENGTH);
 	else
 		tmp = "";
 
@@ -642,6 +647,6 @@ std::string CYSFPayload::getDest()
 
 void CYSFPayload::reset()
 {
-	m_source.reset();
-	m_dest.reset();
+	delete[] m_source, m_dest;
+	m_source = m_dest = nullptr;
 }

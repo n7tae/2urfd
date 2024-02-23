@@ -359,7 +359,7 @@ bool CP25Protocol::IsValidDvPacket(const CIp &Ip, const CBuffer &Buffer, std::un
 			break;
 		}
 
-		frame = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(&(Buffer.data()[offset]), m_uiStreamId, last));
+		frame = std::make_unique<CDvFramePacket>(&(Buffer.data()[offset]), m_uiStreamId, last);
 		return true;
 	}
 	return false;
@@ -378,7 +378,7 @@ bool CP25Protocol::IsValidDvHeaderPacket(const CIp &Ip, const CBuffer &Buffer, s
 			CCallsign rpt2 = m_ReflectorCallsign;
 			rpt1.SetCSModule(P25_MODULE_ID);
 			rpt2.SetCSModule(' ');
-			header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, m_uiStreamId, false));
+			header = std::make_unique<CDvHeaderPacket>(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, m_uiStreamId, false);
 		}
 		return true;
 	}

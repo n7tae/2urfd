@@ -142,7 +142,7 @@ CDvFramePacket::CDvFramePacket(const int16_t *usrp, uint16_t streamid, bool isla
 
 std::unique_ptr<CPacket> CDvFramePacket::Copy(void)
 {
-	return std::unique_ptr<CPacket>(new CDvFramePacket(*this));
+	return std::make_unique<CDvFramePacket>(*this);
 }
 
 // Network

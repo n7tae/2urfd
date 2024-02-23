@@ -519,7 +519,7 @@ bool CURFProtocol::IsValidDvHeaderPacket(const CBuffer &Buffer, std::unique_ptr<
 	uint8_t magic[] = { 'U', 'R', 'F', 'H' };
 	if (Buffer.size()==CDvHeaderPacket::GetNetworkSize() && 0==Buffer.Compare(magic, 4))
 	{
-		header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(Buffer));
+		header = std::make_unique<CDvHeaderPacket>(Buffer);
 		if (header)
 		{
 			if (header->IsValid())
@@ -536,7 +536,7 @@ bool CURFProtocol::IsValidDvFramePacket(const CBuffer &Buffer, std::unique_ptr<C
 	uint8_t magic[] = { 'U', 'R', 'F', 'F' };
 	if (Buffer.size()==CDvFramePacket::GetNetworkSize() && 0==Buffer.Compare(magic, 4))
 	{
-		dvframe = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(Buffer));
+		dvframe = std::make_unique<CDvFramePacket>(Buffer);
 		if (dvframe)
 		{
 			if (dvframe->IsValid())

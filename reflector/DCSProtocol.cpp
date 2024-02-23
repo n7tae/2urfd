@@ -370,10 +370,10 @@ bool CDcsProtocol::IsValidDvPacket(const CBuffer &Buffer, std::unique_ptr<CDvHea
 	if ( (Buffer.size() >= 100) && (Buffer.Compare(tag, sizeof(tag)) == 0) )
 	{
 		// get the header
-		header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket((struct dstar_header *)&(Buffer.data()[4]), *((uint16_t *)&(Buffer.data()[43])), 0x80));
+		header = std::make_unique<CDvHeaderPacket>((struct dstar_header *)&(Buffer.data()[4]), *((uint16_t *)&(Buffer.data()[43])), 0x80);
 
 		// get the frame
-		frame = std::unique_ptr<CDvFramePacket>(new CDvFramePacket((SDStarFrame *)&(Buffer.data()[46]), *((uint16_t *)&(Buffer.data()[43])), Buffer.data()[45]));
+		frame = std::make_unique<CDvFramePacket>((SDStarFrame *)&(Buffer.data()[46]), *((uint16_t *)&(Buffer.data()[43])), Buffer.data()[45]);
 
 		// check validity of packets
 		if ( header && header->IsValid() && frame && frame->IsValid() )

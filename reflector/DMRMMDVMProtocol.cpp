@@ -643,7 +643,7 @@ bool CDmrmmdvmProtocol::IsValidDvHeaderPacket(const CBuffer &Buffer, std::unique
 				rpt2.SetCSModule(DmrDstIdToModule(uiDstId));
 
 				// and packet
-				header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(uiSrcId, CCallsign("CQCQCQ"), rpt1, rpt2, uiStreamId, 0, 0));
+				header = std::make_unique<CDvHeaderPacket>(uiSrcId, CCallsign("CQCQCQ"), rpt1, rpt2, uiStreamId, 0, 0);
 				if ( header && header->IsValid() )
 					return true;
 			}
@@ -698,15 +698,15 @@ bool CDmrmmdvmProtocol::IsValidDvFramePacket(const CBuffer &Buffer, std::array<s
 			// and create 3 dv frames
 			// frame1
 			memcpy(dmrambe, &dmr3ambe[0], 9);
-			frames[0] = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(dmrambe, dmrsync, uiStreamId, uiVoiceSeq, 1, false));
+			frames[0] = std::make_unique<CDvFramePacket>(dmrambe, dmrsync, uiStreamId, uiVoiceSeq, 1, false);
 
 			// frame2
 			memcpy(dmrambe, &dmr3ambe[9], 9);
-			frames[1] = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(dmrambe, dmrsync, uiStreamId, uiVoiceSeq, 2, false));
+			frames[1] = std::make_unique<CDvFramePacket>(dmrambe, dmrsync, uiStreamId, uiVoiceSeq, 2, false);
 
 			// frame3
 			memcpy(dmrambe, &dmr3ambe[18], 9);
-			frames[2] = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(dmrambe, dmrsync, uiStreamId, uiVoiceSeq, 3, false));
+			frames[2] = std::make_unique<CDvFramePacket>(dmrambe, dmrsync, uiStreamId, uiVoiceSeq, 3, false);
 
 			// check
 			if (frames[0] && frames[1] && frames[2])
@@ -760,7 +760,7 @@ bool CDmrmmdvmProtocol::IsValidDvLastFramePacket(const CBuffer &Buffer, std::uni
 
 
 				// and packet
-				frame = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(ambe, dmrsync, uiStreamId, 0, 0, true));
+				frame = std::make_unique<CDvFramePacket>(ambe, dmrsync, uiStreamId, 0, 0, true);
 				if (frame)
 					return true;
 			}

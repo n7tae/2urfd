@@ -73,7 +73,7 @@ void CM17Protocol::Task(void)
 				OnDvHeaderPacketIn(Header, Ip);
 
 				// xrf needs a voice frame every 20 ms and an M17 frame is 40 ms, so we need a duplicate
-				auto secondFrame = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(*Frame.get()));
+				auto secondFrame = std::make_unique<CDvFramePacket>(*Frame.get());
 
 				// This is not a second packet, so clear the last packet status, since the real last packet it the secondFrame
 				if (Frame->IsLastPacket())
@@ -364,10 +364,10 @@ bool CM17Protocol::IsValidDvPacket(const CBuffer &Buffer, std::unique_ptr<CDvHea
 		// Make the M17 header
 		CM17Packet m17(Buffer.data());
 		// get the header
-		header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(m17));
+		header = std::make_unique<CDvHeaderPacket>(m17);
 
 		// get the frame
-		frame = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(m17));
+		frame = std::make_unique<CDvFramePacket>(m17);
 
 		// check validity of packets
 		if ( header && header->IsValid() && frame && frame->IsValid() )

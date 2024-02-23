@@ -418,7 +418,7 @@ bool CDextraProtocol::IsValidDvHeaderPacket(const CBuffer &Buffer, std::unique_p
 	if ( 56==Buffer.size() && 0==Buffer.Compare((uint8_t *)"DSVT", 4) && 0x10U==Buffer.data()[4] && 0x20U==Buffer.data()[8] )
 	{
 		// create packet
-		header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket((struct dstar_header *)&(Buffer.data()[15]), *((uint16_t *)&(Buffer.data()[12])), 0x80));
+		header = std::make_unique<CDvHeaderPacket>((struct dstar_header *)&(Buffer.data()[15]), *((uint16_t *)&(Buffer.data()[12])), 0x80);
 		// check validity of packet
 		if ( header && header->IsValid() )
 			return true;
@@ -431,7 +431,7 @@ bool CDextraProtocol::IsValidDvFramePacket(const CBuffer &Buffer, std::unique_pt
 	if ( 27==Buffer.size() && 0==Buffer.Compare((uint8_t *)"DSVT", 4) && 0x20U==Buffer.data()[4] && 0x20U==Buffer.data()[8] )
 	{
 		// create packet
-		dvframe = std::unique_ptr<CDvFramePacket>(new CDvFramePacket((SDStarFrame *)&(Buffer.data()[15]), *((uint16_t *)&(Buffer.data()[12])), Buffer.data()[14]));
+		dvframe = std::make_unique<CDvFramePacket>((SDStarFrame *)&(Buffer.data()[15]), *((uint16_t *)&(Buffer.data()[12])), Buffer.data()[14]);
 		// check validity of packet
 		if ( dvframe && dvframe->IsValid() )
 			return true;

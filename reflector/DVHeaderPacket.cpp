@@ -157,7 +157,7 @@ CDvHeaderPacket::CDvHeaderPacket(const CM17Packet &m17) : CPacket(m17)
 
 std::unique_ptr<CPacket> CDvHeaderPacket::Copy(void)
 {
-	return std::unique_ptr<CPacket>(new CDvHeaderPacket(*this));
+	return std::make_unique<CDvHeaderPacket>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
