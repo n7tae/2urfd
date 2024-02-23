@@ -212,7 +212,12 @@ void CURFProtocol::HandleQueue(void)
 		{
 			// encode it
 			CBuffer buffer;
-			if ( EncodeDvPacket(*packet, buffer) )
+			bool encoded = false;
+			if ( packet->IsDvFrame() )
+				encoded = EncodeDvFramePacket( (CDvFramePacket &)packet, buffer);
+			else if ( packet->IsDvHeader() )
+				encoded = EncodeDvHeaderPacket( (CDvHeaderPacket &)packet, buffer);
+			if ( encoded )
 			{
 				// and push it to all our clients linked to the module and who are not streaming in
 				CClients *clients = g_Reflector.GetClients();

@@ -21,16 +21,16 @@
 #include "Defines.h"
 #include "Version.h"
 #include "Timer.h"
-#include "SEProtocol.h"
+#include "Protocol.h"
 #include "Clients.h"
 
 class CPeer;
 
-class CURFProtocol : public CSEProtocol
+class CURFProtocol : public CProtocol
 {
 public:
 	// constructor
-	CURFProtocol(const std::string &name) : CSEProtocol(name) {}
+	CURFProtocol(const std::string &name) : CProtocol(name) {}
 
 	// initialization
 	bool Initialize(const char *type, const EProtocol ptype, const uint16_t port, const bool has_ipv4, const bool has_ipv6);

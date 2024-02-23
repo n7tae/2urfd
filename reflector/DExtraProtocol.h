@@ -20,7 +20,7 @@
 
 #include "Defines.h"
 #include "Timer.h"
-#include "SEProtocol.h"
+#include "Protocol.h"
 #include "DVHeaderPacket.h"
 #include "DVFramePacket.h"
 
@@ -48,11 +48,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // class
 
-class CDextraProtocol : public CSEProtocol
+class CDextraProtocol : public CProtocol
 {
 public:
 	// constructor
-	CDextraProtocol(const std::string &name) : CSEProtocol(name) {}
+	CDextraProtocol(const std::string &name) : CProtocol(name) {}
 
 	// initialization
 	bool Initialize(const char *type, const EProtocol ptype, const uint16_t port, const bool has_ipv4, const bool has_ipv6);
