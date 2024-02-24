@@ -2,6 +2,7 @@
 *.d
 .vscode
 reflector/urfd.*
+transcoder/tcd.*
 urfd
 inicheck
 dbutil
