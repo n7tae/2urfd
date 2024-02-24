@@ -83,7 +83,6 @@ void CDvHeaderPacket::EncodeInterlinkPacket(CBuffer &buf) const
 }
 
 // dstar constructor
-
 CDvHeaderPacket::CDvHeaderPacket(const struct dstar_header *buffer, uint16_t sid, uint8_t pid)
 	: CPacket(sid, pid)
 {
@@ -99,7 +98,6 @@ CDvHeaderPacket::CDvHeaderPacket(const struct dstar_header *buffer, uint16_t sid
 }
 
 // dmr constructor
-
 CDvHeaderPacket::CDvHeaderPacket(uint32_t my, const CCallsign &ur, const CCallsign &rpt1, const CCallsign &rpt2, uint16_t sid, uint8_t pid, uint8_t spid)
 	: CPacket(sid, pid, spid, false)
 {
@@ -114,7 +112,6 @@ CDvHeaderPacket::CDvHeaderPacket(uint32_t my, const CCallsign &ur, const CCallsi
 }
 
 // YSF constructor
-
 CDvHeaderPacket::CDvHeaderPacket(const CCallsign &my, const CCallsign &ur, const CCallsign &rpt1, const CCallsign &rpt2, uint16_t sid, uint8_t pid)
 	: CPacket(sid, pid, 0, 0)
 {
@@ -129,9 +126,8 @@ CDvHeaderPacket::CDvHeaderPacket(const CCallsign &my, const CCallsign &ur, const
 }
 
 // P25
-
 CDvHeaderPacket::CDvHeaderPacket(const CCallsign &my, const CCallsign &ur, const CCallsign &rpt1, const CCallsign &rpt2, uint16_t sid, bool usrp)
-	: CPacket(sid, usrp, false)
+	: CPacket(sid, false)
 {
 	m_uiFlag1 = 0;
 	m_uiFlag2 = 0;
@@ -144,7 +140,6 @@ CDvHeaderPacket::CDvHeaderPacket(const CCallsign &my, const CCallsign &ur, const
 }
 
 // M17
-
 CDvHeaderPacket::CDvHeaderPacket(const CM17Packet &m17) : CPacket(m17)
 {
 	m_uiFlag1 = m_uiFlag2 = m_uiFlag3 = 0;

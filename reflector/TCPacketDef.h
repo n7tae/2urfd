@@ -23,7 +23,7 @@
 #define TC2REF "TC2URFMod"
 #define REF2TC "URF2TC"
 
-enum class ECodecType : std::uint8_t { none = 0, dstar = 1, dmr = 2, c2_1600 = 3, c2_3200 = 4, p25 = 5, usrp = 6 };
+enum class ECodecType : std::uint8_t { none = 0, dstar = 1, dmr = 2, c2_1600 = 3, c2_3200 = 4, p25 = 5 };
 
 using STCPacket = struct tcpacket_tag {
 	CTimer rt_timer;
@@ -36,5 +36,4 @@ using STCPacket = struct tcpacket_tag {
 	uint8_t dmr[9];
 	uint8_t m17[16];
 	uint8_t p25[11];
-	int16_t usrp[160];
 };

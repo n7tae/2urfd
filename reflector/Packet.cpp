@@ -141,8 +141,8 @@ CPacket::CPacket(uint16_t sid, uint8_t ysfpid, uint8_t ysfsubpid, uint8_t ysffri
 	m_bLastPacket = lastpacket;
 }
 
-// p25 / usrp constructor
-CPacket::CPacket(uint16_t sid, bool isusrp, bool lastpacket)
+// p25 constructor
+CPacket::CPacket(uint16_t sid, bool lastpacket)
 {
 	m_uiStreamId = sid;
 	m_uiDstarPacketId = 0xFF;
@@ -155,7 +155,7 @@ CPacket::CPacket(uint16_t sid, bool isusrp, bool lastpacket)
 	m_uiM17FrameNumber = 0xFFFFFFFFU;
 	m_cModule = ' ';
 	m_eOrigin = EOrigin::local;
-	isusrp ? m_eCodecIn = ECodecType::usrp : ECodecType::p25;
+	m_eCodecIn = ECodecType::p25;
 	m_bLastPacket = lastpacket;
 };
 
