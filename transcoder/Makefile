@@ -5,9 +5,9 @@ include tcd.mk
 GCC = g++
 
 ifeq ($(debug), true)
-CFLAGS = -ggdb3 -W -Werror -Icodec2 -Iimbe -I../common -MMD -MD -std=c++11
+CFLAGS = -ggdb3 -W -Werror -Icodec2 -Iimbe -I../common -MMD -MD -std=c++17
 else
-CFLAGS = -W -Werror -Icodec2 -Iimbe -I../common -MMD -MD -std=c++11
+CFLAGS = -W -Werror -Icodec2 -Iimbe -I../common -MMD -MD -std=c++17
 endif
 
 LDFLAGS = -lftd2xx -pthread
@@ -24,7 +24,7 @@ $(EXE) : $(OBJS)
 	$(GCC) $(CFLAGS) -c $< -o $@
 
 clean :
-	$(RM) $(EXE) $(OBJS) $(DEPS)
+	$(RM) $(EXE) *.d *.o codec/*.d codec/*.o imbe/*.d imbe/*.o ../common/*.d ../common/*.o
 
 -include $(DEPS)
 

@@ -27,9 +27,9 @@ DBUTIL = dbutil
 include urfd.mk
 
 ifeq ($(debug), true)
-CFLAGS = -ggdb3 -DDEBUG -W -Werror -std=c++17 -MMD -MD
+CFLAGS = -ggdb3 -DDEBUG -W -Werror -I../common -std=c++17 -MMD -MD
 else
-CFLAGS = -W -Werror -std=c++17 -MMD -MD
+CFLAGS = -W -Werror -I../common -std=c++17 -MMD -MD
 endif
 
 LDFLAGS=-pthread -lcurl
@@ -40,7 +40,7 @@ else
 CFLAGS += -DNO_DHT
 endif
 
-SRCS = $(wildcard *.cpp)
+SRCS = $(wildcard *.cpp) $(wildcard ../common/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 DBUTILOBJS = Configure.o CurlGet.o Lookup.o LookupDmr.o LookupYsf.o YSFNode.o Callsign.o
@@ -60,7 +60,7 @@ $(DBUTIL) : Main.cpp $(DBUTILOBJS)
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean :
-	$(RM) *.o *.d $(EXE) $(INICHECK) $(DBUTIL)
+	$(RM) *.o *.d ../common/*.o ../common/*.d $(EXE) $(INICHECK) $(DBUTIL)
 
 -include $(DEPS)
 
