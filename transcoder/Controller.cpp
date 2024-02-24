@@ -116,8 +116,8 @@ bool CController::InitVocoders()
 	const std::string modules(g_Conf.GetTCMods());
 	for ( auto c : modules)
 	{
-		c2_16[c] = std::unique_ptr<CCodec2>(new CCodec2(false));
-		c2_32[c] = std::unique_ptr<CCodec2>(new CCodec2(true));
+		c2_16[c] = std::make_unique<CCodec2>(false);
+		c2_32[c] = std::make_unique<CCodec2>(true);
 	}
 
 	// the 3000 or 3003 devices
@@ -170,13 +170,13 @@ bool CController::InitVocoders()
 	{
 		if (Edvtype::dv3000 == dvtype)
 		{
-			dstar_device = std::unique_ptr<CDVDevice>(new CDV3000(Encoding::dstar));
-			dmrsf_device = std::unique_ptr<CDVDevice>(new CDV3000(Encoding::dmrsf));
+			dstar_device = std::make_unique<CDV3000>(Encoding::dstar);
+			dmrsf_device = std::make_unique<CDV3000>(Encoding::dmrsf);
 		}
 		else
 		{
-			dstar_device = std::unique_ptr<CDVDevice>(new CDV3003(Encoding::dstar));
-			dmrsf_device = std::unique_ptr<CDVDevice>(new CDV3003(Encoding::dmrsf));
+			dstar_device = std::make_unique<CDV3003>(Encoding::dstar);
+			dmrsf_device = std::make_unique<CDV3003>(Encoding::dmrsf);
 		}
 
 		if (dstar_device)

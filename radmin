@@ -28,7 +28,7 @@ UninstallReflector () {
 		popd
 	fi
 	if [ -e $tcdserv ]; then
-		pushd ../tcd
+		pushd transcoder
 		sudo make uninstall
 		popd
 	fi
@@ -36,7 +36,7 @@ UninstallReflector () {
 
 InstallReflector () {
 	if [ "$tcaddress" != none ]; then
-		pushd ../tcd
+		pushd transcoder
 		sudo make install || read -p "<Enter> to continue: " ans
 		popd
 	fi
@@ -97,7 +97,7 @@ do
 		ps -aux | grep -e urfd -e tcd | grep -vE 'grep|journalctl'
 	fi
 	echo
-	echo "        Reflector Administration, Version #240214"
+	echo "        Reflector Administration, Version #240224"
 	echo
 	git status | head -1
 	echo

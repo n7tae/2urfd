@@ -4,19 +4,9 @@ The URF Multi-protocol Gateway Reflector Server, ***urfd***, is part of the soft
 
 ## Introduction
 
-This will build a new kind of digital voice reflector. A *urfd* supports DStar protocols (DCS, DExtra) DMR protocols (MMDVMHost), M17, YSF, and P25 (using IMBE). A key part of this is the hybrid transcoder, [tcd](https://github.com/n7tae/tcd), which is in a separate repository. You can't interlink urfd with xlxd. This reflector can be built without a transcoder, but clients will only hear other clients using the same codec. Please note that currently, urfd only supports the tcd transcoder when run locally. As a local device, urfd and tcd uses UNIX DGRAM sockets for inter-process communications. These kernel-base sockets are significantly faster than conventional UDP/IP sockets. It should be noted that tcd supports DVSI-3003 nad DVSI-3000 devices, which it uses for AMBE vocoding.
+This will build a new kind of digital voice reflector. A *urfd* supports DStar protocols (DCS, DExtra) DMR protocols (MMDVMHost), M17, YSF, and P25 (Phase 1, using IMBE). A key part of this is the hybrid transcoder, *tcd*, is in this repository. You can't interlink urfd with xlxd. This reflector can be built without a transcoder, but clients will only hear other clients using the same codec. Please note that currently, urfd only supports the tcd transcoder when run locally. As a local device, urfd and tcd uses UNIX DGRAM sockets for inter-process communications. These kernel-base sockets are significantly faster than conventional UDP/IP sockets. It should be noted that tcd supports DVSI-3003 nad DVSI-3000 devices, which it uses for AMBE vocoding.
 
-This build support *dual-stack* operation, so the server on which it's running, must have both an IPv4 and IPv6 routable address if you are going to configure a dual-stack reflector.
-
-There are many improvements previous multi-mode reflectors:
-
-
-- Nearly all std::vector containers have been replaced with more appropriate containers.
-- No classes are derived from any standard containers.
-- For concurrency, *i.e.*, thread management, the standard thread (std::thread) library calls have been replaced with std::future.
-- Managed memory, std::unique_ptr and std::shared_ptr, is used replacing the need for calls to *new* and *delete*.
-- Your reflector can be configured with up to 26 modules, *A* through *Z* and as few as one module. For other choices, the configure modules don't have to be contiguous. For example, you could configure modules A, B, C and E.
-- An integrated P25 Reflector with software imbe vocoder.
+This build support *dual-stack* operation, so the server on which it's running, must have both an IPv4 and IPv6 routeable address if you are going to configure a dual-stack reflector.
 
 Only systemd-based operating systems are supported. Debian or Ubuntu is recommended. If you want to install this on a non-systemd based OS, you are on your own. Finally, this repository is designed so that you don't have to modify any file in the repository when you build your system. Any file you need to modify to properly configure your reflector will be a file you copy from you locally cloned repo. This makes it easier to update the source code when this repository is updated. Follow the instructions below to build your transcoding URF reflector.
 
@@ -85,7 +75,7 @@ cp ../config/* .
 ```
 
 This will create seven files:
-1. The `urfd.mk` file contains compile-time options for *urfd*. If you change the `BINDIR`, you'll need to update how `urfd.service` starts *urfd*.
+1. The `urfd.mk` file contains compile-time options for *urfd*. If you change the `BINDIR`, you'll need to update how `urfd.service` starts *urfd*. After you've edited this file build *urfd* by typing `make`.
 2. The `urfd.ini` file contains the run-time options for *urfd* and will be discussed below.
 3. The `urfd.blacklist` file defines callsigns that are blocked from linking or transmitting.
 4. The `urfd.whitelist` file defines callsigns that are allowed to link and transmit. Both of these files support the asterisk as a wild-card. The supplied blacklist and whitelist file are empty, which will allow any callsign to link and transmit, blocking no one. Both files support a limited wildcard feature.
@@ -94,16 +84,25 @@ This will create seven files:
 
 You can actually put the blacklist, whitelist, interlink and ini file anyplace and even rename them. Just make sure your ini file and service file have the proper, fully-qualified paths. The service file and the mk file need to remain in your `urfd/reflector` directory.
 
+Now move to the transcoder directory and copy its configuration files:
+
+```bash
+cd ../transcoder
+cp config/* .
+```
+
+This will create three files:
+1. The `tcd.mk` file contains compile-time options for *urfd*. If you change the `BINDIR`, you'll need to update how `tcd.service` starts *tcd*. After you've edited this file build *tcd* by typing `make`.
+2. The `tcd.ini` file contains the run-time options for *tcd*. The gain values adjust gain to equalize listening volumes for all protocols. Be sure that the **Transcoded** parameter exactly agrees with the same value in the `urfd.ini` file.
+3. The `tcd.service` file is a systemd file that will start and stop *tcd*. Importantly, it contains the only reference to where the *tcd* ini file is located. Be sure to set a fully qualified path to your tcd.ini file on the `ExecStart` line.
+
+You can actually put the ini file anyplace and even rename them. Just make sure your ini file and service file have the proper, fully-qualified paths. The service file and the mk file need to remain in your `urfd/reflector` directory.
 
 When you are done with the configuration files and ready to start the installation process, you can return to the main repository directory:
 
 ```bash
 cd ..
 ```
-
-### Build *urfd*
-
-After possibly editing `urfd.mk`, you can build your reflector: `make` . Besides building *urfd*, this will also build two helper applications that will be discussed below.
 
 ### Configuring your reflector
 
