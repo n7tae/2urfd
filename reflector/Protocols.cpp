@@ -66,8 +66,8 @@ bool CProtocols::Init(void)
 		if (! Get(EProtocol::urf)->Initialize("URF", EProtocol::urf, uint16_t(g_Configure.GetUnsigned(g_Keys.urf.port)), URF_IPV4, URF_IPV6))
 			return false;
 
-		Get(EProtocol::urf) = std::make_unique<CYsfProtocol>("YSF");
-		if (! Get(EProtocol::urf)->Initialize("YSF", EProtocol::ysf, uint16_t(g_Configure.GetUnsigned(g_Keys.ysf.port)), YSF_IPV4, YSF_IPV6))
+		Get(EProtocol::ysf) = std::make_unique<CYsfProtocol>("YSF");
+		if (! Get(EProtocol::ysf)->Initialize("YSF", EProtocol::ysf, uint16_t(g_Configure.GetUnsigned(g_Keys.ysf.port)), YSF_IPV4, YSF_IPV6))
 			return false;
 	}
 	m_Mutex.unlock();
