@@ -75,28 +75,11 @@ bool CGateKeeper::MayLink(const CCallsign &callsign, const CIp &ip, EProtocol pr
 	bool ok;
 	const std::string base(callsign.GetBase());
 
-	switch (protocol)
-	{
-	// repeaters
-	case EProtocol::dextra:
-	case EProtocol::dcs:
-	case EProtocol::ysf:
-	case EProtocol::m17:
-	case EProtocol::p25:
-		// is callsign listed OK
-		ok = IsNodeListedOk(base);
-		break;
-
 	// URF and BM interlinks
-	case EProtocol::urf:
+	if ( protocol == EProtocol::urf )
 		ok = IsPeerListedOk(base, ip, modules);
-		break;
-
-	// unsupported
-	default:
-		ok = false;
-		break;
-	}
+	else
+		ok = IsNodeListedOk(base);
 
 	// report
 	if ( ! ok )
@@ -114,29 +97,10 @@ bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EP
 
 	const std::string base(callsign.GetBase());
 
-	switch (protocol)
-	{
-	// repeaters, protocol specific
-	case EProtocol::dextra:
-	case EProtocol::dcs:
-	case EProtocol::ysf:
-	case EProtocol::m17:
-	case EProtocol::p25:
-		// first check is IP & callsigned listed OK
-		ok = IsNodeListedOk(base);
-		// todo: then apply any protocol specific authorisation for the operation
-		break;
-
-	// URF interlinks
-	case EProtocol::urf:
+	if ( protocol == EProtocol::urf )
 		ok = IsPeerListedOk(base, module);
-		break;
-
-	// unsupported
-	default:
-		ok = false;
-		break;
-	}
+	else
+		ok = IsNodeListedOk(base);
 
 	// report
 	if ( !ok )
