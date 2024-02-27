@@ -60,7 +60,7 @@ public:
 	std::unique_ptr<CPacket> Pop()        { return m_Queue.Pop(); }
 	std::unique_ptr<CPacket> PopWait()    { return m_Queue.PopWait(); }
 	bool IsEmpty() const                  { return m_Queue.IsEmpty(); }
-	bool IsCompletelyEmpty() const;
+//	bool IsCompletelyEmpty() const;
 
 protected:
 	// data

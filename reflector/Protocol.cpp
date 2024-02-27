@@ -143,29 +143,30 @@ void CProtocol::OnDvFramePacketIn(std::unique_ptr<CDvFramePacket> &Frame, const 
 	if ( stream )
 	{
 		// set the packet module, the transcoder needs this
-		const auto wasLast = Frame->IsLastPacket();
-		const auto mod = stream->GetOwnerClient()->GetReflectorModule();
-		Frame->SetPacketModule(mod);
+//		const auto wasLast = Frame->IsLastPacket();
+//		const auto mod = stream->GetOwnerClient()->GetReflectorModule();
+//		Frame->SetPacketModule(mod);
+		Frame->SetPacketModule(stream->GetOwnerClient()->GetReflectorModule());
 		// and push
 		stream->Push(std::move(Frame));
 
-		if (wasLast)
-		{
-			// this is the last packet, we'll close the stream
-			while (keep_running)
-			{
-				if (stream->IsCompletelyEmpty())	// this also checks if an associated codec stream is empty
-					break;
-				else
-					// we'll wait until the sream is empty
-					std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-
-			HandleQueue(); // proactively make sure every client has the last packet
-
-			g_Reflector.CloseStream(stream); // now we can close the stream
-			m_Streams.erase(streamID);	// and delete the map entry
-		}
+//		if (wasLast)
+//		{
+//			// this is the last packet, we'll close the stream
+//			while (keep_running)
+//			{
+//				if (stream->IsCompletelyEmpty())	// this also checks if an associated codec stream is empty
+//					break;
+//				else
+//					// we'll wait until the sream is empty
+//					std::this_thread::sleep_for(std::chrono::milliseconds(10));
+//			}
+//
+//			HandleQueue(); // proactively make sure every client has the last packet
+//
+//			g_Reflector.CloseStream(stream); // now we can close the stream
+//			m_Streams.erase(streamID);	// and delete the map entry
+//		}
 	}
 #ifdef DEBUG
 	else

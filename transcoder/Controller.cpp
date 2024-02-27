@@ -45,9 +45,20 @@ bool CController::Start()
 		keep_running = false;
 		return true;
 	}
-	reflectorFuture = std::async(std::launch::async, &CController::ReadReflectorThread, this);
-	c2Future        = std::async(std::launch::async, &CController::ProcessC2Thread,     this);
-	imbeFuture      = std::async(std::launch::async, &CController::ProcessIMBEThread,   this);
+	std::cout << "Listening on " << REF2TC << std::endl;
+
+	try
+	{
+		reflectorFuture = std::async(std::launch::async, &CController::ReadReflectorThread, this);
+		c2Future        = std::async(std::launch::async, &CController::ProcessC2Thread,     this);
+		imbeFuture      = std::async(std::launch::async, &CController::ProcessIMBEThread,   this);
+	}
+	catch (std::exception &e)
+	{
+		keep_running = false;
+		std::cerr << "ERROR: Failure launching treads: " << e.what() << std::endl;
+		return true;
+	}
 	return false;
 }
 
@@ -247,6 +258,7 @@ void CController::ReadReflectorThread()
 			}
 		}
 	}
+	std::cout << "Read reflector thread shut down" << std::endl;
 }
 
 // This is only called when codec_in was dstar or dmr. Obviously, the incoming
@@ -358,6 +370,7 @@ void CController::ProcessC2Thread()
 				break;
 		}
 	}
+	std::cout << "Codec2 process thread shut down" << std::endl;
 }
 
 void CController::AudiotoIMBE(std::shared_ptr<CTranscoderPacket> packet)
@@ -400,6 +413,7 @@ void CController::ProcessIMBEThread()
 				break;
 		}
 	}
+	std::cout << "IMBE process thread shut down" << std::endl;
 }
 
 void CController::SendToReflector(std::shared_ptr<CTranscoderPacket> packet)

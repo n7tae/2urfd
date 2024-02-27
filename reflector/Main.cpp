@@ -29,7 +29,7 @@ SJsonKeys   g_Keys;
 CReflector  g_Reflector;
 CGateKeeper g_GateKeeper;
 CConfigure  g_Configure;
-CVersion    g_Version(3,1,2); // The major byte should only change if the interlink packet changes!
+CVersion    g_Version(2,5,0); // The major byte should only change if the interlink packet changes!
 CLookupDmr  g_LDid;
 CLookupYsf  g_LYtr;
 

@@ -112,15 +112,15 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 	}
 }
 
-bool CPacketStream::IsCompletelyEmpty() const
-{
-	if (m_CodecStream)
-	{
-		if (! m_CodecStream->IsEmpty())
-			return false;
-	}
-	return m_Queue.IsEmpty();
-}
+// bool CPacketStream::IsCompletelyEmpty() const
+// {
+// 	if (m_CodecStream)
+// 	{
+// 		if (! m_CodecStream->IsEmpty())
+// 			return false;
+// 	}
+// 	return m_Queue.IsEmpty();
+// }
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // get
