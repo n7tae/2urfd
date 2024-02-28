@@ -18,13 +18,13 @@
 # if you change these locations, make sure the sgs.service file is updated!
 # you will also break hard coded paths in the dashboard file, index.php.
 
-EXE = urfd
+include ../urfd.mk
+
+EXE = $(REFLECTOR)
 
 INICHECK = inicheck
 
 DBUTIL = dbutil
-
-include urfd.mk
 
 ifeq ($(debug), true)
 CFLAGS = -ggdb3 -DDEBUG -W -Werror -I../common -std=c++17 -MMD -MD
@@ -63,17 +63,3 @@ clean :
 	$(RM) *.o *.d ../common/*.o ../common/*.d $(EXE) $(INICHECK) $(DBUTIL)
 
 -include $(DEPS)
-
-install :
-	cp -f $(EXE).service /etc/systemd/system/
-	cp -f $(EXE) $(BINDIR)
-	systemctl enable $(EXE).service
-	systemctl daemon-reload
-	systemctl start $(EXE)
-
-uninstall :
-	systemctl stop $(EXE).service
-	systemctl disable $(EXE).service
-	$(RM) /etc/systemd/system/$(EXE).service
-	systemctl daemon-reload
-	$(RM) $(BINDIR)/$(EXE)

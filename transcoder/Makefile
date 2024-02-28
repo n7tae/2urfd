@@ -1,6 +1,6 @@
 #Copyright (C) 2024 by Thomas A. Early, N7TAE
 
-include tcd.mk
+include ../urfd.mk
 
 GCC = g++
 
@@ -12,10 +12,13 @@ endif
 
 LDFLAGS = -lftd2xx -pthread
 
-SRCS = $(wildcard *.cpp) $(wildcard codec2/*.cpp) $(wildcard imbe/*.cpp) $(wildcard ../common/*.cpp)
+SRCS = $(wildcard *.cpp) $(wildcard ../common/*.cpp) $(wildcard imbe/*.cpp) $(wildcard codec2/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 EXE = tcd
+
+.PHONY : all
+all : $(EXE)
 
 $(EXE) : $(OBJS)
 	$(GCC) $(OBJS) $(LDFLAGS) -o $@
@@ -23,23 +26,8 @@ $(EXE) : $(OBJS)
 %.o : %.cpp
 	$(GCC) $(CFLAGS) -c $< -o $@
 
+.PHONY : clean
 clean :
-	$(RM) $(EXE) *.d *.o codec/*.d codec/*.o imbe/*.d imbe/*.o ../common/*.d ../common/*.o
+	$(RM) $(EXE) *.d *.o ./common/*.d ../common/*.o imbe/*.o imbe/*.d codec2/*.o codec2/*.d
 
 -include $(DEPS)
-
-# The install and uninstall targets need to be run by root
-install : $(EXE)
-	cp $(EXE) $(BINDIR)
-	cp $(EXE).service /etc/systemd/system/
-	systemctl enable $(EXE)
-	systemctl daemon-reload
-	systemctl start $(EXE)
-
-uninstall :
-	systemctl stop $(EXE)
-	systemctl disable $(EXE)
-	systemctl daemon-reload
-	rm -f /etc/systemd/system/$(EXE).service
-	rm -f $(BINDIR)/$(EXE)
-	systemctl daemon-reload

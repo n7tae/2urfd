@@ -1,8 +1,9 @@
 *.o
 *.d
+*.a
 .vscode
-reflector/urfd.*
-transcoder/tcd.*
+urfd.*
+tcd.*
 urfd
 inicheck
 dbutil
