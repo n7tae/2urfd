@@ -59,32 +59,34 @@ sudo make install
 
 Please note that there is no easy way to uninstall OpenDHT once it's been installed.
 
-### Download and build the repository and
+### Download and build the repository and enter the build directory.
 
 ```bash
 git clone https://github.com/n7tae/2urfd.git
 cd urfd
 ```
 
+Except for the OpenDHT library, this repository contains everything needed to build both *urfd* and *tcd*!
+
 ### Create and edit your configuration files
 
-First, move to the reflector build directory and create your configuration file:
+Create your working copies of the compile-time and run-time configuration files. Some of the these working files you can move most anywhere, more on that below.
 
 ```bash
 cp ../config/* .
 ```
 
 This will create eight files:
-1. The `urfd.mk` file contains compile-time options for *urfd*. If you change the `BINDIR`, you'll need to update how `urfd.service` starts *urfd*. After you've edited this file build *urfd* by typing `make`. This file is used for building both *tcd* and *urfd*.
+1. The `urfd.mk` file contains compile-time options for *urfd*. If you change the `BINDIR`, you'll need to update how the two service files start *urfd* and *tcd*. After you've edited this file build everything by typing `make`.
 2. The `urfd.ini` file contains the run-time options for *urfd* and will be discussed below.
 3. The `urfd.blacklist` file defines callsigns that are blocked from linking or transmitting.
 4. The `urfd.whitelist` file defines callsigns that are allowed to link and transmit. Both of these files support the asterisk as a wild-card. The supplied blacklist and whitelist file are empty, which will allow any callsign to link and transmit, blocking no one. Both files support a limited wildcard feature.
 5. The `urfd.interlink` file defines URF linking.
 6. The `urfd.service` file is a systemd file that will start and stop *urfd*. Importantly, it contains the only reference to where the *urfd* ini file is located. Be sure to set a fully qualified path to your `urfd.ini` file on the `ExecStart` line.
 7. The `tcd.ini` file contains run-time options for *tcd*. Make sure the `Transcoded` line is identical for both `tcd.ini` and `urfd.ini`.
-8. The `tcd.service` file is a systemd file that will start and stop *tcd*. Importantly, it contains the only reference to where the *urfd* ini file is located. Be sure to set a fully qualified path to your `tcd.ini` file on the `ExecStart` line.
+8. The `tcd.service` file is a systemd file that will start and stop *tcd*. Importantly, it contains the only reference to where the *tcd* ini file is located. Be sure to set a fully qualified path to your `tcd.ini` file on the `ExecStart` line.
 
-You can actually put the blacklist, whitelist, interlink and the two ini files any place and even rename them because ini file locations is only referenced in the two service files and the blacklist, whitelist and interlink files are only referenced in the `urfd.ini` file. The service file and the mk file need to remain in your `urfd` directory.
+You can actually put the blacklist, whitelist, interlink and the two ini files anyplace and even rename them because ini file locations are only referenced in the two service files and the blacklist, whitelist and interlink files are only referenced in the `urfd.ini` file. The service files and the mk files need to remain in your `urfd` directory.
 
 ### Configuring your reflector
 
