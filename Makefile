@@ -22,7 +22,7 @@ include urfd.mk
 
 .PHONY : all
 all :
-	cd reflector && make all && cd ../transcoder && make all
+	cd reflector && make all -j$(JOBS) && cd ../transcoder && make all -j$(JOBS)
 
 .PHONY : clean
 clean :

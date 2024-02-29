@@ -63,7 +63,7 @@ Please note that there is no easy way to uninstall OpenDHT once it's been instal
 
 ```bash
 git clone https://github.com/n7tae/2urfd.git
-cd urfd/reflector
+cd urfd
 ```
 
 ### Create and edit your configuration files
@@ -74,43 +74,25 @@ First, move to the reflector build directory and create your configuration file:
 cp ../config/* .
 ```
 
-This will create seven files:
-1. The `urfd.mk` file contains compile-time options for *urfd*. If you change the `BINDIR`, you'll need to update how `urfd.service` starts *urfd*. After you've edited this file build *urfd* by typing `make`.
+This will create eight files:
+1. The `urfd.mk` file contains compile-time options for *urfd*. If you change the `BINDIR`, you'll need to update how `urfd.service` starts *urfd*. After you've edited this file build *urfd* by typing `make`. This file is used for building both *tcd* and *urfd*.
 2. The `urfd.ini` file contains the run-time options for *urfd* and will be discussed below.
 3. The `urfd.blacklist` file defines callsigns that are blocked from linking or transmitting.
 4. The `urfd.whitelist` file defines callsigns that are allowed to link and transmit. Both of these files support the asterisk as a wild-card. The supplied blacklist and whitelist file are empty, which will allow any callsign to link and transmit, blocking no one. Both files support a limited wildcard feature.
-5. The `urfd.interlink` file defines possible Brandmeister and URF linking.
-6. The `urfd.service` file is a systemd file that will start and stop *urfd*. Importantly, it contains the only reference to where the *urfd* ini file is located. Be sure to set a fully qualified path to your urfd.ini file on the `ExecStart` line.
+5. The `urfd.interlink` file defines URF linking.
+6. The `urfd.service` file is a systemd file that will start and stop *urfd*. Importantly, it contains the only reference to where the *urfd* ini file is located. Be sure to set a fully qualified path to your `urfd.ini` file on the `ExecStart` line.
+7. The `tcd.ini` file contains run-time options for *tcd*. Make sure the `Transcoded` line is identical for both `tcd.ini` and `urfd.ini`.
+8. The `tcd.service` file is a systemd file that will start and stop *tcd*. Importantly, it contains the only reference to where the *urfd* ini file is located. Be sure to set a fully qualified path to your `tcd.ini` file on the `ExecStart` line.
 
-You can actually put the blacklist, whitelist, interlink and ini file anyplace and even rename them. Just make sure your ini file and service file have the proper, fully-qualified paths. The service file and the mk file need to remain in your `urfd/reflector` directory.
-
-Now move to the transcoder directory and copy its configuration files:
-
-```bash
-cd ../transcoder
-cp config/* .
-```
-
-This will create three files:
-1. The `tcd.mk` file contains compile-time options for *urfd*. If you change the `BINDIR`, you'll need to update how `tcd.service` starts *tcd*. After you've edited this file build *tcd* by typing `make`.
-2. The `tcd.ini` file contains the run-time options for *tcd*. The gain values adjust gain to equalize listening volumes for all protocols. Be sure that the **Transcoded** parameter exactly agrees with the same value in the `urfd.ini` file.
-3. The `tcd.service` file is a systemd file that will start and stop *tcd*. Importantly, it contains the only reference to where the *tcd* ini file is located. Be sure to set a fully qualified path to your tcd.ini file on the `ExecStart` line.
-
-You can actually put the ini file anyplace and even rename them. Just make sure your ini file and service file have the proper, fully-qualified paths. The service file and the mk file need to remain in your `urfd/reflector` directory.
-
-When you are done with the configuration files and ready to start the installation process, you can return to the main repository directory:
-
-```bash
-cd ..
-```
+You can actually put the blacklist, whitelist, interlink and the two ini files any place and even rename them because ini file locations is only referenced in the two service files and the blacklist, whitelist and interlink files are only referenced in the `urfd.ini` file. The service file and the mk file need to remain in your `urfd` directory.
 
 ### Configuring your reflector
 
-Use your favorite text editor to set your run-time configuration in your copy of `urfd.ini`.
+Use your favorite text editor to set your run-time configuration in your copy of `urfd.ini` and `tcd.ini`.
 
-There are only a few things that need to be specified. Most important are, the reflector callsign and the IP addresses for the IPv4 and IPv6 listen ports and a transcoder port, if there is a transcoder. Dual-stack operation is enabled by specifying both an IPv4 and IPv6 address. IPv4-only single stack can be specified by leaving the IPv6 address undefined.
+There are only a few things that need to be specified. Most important are, the reflector callsign and the IP addresses for the IPv4 and IPv6 listen ports and and identifying the transcoded modules. Dual-stack operation is enabled by specifying both an IPv4 and IPv6 address. IPv4-only single stack can be specified by leaving the IPv6 address undefined. Note that some protocols don't yet support IPv6.
 
-You can configure any modules, from **A** to **Z**. They don't have to be contiguous. If your reflector is configured with a transcoder, you can specify which configured modules will be transcoded. Up to three modules can be transcoded if you have the necessary hardware.
+You can configure any modules, from **A** to **Z**. Up to three modules can be transcoded if you have the necessary hardware.
 
 There are three databases needed by *urfd*:
 1. The *DMR ID* database maps a DMR ID to a callsign and *vis versa*.
@@ -123,7 +105,7 @@ The files section specifies specific locations of important runtime configuratio
 
 There are two, very useful helper applications, *inicheck* and *dbutil*. Both apps will show you a usage message if you execute them without any arguments.
 
-The *inicheck* app will use the exact same code that urfd uses to validate your `urfd.ini` file. Do `./inicheck -q mrefd.ini` to check your infile for errors. If you see any messages containing `ERROR`, that means that *urfd* won't start. You'll have to fix the errors described in the message(s). If you only see messages containing `WARNING`, *urfd* will start, but it may not perform as expected. You will have to decide if the warning should be fixed. If you don't see any messages, it means that your ini file is syntactically correct.
+The *inicheck* app will use the exact same code that urfd uses to validate your `urfd.ini` file. Do `reflector/inicheck -q urefd.ini` to check your infile for errors. If you see any messages containing `ERROR`, that means that *urfd* won't start. You'll have to fix the errors described in the message(s). If you only see messages containing `WARNING`, *urfd* will start, but it may not perform as expected. You will have to decide if the warning should be fixed. If you don't see any messages, it means that *urfd* and *tcd* will start without any configuration problems. The **one exception** is that bad things will happen if you don't have identical **Transcoded** lines in the two ini files.
 
 The *dbutil* app can be used for several tasks relating to the three databases that *urfd* uses. The usage is: `./dbutil DATABASE SOURCE ACTION INIFILE`, where:
 - DATABASE is "dmr" or "ysf"
@@ -133,29 +115,27 @@ The *dbutil* app can be used for several tasks relating to the three databases t
 One at a time, *dbutil* can work with either of the two DATABASEs. It can read either the http or the file SOURCE. It can either show you the data entries that are syntactically correct or incorrect (ACTION). Using the "parse" ACTION, you can create a file that can be subsequently read by urfd:
 
 ```bash
-./dbutil dmr html parse urfd.ini > /home/user/urfd/reflectlor/dmrid.dat
+reflector/dbutil dmr html parse urfd.ini > /home/user/urfd/dmrid.dat
 ```
 
-This can save some time during startup.
+This can save some time during startup. You can then offload the task of periodically updating these to files with other Linux tools, like crontab.
 
 ### Installing your system
 
 After you have written your configuration files, you can install your system:
 
 ```bash
-./radmin
+sudo make install
 ```
 
-You can use this interactive shell script to install and uninstall your system. This can also perform other tasks like restarting the reflector or transcoder process, or be used to view the reflector or transcoder log in real time.
-
-### Stopping and starting the services manually
+and uninstall your system:
 
 ```bash
-sudo systemctl stop urfd # (or xrfd)
-sudo systemctl stop tcd
+sudo make uninstall
 ```
 
-You can start each component by replacing `stop` with `start`, or you can restart each by using `restart`.
+There is also an interactive script you can launch with `./radmin` you can use to install and uninstall your system, restarting the reflector or transcoder process, or viewing the reflector or transcoder log in real time.
+
 
 ### Copy dashboard to /var/www
 
@@ -182,7 +162,6 @@ UDP port 17000         (M17 protocol)
 UPD port 20001         (DPlus protocol)
 UDP port 30001         (DExtra protocol)
 UDP port 30051         (DCS protocol)
-UDP port 32000         (USRP protocol)
 UDP port 40000         (DSD Protocol)
 UDP port 41000         (P25 port)
 UDP port 42000         (YSF protocol)

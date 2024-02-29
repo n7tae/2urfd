@@ -16,3 +16,6 @@ debug = false
 
 # To disable DHT support, set DHT to false.
 DHT = true
+
+# Passed to the -j option of make for concurrent compiling
+JOBS = 1
