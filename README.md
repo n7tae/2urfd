@@ -155,7 +155,7 @@ Please note that your www root directory might be some place else. There is one 
 
 ## Firewall settings
 
-URF Server requires the following ports to be open and forwarded properly for in- and outgoing network traffic. Obviously you don't need to open ports for G3, USRP and BrandMeister if they are not enabled:
+URF Server requires the following ports to be open and forwarded properly for in- and outgoing network traffic:
 
 ```text
 TCP port    80         (http) optional TCP port 443 (https)

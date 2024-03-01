@@ -26,7 +26,7 @@
 
 #include "UnixDgramSocket.h"
 
-CUnixDgramReader::CUnixDgramReader() : fd(-1) {}
+CUnixDgramReader::CUnixDgramReader() : m_fd(-1) {}
 
 CUnixDgramReader::~CUnixDgramReader()
 {
@@ -35,25 +35,23 @@ CUnixDgramReader::~CUnixDgramReader()
 
 bool CUnixDgramReader::Open(const char *path)	// returns true on failure
 {
-	fd = socket(AF_UNIX, SOCK_DGRAM, 0);
-	if (fd < 0)
+	m_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
+	if (m_fd < 0)
 	{
 		std::cerr << "socket() failed for " << path << ": " << strerror(errno) << std::endl;
 		return true;
 	}
 	//fcntl(fd, F_SETFL, O_NONBLOCK);
 
-	struct sockaddr_un addr;
-	memset(&addr, 0, sizeof(addr));
-	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path+1, path, sizeof(addr.sun_path)-2);
+	memset(&m_addr, 0, sizeof(m_addr));
+	m_addr.sun_family = AF_UNIX;
+	strncpy(m_addr.sun_path+1, path, sizeof(m_addr.sun_path)-2);
 
-	int rval = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
+	int rval = bind(m_fd, (struct sockaddr *)&m_addr, sizeof(m_addr));
 	if (rval < 0)
 	{
 		std::cerr << "bind() failed for " << path << ": " << strerror(errno) << std::endl;
-		close(fd);
-		fd = -1;
+		Close();
 		return true;
 	}
 	return false;
@@ -62,18 +60,18 @@ bool CUnixDgramReader::Open(const char *path)	// returns true on failure
 bool CUnixDgramReader::Receive(STCPacket *pack, unsigned timeout) const
 {
 	// socket valid ?
-	if ( 0 > fd )
+	if ( 0 > m_fd )
 		return false;
 
 	// control socket
 	fd_set FdSet;
 	FD_ZERO(&FdSet);
-	FD_SET(fd, &FdSet);
+	FD_SET(m_fd, &FdSet);
 	struct timeval tv;
 	tv.tv_sec = timeout / 1000;
 	tv.tv_usec = (timeout % 1000) * 1000;
 
-	auto rval = select(fd + 1, &FdSet, 0, 0, &tv);
+	auto rval = select(m_fd + 1, &FdSet, 0, 0, &tv);
 	if (rval <= 0) {
 		if (rval < 0) {
 			std::cerr << "select() error on transcoder socket: " << strerror(errno) << std::endl;
@@ -86,7 +84,7 @@ bool CUnixDgramReader::Receive(STCPacket *pack, unsigned timeout) const
 
 bool CUnixDgramReader::Read(STCPacket *pack) const
 {
-	auto len = read(fd, pack, sizeof(STCPacket));
+	auto len = read(m_fd, pack, sizeof(STCPacket));
 	if (len != sizeof(STCPacket)) {
 		std::cerr << "Received transcoder packet is wrong size: " << len << " but should be " << sizeof(STCPacket) << std::endl;
 		return false;
@@ -97,14 +95,12 @@ bool CUnixDgramReader::Read(STCPacket *pack) const
 
 void CUnixDgramReader::Close()
 {
-	if (fd >= 0)
-		close(fd);
-	fd = -1;
-}
-
-int CUnixDgramReader::GetFD() const
-{
-	return fd;
+	if (m_fd >= 0)
+	{
+		std::cout << "Closing unix socket '" << m_addr.sun_path+1 << "'" << std::endl;
+		close(m_fd);
+	}
+	m_fd = -1;
 }
 
 CUnixDgramWriter::CUnixDgramWriter() {}

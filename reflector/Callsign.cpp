@@ -136,7 +136,7 @@ bool CCallsign::IsValid(void) const
 	// is an letter or space
 	valid = valid && (IsLetter(m_Module) || IsSpace(m_Module));
 
-	// dmr and nxdn id is not tested, as it can be 0 if station is not registered
+	// dmr id is not tested, as it can be 0 if station is not registered
 
 	// done
 	return valid;

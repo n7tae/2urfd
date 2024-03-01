@@ -70,7 +70,7 @@ bool CCodecStream::InitCodecStream()
 	name.append(1, m_CSModule);
 	if (m_TCReader.Open(name.c_str()))
 		return true;
-	std::cout << "Initialized CodecStream receive socket " << name << std::endl;
+	std::cout << "Listening on Unix socket " << name << std::endl;
 	keep_running = true;
 	try
 	{

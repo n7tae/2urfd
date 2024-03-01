@@ -45,7 +45,7 @@ bool CController::Start()
 		keep_running = false;
 		return true;
 	}
-	std::cout << "Listening on " << REF2TC << std::endl;
+	std::cout << "Listening on Unix socket " << REF2TC << std::endl;
 
 	try
 	{
@@ -393,7 +393,6 @@ void CController::IMBEtoAudio(std::shared_ptr<CTranscoderPacket> packet)
 	dstar_device->AddPacket(packet);
 	codec2_queue.push(packet);
 	dmrsf_device->AddPacket(packet);
-	usrp_queue.push(packet);
 }
 
 void CController::ProcessIMBEThread()
@@ -408,6 +407,8 @@ void CController::ProcessIMBEThread()
 			case ECodecType::c2_3200:
 			case ECodecType::dstar:
 			case ECodecType::dmr:
+				AudiotoIMBE(packet);
+				break;
 			case ECodecType::p25:
 				IMBEtoAudio(packet);
 				break;
@@ -436,7 +437,6 @@ void CController::RouteDstPacket(std::shared_ptr<CTranscoderPacket> packet)
 		// codec_in is dstar, the audio has just completed, so now calc the M17 and DMR
 		codec2_queue.push(packet);
 		imbe_queue.push(packet);
-		usrp_queue.push(packet);
 		dmrsf_device->AddPacket(packet);
 	}
 	else
@@ -453,7 +453,6 @@ void CController::RouteDmrPacket(std::shared_ptr<CTranscoderPacket> packet)
 	{
 		codec2_queue.push(packet);
 		imbe_queue.push(packet);
-		usrp_queue.push(packet);
 		dstar_device->AddPacket(packet);
 	}
 	else

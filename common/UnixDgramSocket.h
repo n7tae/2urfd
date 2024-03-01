@@ -31,9 +31,9 @@ public:
 	bool Read(STCPacket *pack) const;
 	bool Receive(STCPacket *pack, unsigned timeout) const;
 	void Close();
-	int GetFD() const;
 private:
-	int fd;
+	int m_fd;
+	struct sockaddr_un m_addr;
 };
 
 class CUnixDgramWriter

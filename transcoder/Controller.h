@@ -45,7 +45,7 @@ public:
 
 protected:
 	std::atomic<bool> keep_running;
-	std::future<void> reflectorFuture, c2Future, imbeFuture, usrpFuture;
+	std::future<void> reflectorFuture, c2Future, imbeFuture;
 	std::unordered_map<char, int16_t[160]> audio_store;
 	std::unordered_map<char, uint8_t[8]> data_store;
 	CUnixDgramReader reader;
@@ -55,7 +55,6 @@ protected:
 
 	CPacketQueue codec2_queue;
 	CPacketQueue imbe_queue;
-	CPacketQueue usrp_queue;
 	std::mutex send_mux;
 	int32_t ambe_in_num, ambe_out_num;
 	imbe_vocoder_impl p25vocoder;
