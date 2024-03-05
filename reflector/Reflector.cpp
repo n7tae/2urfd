@@ -695,7 +695,7 @@ void CReflector::PutDHTConfig()
 	cfg.port[toUType(EUrfdPorts::dcs)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.dcs.port);
 	cfg.port[toUType(EUrfdPorts::dextra)]  = (uint16_t)g_Configure.GetUnsigned(g_Keys.dextra.port);
 	cfg.port[toUType(EUrfdPorts::dmrplus)] = (uint16_t)0;
-	cfg.port[toUType(EUrfdPorts::dplus)]   = (uint16_t)0;
+	cfg.port[toUType(EUrfdPorts::dplus)]   = (uint16_t)g_Configure.GetUnsigned(g_Keys.dplus.port);
 	cfg.port[toUType(EUrfdPorts::m17)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.m17.port);
 	cfg.port[toUType(EUrfdPorts::mmdvm)]   = (uint16_t)g_Configure.GetUnsigned(g_Keys.mmdvm.port);
 	cfg.port[toUType(EUrfdPorts::nxdn)]    = (uint16_t)0;

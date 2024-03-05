@@ -17,13 +17,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-#include "DExtraProtocol.h"
 #include "DCSProtocol.h"
-#include "URFProtocol.h"
+#include "DExtraProtocol.h"
+#include "DPlusProtocol.h"
 #include "DMRMMDVMProtocol.h"
-#include "YSFProtocol.h"
 #include "M17Protocol.h"
 #include "P25Protocol.h"
+#include "URFProtocol.h"
+#include "YSFProtocol.h"
 #include "Protocols.h"
 #include "Global.h"
 
@@ -48,6 +49,10 @@ bool CProtocols::Init(void)
 
 		Get(EProtocol::dextra) = std::make_unique<CDextraProtocol>("DExtra");
 		if (! Get(EProtocol::dextra)->Initialize("XRF", EProtocol::dextra, uint16_t(g_Configure.GetUnsigned(g_Keys.dextra.port)), DSTAR_IPV4, DSTAR_IPV6))
+			return false;
+
+		Get(EProtocol::dplus) = std::make_unique<CDplusProtocol>("DPlus");
+		if (! Get(EProtocol::dplus)->Initialize("REF", EProtocol::dplus, uint16_t(g_Configure.GetUnsigned(g_Keys.dplus.port)), DSTAR_IPV4, DSTAR_IPV6))
 			return false;
 
 		Get(EProtocol::mmdvm) = std::make_unique<CDmrmmdvmProtocol>("MMDVM");

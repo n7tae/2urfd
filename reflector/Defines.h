@@ -64,34 +64,26 @@
 // protocols ---------------------------------------------------
 
 // SIZE always has to be the last element!
-enum class EProtocol : unsigned { dcs, dextra, m17, mmdvm, p25, urf, ysf, SIZE };
-
-// DExtra
-#define DEXTRA_KEEPALIVE_PERIOD         3                                   // in seconds
-#define DEXTRA_KEEPALIVE_TIMEOUT        (DEXTRA_KEEPALIVE_PERIOD*10)        // in seconds
+enum class EProtocol : unsigned { dcs, dextra, dplus, m17, mmdvm, p25, urf, ysf, SIZE };
 
 // DCS
 #define DCS_KEEPALIVE_PERIOD            1                                   // in seconds
 #define DCS_KEEPALIVE_TIMEOUT           (DCS_KEEPALIVE_PERIOD*30)           // in seconds
 
-// XLX, used for BM
-#define BM_KEEPALIVE_PERIOD             1                                   // in seconds
-#define BM_KEEPALIVE_TIMEOUT            (BM_KEEPALIVE_PERIOD*30)           // in seconds
-#define BM_RECONNECT_PERIOD             5                                   // in seconds
+// DExtra
+#define DEXTRA_KEEPALIVE_PERIOD         3                                   // in seconds
+#define DEXTRA_KEEPALIVE_TIMEOUT        (DEXTRA_KEEPALIVE_PERIOD*10)        // in seconds
 
-// URF
-#define URF_KEEPALIVE_PERIOD            1                                   // in seconds
-#define URF_KEEPALIVE_TIMEOUT           (URF_KEEPALIVE_PERIOD*30)           // in seconds
-#define URF_RECONNECT_PERIOD            5                                   // in seconds
+// DPlus
+#define DPLUS_KEEPALIVE_PERIOD          1                                   // in seconds
+#define DPLUS_KEEPALIVE_TIMEOUT         (DPLUS_KEEPALIVE_PERIOD*10)         // in seconds
+#define DPLUS_DEFAULT_RPTR1_SUFFIX      'Y'
+
 // DMRMmdvm
 #define DMRMMDVM_KEEPALIVE_PERIOD       10                                  // in seconds
 #define DMRMMDVM_KEEPALIVE_TIMEOUT      (DMRMMDVM_KEEPALIVE_PERIOD*10)      // in seconds
 #define DMRMMDVM_REFLECTOR_SLOT         DMR_SLOT2
 #define DMRMMDVM_REFLECTOR_COLOUR       1
-
-// YSF
-#define YSF_KEEPALIVE_PERIOD            3                                   // in seconds
-#define YSF_KEEPALIVE_TIMEOUT           (YSF_KEEPALIVE_PERIOD*10)           // in seconds
 
 // M17
 #define M17_KEEPALIVE_PERIOD			3
@@ -101,6 +93,14 @@ enum class EProtocol : unsigned { dcs, dextra, m17, mmdvm, p25, urf, ysf, SIZE }
 #define P25_KEEPALIVE_PERIOD            3                                   // in seconds
 #define P25_KEEPALIVE_TIMEOUT           (P25_KEEPALIVE_PERIOD*10)         // in seconds
 
+// URF
+#define URF_KEEPALIVE_PERIOD            1                                   // in seconds
+#define URF_KEEPALIVE_TIMEOUT           (URF_KEEPALIVE_PERIOD*30)           // in seconds
+#define URF_RECONNECT_PERIOD            5                                   // in seconds
+
+// YSF
+#define YSF_KEEPALIVE_PERIOD            3                                   // in seconds
+#define YSF_KEEPALIVE_TIMEOUT           (YSF_KEEPALIVE_PERIOD*10)           // in seconds
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // macros

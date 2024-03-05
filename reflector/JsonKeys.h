@@ -25,6 +25,7 @@ struct SJsonKeys {
 	struct PORTONLY { const std::string port; }
 	dcs { "DCSPort" },
 	dextra { "DExtraPort" },
+	dplus { "DPlusPort" },
 	m17 { "M17Port" },
 	urf { "URFPort" };
 

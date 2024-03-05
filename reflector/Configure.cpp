@@ -45,6 +45,7 @@
 #define JDEXTRA                  "DExtra"
 #define JDHTSAVEPATH             "DHTSavePath"
 #define JDMRIDDB                 "DMR ID DB"
+#define JDPLUS                   "DPlus"
 #define JENABLE                  "Enable"
 #define JFILES                   "Files"
 #define JFILEPATH                "FilePath"
@@ -165,6 +166,8 @@ bool CConfigure::ReadData(const std::string &path)
 				section = ESection::ysf;
 			else if (0 == hname.compare(JDCS))
 				section = ESection::dcs;
+			else if (0 == hname.compare(JDPLUS))
+				section = ESection::dplus;
 			else if (0 == hname.compare(JP25))
 				section = ESection::p25;
 			else if (0 == hname.compare(JM17))
@@ -294,6 +297,12 @@ bool CConfigure::ReadData(const std::string &path)
 			case ESection::dextra:
 				if (0 == key.compare(JPORT))
 					data[g_Keys.dextra.port] = getUnsigned(value, "DExtra Port", 1024, 65535, 30001);
+				else
+					badParam(key);
+				break;
+			case ESection::dplus:
+				if (0 == key.compare(JPORT))
+					data[g_Keys.dplus.port] = getUnsigned(value, "DPlus Port", 1024, 65535, 20001);
 				else
 					badParam(key);
 				break;
@@ -580,6 +589,7 @@ bool CConfigure::ReadData(const std::string &path)
 	// "simple" protocols with only a Port
 	isDefined(ErrorLevel::fatal, JDCS, JPORT, g_Keys.dcs.port, rval);
 	isDefined(ErrorLevel::fatal, JDEXTRA, JPORT, g_Keys.dextra.port, rval);
+	isDefined(ErrorLevel::fatal, JDPLUS, JPORT, g_Keys.dplus.port, rval);
 	isDefined(ErrorLevel::fatal, JM17, JPORT, g_Keys.m17.port, rval);
 	isDefined(ErrorLevel::fatal, JURF, JPORT, g_Keys.urf.port, rval);
 

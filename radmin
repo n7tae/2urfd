@@ -76,9 +76,9 @@ if [[ $# -eq 1 ]]; then
 		exit 1
 	fi
 else
-	if [[ -e reflector/urfd.ini ]]; then
-		callsign=$(awk '$1 == "Callsign"{print $3}' reflector/urfd.ini)
-		tcaddress=$(awk '$1 == "Transcoder"{print $3}' reflector/urfd.ini)
+	if [[ -e urfd.ini ]]; then
+		callsign=$(awk '$1 == "Callsign"{print $3}' urfd.ini)
+		tcaddress=$(awk '$1 == "Transcoder"{print $3}' urfd.ini)
 	else
 		echo "ERROR: could not find reflector/urfd.ini! You'll have to specify it."
 		echo "Usage: ./radmin PATH-TO-INI-FILE"
@@ -97,7 +97,7 @@ do
 		ps -aux | grep -e urfd -e tcd | grep -vE 'grep|journalctl'
 	fi
 	echo
-	echo "        Reflector Administration, Version #240224"
+	echo "        Reflector Administration, Version #240303"
 	echo
 	git status | head -1
 	echo
