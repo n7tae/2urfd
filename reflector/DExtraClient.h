@@ -36,7 +36,6 @@ public:
 	EProtocol GetProtocol(void) const           { return EProtocol::dextra; }
 	EProtoRev GetProtocolRevision(void) const   { return m_ProtRev; }
 	const char *GetProtocolName(void) const     { return "DExtra"; }
-	bool IsNode(void) const                     { return true; }
 
 	// status
 	bool IsAlive(void) const;

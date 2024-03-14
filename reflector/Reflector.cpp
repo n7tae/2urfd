@@ -559,10 +559,7 @@ void CReflector::WriteXmlFile(std::ofstream &xmlFile)
 	// iterate on clients
 	for ( auto cit=clients->cbegin(); cit!=clients->cend(); cit++ )
 	{
-		if ( (*cit)->IsNode() )
-		{
-			(*cit)->WriteXml(xmlFile);
-		}
+		(*cit)->WriteXml(xmlFile);
 	}
 	// unlock
 	ReleaseClients();

@@ -35,7 +35,6 @@ public:
 	// identity
 	EProtocol GetProtocol(void) const           { return EProtocol::ysf; }
 	const char *GetProtocolName(void) const     { return "YSF"; }
-	bool IsNode(void) const                     { return true; }
 
 	// status
 	bool IsAlive(void) const;

@@ -35,7 +35,6 @@ public:
 	// identity
 	EProtocol GetProtocol(void) const           { return EProtocol::p25; }
 	const char *GetProtocolName(void) const     { return "P25"; }
-	bool IsNode(void) const                     { return true; }
 
 	// status
 	bool IsAlive(void) const;

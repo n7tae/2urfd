@@ -35,7 +35,6 @@ public:
 	// identity
 	EProtocol GetProtocol(void) const           { return EProtocol::dplus; }
 	const char *GetProtocolName(void) const     { return "DPlus"; }
-	bool IsNode(void) const                     { return true; }
 	bool IsDextraDongle(void) const             { return m_bDextraDongle; }
 	void SetDextraDongle(void)                  { m_bDextraDongle = true; }
 

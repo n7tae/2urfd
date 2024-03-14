@@ -61,7 +61,6 @@ public:
 	virtual EProtocol GetProtocol(void) const            = 0;
 	virtual EProtoRev GetProtocolRevision(void) const    { return EProtoRev::ambe; }
 	virtual const char *GetProtocolName(void) const      { return "none"; }
-	virtual bool IsNode(void) const                      { return false; }
 	virtual bool IsPeer(void) const                      { return false; }
 	virtual bool IsDextraDongle(void) const              { return false; }
 	virtual void SetDextraDongle(void)                   { }
@@ -80,6 +79,8 @@ public:
 
 protected:
 	// data
+
+	// identity
 	CCallsign   m_Callsign;
 	CIp         m_Ip;
 
