@@ -21,17 +21,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CM17Client::CM17Client()
-{
-}
-
 CM17Client::CM17Client(const CCallsign &callsign, const CIp &ip, char reflectorModule)
 	: CClient(callsign, ip, reflectorModule)
-{
-}
-
-CM17Client::CM17Client(const CM17Client &client)
-	: CClient(client)
 {
 }
 

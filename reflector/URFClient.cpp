@@ -24,21 +24,10 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CURFClient::CURFClient()
-{
-	m_ProtRev = EProtoRev::original;
-}
-
 CURFClient::CURFClient(const CCallsign &callsign, const CIp &ip, char reflectorModule, EProtoRev protRev)
 	: CClient(callsign, ip, reflectorModule)
 {
 	m_ProtRev = protRev;
-}
-
-CURFClient::CURFClient(const CURFClient &client)
-	: CClient(client)
-{
-	m_ProtRev = client.m_ProtRev;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

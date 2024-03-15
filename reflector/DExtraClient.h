@@ -25,9 +25,7 @@ class CDextraClient : public CClient
 {
 public:
 	// constructors
-	CDextraClient();
 	CDextraClient(const CCallsign &, const CIp &, char, EProtoRev);
-//	CDextraClient(const CDextraClient &);
 
 	// destructor
 	virtual ~CDextraClient() {};

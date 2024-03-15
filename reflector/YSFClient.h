@@ -25,9 +25,7 @@ class CYsfClient : public CClient
 {
 public:
 	// constructors
-	CYsfClient();
 	CYsfClient(const CCallsign &, const CIp &, char = ' ');
-	CYsfClient(const CYsfClient &);
 
 	// destructor
 	virtual ~CYsfClient() {};

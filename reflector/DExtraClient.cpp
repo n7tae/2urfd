@@ -21,22 +21,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CDextraClient::CDextraClient()
-{
-	m_ProtRev = EProtoRev::ambe;
-}
-
 CDextraClient::CDextraClient(const CCallsign &callsign, const CIp &ip, char reflectorModule, EProtoRev protRev)
 	: CClient(callsign, ip, reflectorModule)
 {
 	m_ProtRev = protRev;
 }
-
-//CDextraClient::CDextraClient(const CDextraClient &client)
-//	: CClient(client)
-//{
-//	m_ProtRev = client.m_ProtRev;
-//}
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // status

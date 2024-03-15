@@ -25,9 +25,7 @@ class CP25Client : public CClient
 {
 public:
 	// constructors
-	CP25Client();
 	CP25Client(const CCallsign &, const CIp &, char = ' ');
-	CP25Client(const CP25Client &);
 
 	// destructor
 	virtual ~CP25Client() {};

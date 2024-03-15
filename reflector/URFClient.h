@@ -25,9 +25,7 @@ class CURFClient : public CClient
 {
 public:
 	// constructors
-	CURFClient();
 	CURFClient(const CCallsign &, const CIp &, char = ' ', EProtoRev = EProtoRev::original);
-	CURFClient(const CURFClient &);
 
 	// destructor
 	virtual ~CURFClient() {};

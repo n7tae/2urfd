@@ -25,9 +25,7 @@ class CDplusClient : public CClient
 {
 public:
 	// constructors
-	CDplusClient();
 	CDplusClient(const CCallsign &, const CIp &, char = ' ');
-	CDplusClient(const CDplusClient &);
 
 	// destructor
 	virtual ~CDplusClient() {};

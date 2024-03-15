@@ -23,21 +23,10 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CDplusClient::CDplusClient()
-{
-	m_bDextraDongle = false;
-}
-
 CDplusClient::CDplusClient(const CCallsign &callsign, const CIp &ip, char reflectorModule)
 	: CClient(callsign, ip, reflectorModule)
 {
 	m_bDextraDongle = false;
-}
-
-CDplusClient::CDplusClient(const CDplusClient &client)
-	: CClient(client)
-{
-	m_bDextraDongle = client.m_bDextraDongle;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

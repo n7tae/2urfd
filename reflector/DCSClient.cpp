@@ -23,17 +23,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CDcsClient::CDcsClient()
-{
-}
-
 CDcsClient::CDcsClient(const CCallsign &callsign, const CIp &ip, char reflectorModule)
 	: CClient(callsign, ip, reflectorModule)
-{
-}
-
-CDcsClient::CDcsClient(const CDcsClient &client)
-	: CClient(client)
 {
 }
 

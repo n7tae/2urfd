@@ -33,9 +33,9 @@ class CClient
 {
 public:
 	// constructors
-	CClient();
+	CClient() = delete;
+	CClient(const CClient &) = delete;
 	CClient(const CCallsign &, const CIp &, char = ' ');
-	CClient(const CClient &);
 
 	// destructor
 	virtual ~CClient() {};

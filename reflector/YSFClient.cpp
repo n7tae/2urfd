@@ -23,17 +23,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CYsfClient::CYsfClient()
-{
-}
-
 CYsfClient::CYsfClient(const CCallsign &callsign, const CIp &ip, char reflectorModule)
 	: CClient(callsign, ip, reflectorModule)
-{
-}
-
-CYsfClient::CYsfClient(const CYsfClient &client)
-	: CClient(client)
 {
 }
 

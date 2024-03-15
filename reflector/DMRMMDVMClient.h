@@ -25,9 +25,7 @@ class CDmrmmdvmClient : public CClient
 {
 public:
 	// constructors
-	CDmrmmdvmClient();
 	CDmrmmdvmClient(const CCallsign &, const CIp &, char = ' ');
-	CDmrmmdvmClient(const CDmrmmdvmClient &);
 
 	// destructor
 	virtual ~CDmrmmdvmClient() {};

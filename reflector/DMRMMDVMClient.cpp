@@ -23,17 +23,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CDmrmmdvmClient::CDmrmmdvmClient()
-{
-}
-
 CDmrmmdvmClient::CDmrmmdvmClient(const CCallsign &callsign, const CIp &ip, char reflectorModule)
 	: CClient(callsign, ip, reflectorModule)
-{
-}
-
-CDmrmmdvmClient::CDmrmmdvmClient(const CDmrmmdvmClient &client)
-	: CClient(client)
 {
 }
 
