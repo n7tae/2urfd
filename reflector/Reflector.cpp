@@ -518,7 +518,8 @@ void CReflector::JsonReport(nlohmann::json &report)
 	report["Clients"] = nlohmann::json::array();
 	auto clients = GetClients();
 	for (auto cit=clients->cbegin(); cit!=clients->cend(); cit++)
-		(*cit)->JsonReport(report);
+		if (! ((*cit)->IsPeer()))
+			(*cit)->JsonReport(report);
 	ReleaseClients();
 
 	report["Users"] = nlohmann::json::array();
@@ -559,7 +560,10 @@ void CReflector::WriteXmlFile(std::ofstream &xmlFile)
 	// iterate on clients
 	for ( auto cit=clients->cbegin(); cit!=clients->cend(); cit++ )
 	{
-		(*cit)->WriteXml(xmlFile);
+		if ( ! ((*cit)->IsPeer()) )
+		{
+			(*cit)->WriteXml(xmlFile);
+		}
 	}
 	// unlock
 	ReleaseClients();

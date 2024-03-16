@@ -282,11 +282,11 @@ void CDmrmmdvmProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Hea
 				// not linked yet
 				if ( cmd == CMD_LINK )
 				{
-					if ( g_Reflector.IsValidModule(rpt2.GetCSModule()) )
+					if ( g_Reflector.IsValidModule(rpt2.GetModule()) )
 					{
-						std::cout << "DMRmmdvm client " << client->GetCallsign() << " linking on module " << rpt2.GetCSModule() << std::endl;
+						std::cout << "DMRmmdvm client " << client->GetCallsign() << " linking on module " << rpt2.GetModule() << std::endl;
 						// link
-						client->SetReflectorModule(rpt2.GetCSModule());
+						client->SetReflectorModule(rpt2.GetModule());
 					}
 					else
 					{
@@ -313,7 +313,7 @@ void CDmrmmdvmProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Hea
 			}
 
 			// and now, re-check module is valid && that it's not a private call
-			if ( g_Reflector.IsValidModule(rpt2.GetCSModule()) && (CallType == DMR_GROUP_CALL) )
+			if ( g_Reflector.IsValidModule(rpt2.GetModule()) && (CallType == DMR_GROUP_CALL) )
 			{
 				// yes, try to open the stream
 				if ( (stream = g_Reflector.OpenStream(Header, client)) != nullptr )

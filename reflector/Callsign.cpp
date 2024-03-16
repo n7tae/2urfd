@@ -352,7 +352,7 @@ bool CCallsign::HasSameCallsignWithWildcard(const CCallsign &cs) const
 
 bool CCallsign::operator ==(const CCallsign &cs) const
 {
-	return (cs.m_Callsign.l == m_Callsign.l) && (m_Module == cs.m_Module) && (cs.m_Suffix.u == m_Suffix.u) && (m_uiDmrid == cs.m_uiDmrid);
+	return (cs.m_Callsign.l == m_Callsign.l) && (m_Module == cs.m_Module) && (cs.m_Suffix.u == m_Suffix.u);
 }
 
 CCallsign::operator const char *() const

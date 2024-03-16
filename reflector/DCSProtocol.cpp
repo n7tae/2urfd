@@ -408,8 +408,8 @@ void CDcsProtocol::EncodeKeepAlivePacket(CBuffer *Buffer, std::shared_ptr<CClien
 	Buffer->Append((uint8_t)Client->GetReflectorModule());
 	Buffer->Append((uint8_t)' ');
 	Buffer->Append((uint8_t *)(const char *)Client->GetCallsign(), CALLSIGN_LEN-1);
-	Buffer->Append((uint8_t)Client->GetCSModule());
-	Buffer->Append((uint8_t)Client->GetCSModule());
+	Buffer->Append((uint8_t)Client->GetClientModule());
+	Buffer->Append((uint8_t)Client->GetClientModule());
 	Buffer->Append(tag, sizeof(tag));
 }
 
@@ -421,7 +421,7 @@ void CDcsProtocol::EncodeConnectAckPacket(const CCallsign &Callsign, char Reflec
 	Callsign.GetCallsign(cs);
 	Buffer->Set(cs, CALLSIGN_LEN-1);
 	Buffer->Append((uint8_t)' ');
-	Buffer->Append((uint8_t)Callsign.GetCSModule());
+	Buffer->Append((uint8_t)Callsign.GetModule());
 	Buffer->Append((uint8_t)ReflectorModule);
 	Buffer->Append(tag, sizeof(tag));
 }
@@ -434,7 +434,7 @@ void CDcsProtocol::EncodeConnectNackPacket(const CCallsign &Callsign, char Refle
 	Callsign.GetCallsign(cs);
 	Buffer->Set(cs, CALLSIGN_LEN-1);
 	Buffer->Append((uint8_t)' ');
-	Buffer->Append((uint8_t)Callsign.GetCSModule());
+	Buffer->Append((uint8_t)Callsign.GetModule());
 	Buffer->Append((uint8_t)ReflectorModule);
 	Buffer->Append(tag, sizeof(tag));
 }
@@ -443,7 +443,7 @@ void CDcsProtocol::EncodeDisconnectPacket(CBuffer *Buffer, std::shared_ptr<CClie
 {
 	Buffer->Set((uint8_t *)(const char *)Client->GetCallsign(), CALLSIGN_LEN-1);
 	Buffer->Append((uint8_t)' ');
-	Buffer->Append((uint8_t)Client->GetCSModule());
+	Buffer->Append((uint8_t)Client->GetClientModule());
 	Buffer->Append((uint8_t)0x00);
 	Buffer->Append((uint8_t *)(const char *)GetReflectorCallsign(), CALLSIGN_LEN-1);
 	Buffer->Append((uint8_t)' ');

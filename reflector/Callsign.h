@@ -94,7 +94,7 @@ public:
 	const std::string GetCS() const;
 	uint32_t GetDmrid(void) const { return m_uiDmrid; }
 	void GetSuffix(uint8_t *) const;
-	char GetCSModule(void) const { return m_Module; }
+	char GetModule(void) const { return m_Module; }
 
 	// compare
 	bool HasSameCallsign(const CCallsign &) const;

@@ -66,7 +66,7 @@ void CUser::WriteXml(std::ofstream &xmlFile)
 	xmlFile << "<STATION>" << std::endl;
 	xmlFile << "\t<Callsign>" << m_My << "</Callsign>" << std::endl;
 	xmlFile << "\t<Via node>" << m_Rpt1 << "</Via node>" << std::endl;
-	xmlFile << "\t<On module>" << m_Rpt2.GetCSModule() << "</On module>" << std::endl;
+	xmlFile << "\t<On module>" << m_Rpt2.GetModule() << "</On module>" << std::endl;
 	xmlFile << "\t<Via peer>" << m_Xlx << "</Via peer>" << std::endl;
 
 	char mbstr[100];
@@ -82,7 +82,7 @@ void CUser::JsonReport(nlohmann::json &report)
 	nlohmann::json juser;
 	juser["Callsign"] = m_My.GetCS();
 	juser["Repeater"] = m_Rpt1.GetCS();
-	juser["OnModule"] = std::string(1, m_Rpt2.GetCSModule());
+	juser["OnModule"] = std::string(1, m_Rpt2.GetModule());
 	juser["ViaPeer"] = m_Xlx.GetCS();
 	char s[100];
 	if (std::strftime(s, sizeof(s), "%FT%TZ", std::gmtime(&m_LastHeardTime)))
