@@ -198,7 +198,7 @@ void CDplusProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header
 				// now we know its module, let's update it
 				if ( !client->HasModule() )
 				{
-					client->SetCSModule(rpt1.GetModule());
+					client->SetModule(rpt1.GetModule());
 				}
 				// get client callsign
 				rpt1 = client->GetCallsign();

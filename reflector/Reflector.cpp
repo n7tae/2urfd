@@ -350,7 +350,7 @@ void CReflector::ModuleThread(const char ThisModule)
 			{
 				// make the protocol-patched reflector callsign
 				CCallsign csRPT = m_Protocols.Get(i)->GetReflectorCallsign();
-				csRPT.SetCSModule(ThisModule);
+				csRPT.SetModule(ThisModule);
 				// and put it in the copy
 				(dynamic_cast<CDvHeaderPacket *>(copy.get()))->SetRpt2Callsign(csRPT);
 			}

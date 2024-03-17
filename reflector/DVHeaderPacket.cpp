@@ -147,7 +147,7 @@ CDvHeaderPacket::CDvHeaderPacket(const CM17Packet &m17) : CPacket(m17)
 	m_csUR = CCallsign("CQCQCQ");
 	m_csMY = m17.GetSourceCallsign();
 	m_csRPT1 = m_csRPT2 = m17.GetDestCallsign();
-	m_csRPT1.SetCSModule('G');
+	m_csRPT1.SetModule('G');
 }
 
 std::unique_ptr<CPacket> CDvHeaderPacket::Copy(void)

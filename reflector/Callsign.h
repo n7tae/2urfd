@@ -79,7 +79,7 @@ public:
 	void SetCallsign(const uint8_t *, int, bool = true);
 	void SetDmrid(uint32_t, bool = true);
 	void SetDmrid(const uint8_t *, bool = true);
-	void SetCSModule(char);
+	void SetModule(char);
 	void SetSuffix(const std::string &s);
 	void SetSuffix(const uint8_t *, int);
 

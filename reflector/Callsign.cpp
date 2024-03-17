@@ -230,7 +230,7 @@ void CCallsign::SetDmrid(const uint8_t *buffer, bool UpdateCallsign)
 	SetDmrid((uint32_t)::strtol(sz, nullptr, 16), UpdateCallsign);
 }
 
-void CCallsign::SetCSModule(char c)
+void CCallsign::SetModule(char c)
 {
 	m_Module = c;
 	CSIn();
@@ -328,7 +328,7 @@ void CCallsign::GetSuffix(uint8_t *buffer) const
 
 bool CCallsign::HasSameCallsign(const CCallsign &cs) const
 {
-	return (memcmp(m_Callsign.c, cs.m_Callsign.c, CALLSIGN_LEN) == 0);
+	return cs.m_Callsign.l == m_Callsign.l;
 }
 
 bool CCallsign::HasSameCallsignWithWildcard(const CCallsign &cs) const
@@ -352,7 +352,7 @@ bool CCallsign::HasSameCallsignWithWildcard(const CCallsign &cs) const
 
 bool CCallsign::operator ==(const CCallsign &cs) const
 {
-	return (cs.m_Callsign.l == m_Callsign.l) && (m_Module == cs.m_Module) && (cs.m_Suffix.u == m_Suffix.u);
+	return (cs.m_Callsign.l == m_Callsign.l) && (m_Module == cs.m_Module);
 }
 
 CCallsign::operator const char *() const

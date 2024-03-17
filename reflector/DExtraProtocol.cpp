@@ -343,7 +343,7 @@ void CDextraProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Heade
 				// the module the client is linked to
 				auto m = client->GetReflectorModule();
 				Header->SetRpt2Module(m);
-				rpt2.SetCSModule(m);
+				rpt2.SetModule(m);
 			}
 			// and try to open the stream
 			if ( (stream = g_Reflector.OpenStream(Header, client)) != nullptr )
@@ -370,7 +370,7 @@ bool CDextraProtocol::IsValidConnectPacket(const CBuffer &Buffer, CCallsign &cal
 	if ((Buffer.size() == 11) && (Buffer.data()[9] != ' '))
 	{
 		callsign.SetCallsign(Buffer.data(), 8);
-		callsign.SetCSModule(Buffer.data()[8]);
+		callsign.SetModule(Buffer.data()[8]);
 		module = Buffer.data()[9];
 		valid = (callsign.IsValid() && IsLetter(module));
 		// detect revision
@@ -396,7 +396,7 @@ bool CDextraProtocol::IsValidDisconnectPacket(const CBuffer &Buffer, CCallsign *
 	if ((Buffer.size() == 11) && (Buffer.data()[9] == ' '))
 	{
 		callsign->SetCallsign(Buffer.data(), 8);
-		callsign->SetCSModule(Buffer.data()[8]);
+		callsign->SetModule(Buffer.data()[8]);
 		valid = callsign->IsValid();
 	}
 	return valid;

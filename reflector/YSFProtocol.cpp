@@ -278,7 +278,7 @@ void CYsfProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header, 
 			// get module it's linked to
 			auto m = client->GetReflectorModule();
 			Header->SetRpt2Module(m);
-			rpt2.SetCSModule(m);
+			rpt2.SetModule(m);
 
 			// and try to open the stream
 			if ( (stream = g_Reflector.OpenStream(Header, client)) != nullptr )
@@ -414,7 +414,7 @@ bool CYsfProtocol::IsValidConnectPacket(const CBuffer &Buffer, CCallsign *callsi
 	if ( (Buffer.size() == 14) && (Buffer.Compare(tag, sizeof(tag)) == 0) )
 	{
 		callsign->SetCallsign(Buffer.data()+4, 8);
-		callsign->SetCSModule(YSF_MODULE_ID);
+		callsign->SetModule(YSF_MODULE_ID);
 		valid = (callsign->IsValid());
 	}
 	return valid;
@@ -477,12 +477,12 @@ bool CYsfProtocol::IsValidDvHeaderPacket(const CIp &Ip, const CYSFFICH &Fich, co
 			memcpy(sz, &(Buffer.data()[4]), YSF_CALLSIGN_LENGTH);
 			sz[YSF_CALLSIGN_LENGTH] = 0;
 			CCallsign rpt1 = CCallsign((const char *)sz);
-			rpt1.SetCSModule(YSF_MODULE_ID);
+			rpt1.SetModule(YSF_MODULE_ID);
 			CCallsign rpt2 = m_ReflectorCallsign;
 			// as YSF protocol does not provide a module-tranlatable
 			// destid, set module to none and rely on OnDvHeaderPacketIn()
 			// to later fill it with proper value
-			rpt2.SetCSModule(' ');
+			rpt2.SetModule(' ');
 
 			// and packet
 			header = std::make_unique<CDvHeaderPacket>(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, uiStreamId, Fich.getFN());
@@ -530,9 +530,9 @@ bool CYsfProtocol::IsValidDvFramePacket(const CIp &Ip, const CYSFFICH &Fich, con
 			memcpy(sz, &(Buffer.data()[4]), YSF_CALLSIGN_LENGTH);
 			sz[YSF_CALLSIGN_LENGTH] = 0;
 			CCallsign rpt1 = CCallsign((const char *)sz);
-			rpt1.SetCSModule(YSF_MODULE_ID);
+			rpt1.SetModule(YSF_MODULE_ID);
 			CCallsign rpt2 = m_ReflectorCallsign;
-			rpt2.SetCSModule(' ');
+			rpt2.SetModule(' ');
 			header = std::make_unique<CDvHeaderPacket>(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, uiStreamId, Fich.getFN());
 
 			if ( g_GateKeeper.MayTransmit(header->GetMyCallsign(), Ip, EProtocol::ysf, header->GetRpt2Module())  )
@@ -853,7 +853,7 @@ bool CYsfProtocol::IsValidwirexPacket(const CBuffer &Buffer, CYSFFICH *Fich, CCa
 			{
 				// get callsign
 				Callsign->SetCallsign(&(Buffer.data()[4]), CALLSIGN_LEN, false);
-				Callsign->SetCSModule(YSF_MODULE_ID);
+				Callsign->SetModule(YSF_MODULE_ID);
 				// decode payload
 				if ( Fich->getFN() == 0U )
 				{

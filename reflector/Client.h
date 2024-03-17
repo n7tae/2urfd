@@ -54,7 +54,7 @@ public:
 	std::time_t GetLastHeardTime(void) const            { return m_LastHeardTime; }
 
 	// set
-	void SetCSModule(char c)                             { m_Callsign.SetCSModule(c); }
+	void SetModule(char c)                             { m_Callsign.SetModule(c); }
 	void SetReflectorModule(char c)                      { m_ReflectorModule = c; }
 
 	// identity
@@ -83,8 +83,6 @@ protected:
 	// identity
 	CCallsign   m_Callsign;
 	CIp         m_Ip;
-
-	// linked to
 	char        m_ReflectorModule;
 
 	// status

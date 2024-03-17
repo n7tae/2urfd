@@ -207,7 +207,7 @@ void CP25Protocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header, 
 			rpt1 = client->GetCallsign();
 			auto m = client->GetReflectorModule();
 			Header->SetRpt2Module(m);
-			rpt2.SetCSModule(m);
+			rpt2.SetModule(m);
 			// and try to open the stream
 			if ( (stream = g_Reflector.OpenStream(Header, client)) != nullptr )
 			{
@@ -376,8 +376,8 @@ bool CP25Protocol::IsValidDvHeaderPacket(const CIp &Ip, const CBuffer &Buffer, s
 			CCallsign csMY = CCallsign("", uiSrcId);
 			CCallsign rpt1 = CCallsign("", uiSrcId);
 			CCallsign rpt2 = m_ReflectorCallsign;
-			rpt1.SetCSModule(P25_MODULE_ID);
-			rpt2.SetCSModule(' ');
+			rpt1.SetModule(P25_MODULE_ID);
+			rpt2.SetModule(' ');
 			header = std::make_unique<CDvHeaderPacket>(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, m_uiStreamId, false);
 		}
 		return true;

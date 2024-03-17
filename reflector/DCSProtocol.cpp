@@ -327,7 +327,7 @@ bool CDcsProtocol::IsValidConnectPacket(const CBuffer &Buffer, CCallsign *callsi
 	if ( Buffer.size() == 519 )
 	{
 		callsign->SetCallsign(Buffer.data(), 8);
-		callsign->SetCSModule(Buffer.data()[8]);
+		callsign->SetModule(Buffer.data()[8]);
 		*reflectormodule = Buffer.data()[9];
 		valid = (callsign->IsValid() && IsLetter(*reflectormodule));
 	}
@@ -340,13 +340,13 @@ bool CDcsProtocol::IsValidDisconnectPacket(const CBuffer &Buffer, CCallsign *cal
 	if ((Buffer.size() == 11) && (Buffer.data()[9] == ' '))
 	{
 		callsign->SetCallsign(Buffer.data(), 8);
-		callsign->SetCSModule(Buffer.data()[8]);
+		callsign->SetModule(Buffer.data()[8]);
 		valid = callsign->IsValid();
 	}
 	else if ((Buffer.size() == 19) && (Buffer.data()[9] == ' ') && (Buffer.data()[10] == 0x00))
 	{
 		callsign->SetCallsign(Buffer.data(), 8);
-		callsign->SetCSModule(Buffer.data()[8]);
+		callsign->SetModule(Buffer.data()[8]);
 		valid = callsign->IsValid();
 	}
 	return valid;

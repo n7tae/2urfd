@@ -57,7 +57,7 @@ void CClients::AddClient(std::shared_ptr<CClient> client)
 
 	// and append
 	m_Clients.push_back(client);
-	std::cout << "New client " << client->GetCallsign() << " at " << client->GetIp() << " added with protocol " << client->GetProtocolName();
+	std::cout << "New client " << client->GetCallsign() << " at " << client->GetIp() << " added with protocol " << client->GetProtocolName() << std::endl;
 	if ( client->GetReflectorModule() != ' ' )
 	{
 		std::cout << " on module " << client->GetReflectorModule();
