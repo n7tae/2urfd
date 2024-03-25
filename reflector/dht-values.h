@@ -23,8 +23,8 @@
 
 #define URFD_PEERS_1   "urfd-peers-1"
 #define URFD_USERS_1   "urfd-users-1"
-#define URFD_CONFIG_1  "urfd-config-1"
-#define URFD_CLIENTS_1 "urfd-clients-1"
+#define URFD_CONFIG_2  "urfd-config-2"
+#define URFD_CLIENTS_2 "urfd-clients-2"
 
 enum class EUrfdValueID : uint64_t { Config=1, Peers=2, Clients=3, Users=4 };
 
@@ -39,13 +39,13 @@ struct SUrfdPeers1
 	MSGPACK_DEFINE(timestamp, sequence, list)
 };
 
-using UrfdClientTuple = std::tuple<std::string, std::string, char, std::time_t, std::time_t>;
-enum class EUrfdClientFields { Callsign, Ip, Module, ConnectTime, LastHeardTime };
-struct SUrfdClients1
+using UrfdClientTuple2 = std::tuple<std::string, std::string, std::string, char, std::time_t, std::time_t>;
+enum class EUrfdClientFields2 { Callsign, Protocol, Ip, Module, ConnectTime, LastHeardTime };
+struct SUrfdClients2
 {
 	std::time_t timestamp;
 	unsigned int sequence;
-	std::list<UrfdClientTuple> list;
+	std::list<UrfdClientTuple2> list;
 
 	MSGPACK_DEFINE(timestamp, sequence, list)
 };
@@ -62,20 +62,19 @@ struct SUrfdUsers1
 };
 
 // 'SIZE' has to be last value for these scoped enums
-enum class EUrfdPorts : unsigned { dcs, dextra, dmrplus, dplus, m17, mmdvm, nxdn, p25, urf, ysf, SIZE };
-enum class EUrfdAlMod : unsigned { nxdn, p25, ysf, SIZE };
-enum class EUrfdTxRx  : unsigned { rx, tx, SIZE };
-enum class EUrfdRefId : unsigned { nxdn, p25, SIZE };
-struct SUrfdConfig1
+enum class EUrfdPorts2 : unsigned { dcs, dextra, dmrplus, dplus, dsd, m17, mmdvm, nxdn, p25, urf, ysf, SIZE };
+enum class EUrfdAlMod  : unsigned { nxdn, p25, ysf, SIZE };
+enum class EUrfdTxRx   : unsigned { rx, tx, SIZE };
+enum class EUrfdRefId  : unsigned { nxdn, p25, SIZE };
+struct SUrfdConfig2
 {
 	std::time_t timestamp;
 	std::string callsign, ipv4addr, ipv6addr, modules, transcodedmods, url, email, sponsor, country, version;
-	std::array<uint16_t, toUType(EUrfdPorts::SIZE)> port;
+	std::array<uint16_t, toUType(EUrfdPorts2::SIZE)> port;
 	std::array<char, toUType(EUrfdAlMod::SIZE)> almod;
 	std::array<unsigned long, toUType(EUrfdTxRx::SIZE)> ysffreq;
 	std::array<unsigned, toUType(EUrfdRefId::SIZE)> refid;
 	std::unordered_map<char, std::string> description;
-	bool g3enabled;
 
-	MSGPACK_DEFINE(timestamp, callsign, ipv4addr, ipv6addr, modules, transcodedmods, url, email, sponsor, country, version, almod, ysffreq, refid, g3enabled, port, description)
+	MSGPACK_DEFINE(timestamp, callsign, ipv4addr, ipv6addr, modules, transcodedmods, url, email, sponsor, country, version, almod, ysffreq, refid, port, description)
 };

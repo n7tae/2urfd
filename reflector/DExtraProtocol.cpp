@@ -106,7 +106,7 @@ void CDextraProtocol::Task(void)
 					Send(Buffer, Ip);
 
 					// create the client and append
-					g_Reflector.GetClients()->AddClient(std::make_shared<CDextraClient>(Callsign, Ip, ToLinkModule, ProtRev));
+					g_Reflector.GetClients()->AddClient(std::make_shared<CDextraClient>(Callsign, EProtocol::dextra, Ip, ToLinkModule, ProtRev));
 					g_Reflector.ReleaseClients();
 				}
 				else

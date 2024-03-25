@@ -25,14 +25,10 @@ class CDmrmmdvmClient : public CClient
 {
 public:
 	// constructors
-	CDmrmmdvmClient(const CCallsign &, const CIp &, char = ' ');
+	CDmrmmdvmClient(const CCallsign &, EProtocol, const CIp &, char = ' ');
 
 	// destructor
 	virtual ~CDmrmmdvmClient() {};
-
-	// identity
-	EProtocol GetProtocol(void) const           { return EProtocol::mmdvm; }
-	const char *GetProtocolName(void) const     { return "DMRMmdvm"; }
 
 	// status
 	bool IsAlive(void) const;

@@ -46,7 +46,6 @@
 
 //// Module configuration
 #define DSTAR_IPV4 true
-#define DSD_IPV4 true
 #define DMR_IPV4 true
 #define YSF_IPV4 true
 #define M17_IPV4 true
@@ -55,7 +54,6 @@
 
 
 #define DSTAR_IPV6 true	// QnetGateway can use IPv6
-#define DSD_IPV6 false
 #define DMR_IPV6 false
 #define YSF_IPV6 false
 #define XLX_IPV6 false
@@ -96,7 +94,7 @@ enum class EProtocol : unsigned { dcs, dextra, dplus, dsd, m17, mmdvm, p25, urf,
 
 // P25
 #define P25_KEEPALIVE_PERIOD            3                                   // in seconds
-#define P25_KEEPALIVE_TIMEOUT           (P25_KEEPALIVE_PERIOD*10)         // in seconds
+#define P25_KEEPALIVE_TIMEOUT           (P25_KEEPALIVE_PERIOD*10)           // in seconds
 
 // URF
 #define URF_KEEPALIVE_PERIOD            1                                   // in seconds

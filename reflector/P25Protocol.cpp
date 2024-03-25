@@ -119,7 +119,7 @@ void CP25Protocol::Task(void)
 					std::cout << "P25 connect packet from " << Callsign << " at " << Ip << std::endl;
 
 					// create the client
-					auto newclient = std::make_shared<CP25Client>(Callsign, Ip);
+					auto newclient = std::make_shared<CP25Client>(Callsign, EProtocol::p25, Ip);
 
 					// aautolink, if enabled
 					if (m_AutolinkModule)

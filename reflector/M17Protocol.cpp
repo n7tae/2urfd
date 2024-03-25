@@ -99,7 +99,7 @@ void CM17Protocol::Task(void)
 					Send("ACKN", Ip);
 
 					// create the client and append
-					g_Reflector.GetClients()->AddClient(std::make_shared<CM17Client>(Callsign, Ip, ToLinkModule));
+					g_Reflector.GetClients()->AddClient(std::make_shared<CM17Client>(Callsign, EProtocol::m17, Ip, ToLinkModule));
 					g_Reflector.ReleaseClients();
 				}
 				else

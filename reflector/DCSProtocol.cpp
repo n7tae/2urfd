@@ -89,7 +89,7 @@ void CDcsProtocol::Task(void)
 					Send(Buffer, Ip);
 
 					// create the client and append
-					g_Reflector.GetClients()->AddClient(std::make_shared<CDcsClient>(Callsign, Ip, ToLinkModule));
+					g_Reflector.GetClients()->AddClient(std::make_shared<CDcsClient>(Callsign, EProtocol::dcs, Ip, ToLinkModule));
 					g_Reflector.ReleaseClients();
 				}
 				else

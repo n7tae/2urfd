@@ -19,16 +19,16 @@
 
 #include <string.h>
 #include "Client.h"
+#include "Global.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CClient::CClient(const CCallsign &callsign, const CIp &ip, char reflectorModule)
+CClient::CClient(const CCallsign &callsign, EProtocol protocol, const CIp &ip, char reflectorModule) : m_Protocol(protocol), m_Ip(ip)
 {
 	m_ReflectorModule = reflectorModule;
 	m_Callsign = callsign;
-	m_Ip = ip;
 	m_ModuleMastered = ' ';
 	m_LastKeepaliveTime.start();
 	m_ConnectTime = std::time(nullptr);
@@ -43,6 +43,10 @@ void CClient::Alive(void)
 	m_LastKeepaliveTime.start();
 }
 
+const std::string &CClient::GetProtocolName(void) const
+{
+	return g_Reflector.GetProtocolName(m_Protocol);
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // operators

@@ -24,8 +24,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CP25Client::CP25Client(const CCallsign &callsign, const CIp &ip, char reflectorModule)
-	: CClient(callsign, ip, reflectorModule)
+CP25Client::CP25Client(const CCallsign &callsign, EProtocol protocol, const CIp &ip, char reflectorModule) : CClient(callsign, protocol, ip, reflectorModule)
 {
 }
 

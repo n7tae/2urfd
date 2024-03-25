@@ -25,14 +25,12 @@ class CDplusClient : public CClient
 {
 public:
 	// constructors
-	CDplusClient(const CCallsign &, const CIp &, char = ' ');
+	CDplusClient(const CCallsign &, EProtocol, const CIp &, char = ' ');
 
 	// destructor
 	virtual ~CDplusClient() {};
 
 	// identity
-	EProtocol GetProtocol(void) const           { return EProtocol::dplus; }
-	const char *GetProtocolName(void) const     { return "DPlus"; }
 	bool IsDextraDongle(void) const             { return m_bDextraDongle; }
 	void SetDextraDongle(void)                  { m_bDextraDongle = true; }
 

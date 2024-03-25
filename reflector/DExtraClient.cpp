@@ -21,8 +21,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CDextraClient::CDextraClient(const CCallsign &callsign, const CIp &ip, char reflectorModule, EProtoRev protRev)
-	: CClient(callsign, ip, reflectorModule)
+CDextraClient::CDextraClient(const CCallsign &callsign, EProtocol protocol, const CIp &ip, char reflectorModule, EProtoRev protRev) : CClient(callsign, protocol, ip, reflectorModule)
 {
 	m_ProtRev = protRev;
 }

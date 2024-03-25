@@ -19,9 +19,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructor
 
-CDStarDirectClient::CDStarDirectClient(const CCallsign &callsign, const CCallsign &repeater, const CIp &ip, char reflectorModule)
-	: CClient(callsign, ip, reflectorModule)
-	, m_Repeater(repeater)
+CDStarDirectClient::CDStarDirectClient(const CCallsign &callsign, EProtocol protocol, const CCallsign &repeater, const CIp &ip, char reflectorModule) : CClient(callsign, protocol, ip, reflectorModule), m_Repeater(repeater)
 {
 }
 

@@ -408,7 +408,7 @@ void CDStarDirectProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &
 		if (g_Reflector.IsValidModule(urmod))
 		{
 			// make the new client
-			client = std::make_shared<CDStarDirectClient>(usercs, repeater, Ip, urmod);
+			client = std::make_shared<CDStarDirectClient>(usercs, EProtocol::dsd, repeater, Ip, urmod);
 			// emplace the new action map item
 			auto rv = m_ActionMap.emplace(std::piecewise_construct,
 				std::forward_as_tuple(streamID),
@@ -462,7 +462,7 @@ void CDStarDirectProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &
 		{
 			if (g_Reflector.IsValidModule(urmod))
 			{
-				auto newclient = std::make_shared<CDStarDirectClient>(usercs, repeater, Ip, urmod);
+				auto newclient = std::make_shared<CDStarDirectClient>(usercs, EProtocol::dsd, repeater, Ip, urmod);
 				auto rv = m_ActionMap.emplace(std::piecewise_construct,
 					std::forward_as_tuple(streamID),
 					std::forward_as_tuple(EDSDAction::change, client, newclient) );

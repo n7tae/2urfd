@@ -96,7 +96,7 @@ void CDplusProtocol::Task(void)
 				Send(Buffer, Ip);
 
 				// create the client and append
-				g_Reflector.GetClients()->AddClient(std::make_shared<CDplusClient>(Callsign, Ip));
+				g_Reflector.GetClients()->AddClient(std::make_shared<CDplusClient>(Callsign, EProtocol::dplus, Ip));
 				g_Reflector.ReleaseClients();
 			}
 			else

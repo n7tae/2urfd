@@ -312,14 +312,14 @@ bool CConfigure::ReadData(const std::string &path)
 					badParam(key);
 				break;
 			case ESection::dsd:
-#ifndef NO_DSD
-				if (0 == key.compare(JIRCLOGIN))
+				if (0 == key.compare(JPORT))
+					data[g_Keys.dsd.port] = getUnsigned(value, "DSD Port", 1024, 65535, 40000);
+				else if (0 == key.compare(JIRCLOGIN))
 					data[g_Keys.dsd.ircLogin] = value;
 				else if (0 == key.compare(JIRCSERVER))
 					data[g_Keys.dsd.ircServer] = value;
 				else
 					badParam(key);
-#endif
 				break;
 			case ESection::m17:
 				if (0 == key.compare(JPORT))
@@ -609,7 +609,7 @@ bool CConfigure::ReadData(const std::string &path)
 	isDefined(ErrorLevel::fatal, JURF, JPORT, g_Keys.urf.port, rval);
 
 	// DSD
-#ifndef NO_DSD
+	isDefined(ErrorLevel::fatal, JDSTARDIRECT, JPORT, g_Keys.dsd.port, rval);
 	isDefined(ErrorLevel::fatal, JDSTARDIRECT, JIRCSERVER, g_Keys.dsd.ircServer, rval);
 	if (isDefined(ErrorLevel::fatal, JDSTARDIRECT, JIRCLOGIN, g_Keys.dsd.ircLogin, rval))
 	{
@@ -622,7 +622,6 @@ bool CConfigure::ReadData(const std::string &path)
 			rval = true;
 		}
 	}
-#endif
 
 	// MMDVM
 	isDefined(ErrorLevel::fatal, JMMDVM, JPORT, g_Keys.mmdvm.port, rval);

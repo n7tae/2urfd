@@ -23,14 +23,10 @@ class CM17Client : public CClient
 {
 public:
 	// constructors
-	CM17Client(const CCallsign &, const CIp &, char);
+	CM17Client(const CCallsign &, EProtocol, const CIp &, char);
 
 	// destructor
 	virtual ~CM17Client() {};
-
-	// identity
-	const char *GetProtocolName(void) const     { return "M17"; }
-	EProtocol GetProtocol(void) const           { return EProtocol::m17; }
 
 	// status
 	bool IsAlive(void) const;

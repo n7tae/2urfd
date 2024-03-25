@@ -42,7 +42,7 @@ CURFPeer::CURFPeer(const CCallsign &callsign, const CIp &ip, const char *modules
 	for ( unsigned i = 0; i < ::strlen(modules); i++ )
 	{
 		// create and append to vector
-		m_Clients.push_back(std::make_shared<CURFClient>(callsign, ip, modules[i], protrev));
+		m_Clients.push_back(std::make_shared<CURFClient>(callsign, EProtocol::urf, ip, modules[i], protrev));
 	}
 }
 

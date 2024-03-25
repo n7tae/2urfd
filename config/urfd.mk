@@ -16,6 +16,3 @@ JOBS = 1
 
 # To disable DHT support, set DHT to false
 DHT = true
-
-# To disable DStarDirect, set DSD to false
-DSD = true;

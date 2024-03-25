@@ -154,7 +154,7 @@ void CDmrmmdvmProtocol::Task(void)
 					std::cout << "DMRmmdvm login from " << Callsign << " at " << Ip << std::endl;
 
 					// create the client and append
-					clients->AddClient(std::make_shared<CDmrmmdvmClient>(Callsign, Ip));
+					clients->AddClient(std::make_shared<CDmrmmdvmClient>(Callsign, EProtocol::mmdvm, Ip));
 				}
 				else
 				{

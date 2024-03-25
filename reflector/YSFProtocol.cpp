@@ -161,7 +161,7 @@ void CYsfProtocol::Task(void)
 					std::cout << "YSF connect packet from " << Callsign << " at " << Ip << std::endl;
 
 					// create the client
-					auto newclient = std::make_shared<CYsfClient>(Callsign, Ip);
+					auto newclient = std::make_shared<CYsfClient>(Callsign, EProtocol::ysf, Ip);
 
 					// aautolink, if enabled
 					if (m_AutolinkModule)

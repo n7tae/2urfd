@@ -595,18 +595,18 @@ void CReflector::PutDHTPeers()
 void CReflector::PutDHTClients()
 {
 	const std::string cs(g_Configure.GetString(g_Keys.names.callsign));
-	SUrfdClients1 c;
+	SUrfdClients2 c;
 	time(&c.timestamp);
 	c.sequence = clients_put_count++;
 	auto clients = GetClients();
 	for (auto cit=clients->cbegin(); cit!=clients->cend(); cit++)
 	{
-		c.list.emplace_back((*cit)->GetCallsign().GetCS(), std::string((*cit)->GetIp().GetAddress()), (*cit)->GetReflectorModule(), (*cit)->GetConnectTime(), (*cit)->GetLastHeardTime());
+		c.list.emplace_back((*cit)->GetCallsign().GetCS(), (*cit)->GetProtocolName(), std::string((*cit)->GetIp().GetAddress()), (*cit)->GetReflectorModule(), (*cit)->GetConnectTime(), (*cit)->GetLastHeardTime());
 	}
 	ReleaseClients();
 
 	auto nv = std::make_shared<dht::Value>(c);
-	nv->user_type.assign(URFD_CLIENTS_1);
+	nv->user_type.assign(URFD_CLIENTS_2);
 	nv->id = toUType(EUrfdValueID::Clients);
 
 	node.putSigned(
@@ -653,7 +653,7 @@ void CReflector::PutDHTUsers()
 void CReflector::PutDHTConfig()
 {
 	const std::string cs(g_Configure.GetString(g_Keys.names.callsign));
-	SUrfdConfig1 cfg;
+	SUrfdConfig2 cfg;
 	time(&cfg.timestamp);
 	cfg.callsign.assign(cs);
 	cfg.ipv4addr.assign(g_Configure.GetString(g_Keys.ip.ipv4address));
@@ -674,22 +674,22 @@ void CReflector::PutDHTConfig()
 	cfg.ysffreq[toUType(EUrfdTxRx::tx)]    = g_Configure.GetUnsigned(g_Keys.ysf.defaulttxfreq);
 	cfg.refid[toUType(EUrfdRefId::nxdn)]   = 0;
 	cfg.refid[toUType(EUrfdRefId::p25)]    = g_Configure.GetUnsigned(g_Keys.p25.reflectorid);
-	cfg.port[toUType(EUrfdPorts::dcs)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.dcs.port);
-	cfg.port[toUType(EUrfdPorts::dextra)]  = (uint16_t)g_Configure.GetUnsigned(g_Keys.dextra.port);
-	cfg.port[toUType(EUrfdPorts::dmrplus)] = (uint16_t)0;
-	cfg.port[toUType(EUrfdPorts::dplus)]   = (uint16_t)g_Configure.GetUnsigned(g_Keys.dplus.port);
-	cfg.port[toUType(EUrfdPorts::m17)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.m17.port);
-	cfg.port[toUType(EUrfdPorts::mmdvm)]   = (uint16_t)g_Configure.GetUnsigned(g_Keys.mmdvm.port);
-	cfg.port[toUType(EUrfdPorts::nxdn)]    = (uint16_t)0;
-	cfg.port[toUType(EUrfdPorts::p25)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.p25.port);
-	cfg.port[toUType(EUrfdPorts::urf)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.urf.port);
-	cfg.port[toUType(EUrfdPorts::ysf)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.ysf.port);
-	cfg.g3enabled = false;
+	cfg.port[toUType(EUrfdPorts2::dcs)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.dcs.port);
+	cfg.port[toUType(EUrfdPorts2::dextra)]  = (uint16_t)g_Configure.GetUnsigned(g_Keys.dextra.port);
+	cfg.port[toUType(EUrfdPorts2::dmrplus)] = (uint16_t)0;
+	cfg.port[toUType(EUrfdPorts2::dplus)]   = (uint16_t)g_Configure.GetUnsigned(g_Keys.dplus.port);
+	cfg.port[toUType(EUrfdPorts2::dsd)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.dsd.port);
+	cfg.port[toUType(EUrfdPorts2::m17)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.m17.port);
+	cfg.port[toUType(EUrfdPorts2::mmdvm)]   = (uint16_t)g_Configure.GetUnsigned(g_Keys.mmdvm.port);
+	cfg.port[toUType(EUrfdPorts2::nxdn)]    = (uint16_t)0;
+	cfg.port[toUType(EUrfdPorts2::p25)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.p25.port);
+	cfg.port[toUType(EUrfdPorts2::urf)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.urf.port);
+	cfg.port[toUType(EUrfdPorts2::ysf)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.ysf.port);
 	for (const auto m : cfg.modules)
 		cfg.description[m] = g_Configure.GetString(g_Keys.modules.descriptor[m-'A']);
 
 	auto nv = std::make_shared<dht::Value>(cfg);
-	nv->user_type.assign(URFD_CONFIG_1);
+	nv->user_type.assign(URFD_CONFIG_2);
 	nv->id = toUType(EUrfdValueID::Config);
 
 	node.putSigned(
@@ -702,7 +702,7 @@ void CReflector::PutDHTConfig()
 
 void CReflector::GetDHTConfig(const std::string &cs)
 {
-	static SUrfdConfig1 cfg;
+	static SUrfdConfig2 cfg;
 	cfg.timestamp = 0;	// every time this is called, zero the timestamp
 
 	std::cout << "Getting " << cs << " connection info..." << std::endl;
@@ -714,13 +714,13 @@ void CReflector::GetDHTConfig(const std::string &cs)
 	node.get(
 		dht::InfoHash::get(cs),
 		[](const std::shared_ptr<dht::Value> &v) {
-			if (0 == v->user_type.compare(URFD_CONFIG_1))
+			if (0 == v->user_type.compare(URFD_CONFIG_2))
 			{
-				auto rdat = dht::Value::unpack<SUrfdConfig1>(*v);
+				auto rdat = dht::Value::unpack<SUrfdConfig2>(*v);
 				if (rdat.timestamp > cfg.timestamp)
 				{
 					// the time stamp is the newest so far, so put it in the static cfg struct
-					cfg = dht::Value::unpack<SUrfdConfig1>(*v);
+					cfg = dht::Value::unpack<SUrfdConfig2>(*v);
 				}
 			}
 			else
@@ -735,7 +735,7 @@ void CReflector::GetDHTConfig(const std::string &cs)
 				if (cfg.timestamp)
 				{
 					// if the get() call was successful and there is a nonzero timestamp, then do the update
-					g_GateKeeper.GetInterlinkMap()->Update(cfg.callsign, cfg.modules, cfg.ipv4addr, cfg.ipv6addr, cfg.port[toUType(EUrfdPorts::urf)], cfg.transcodedmods);
+					g_GateKeeper.GetInterlinkMap()->Update(cfg.callsign, cfg.modules, cfg.ipv4addr, cfg.ipv6addr, cfg.port[toUType(EUrfdPorts2::urf)], cfg.transcodedmods);
 					g_GateKeeper.ReleaseInterlinkMap();
 				}
 				else

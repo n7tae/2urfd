@@ -35,7 +35,7 @@ public:
 	// constructors
 	CClient() = delete;
 	CClient(const CClient &) = delete;
-	CClient(const CCallsign &, const CIp &, char = ' ');
+	CClient(const CCallsign &, EProtocol, const CIp &, char = ' ');
 
 	// destructor
 	virtual ~CClient() {};
@@ -54,13 +54,13 @@ public:
 	std::time_t GetLastHeardTime(void) const            { return m_LastHeardTime; }
 
 	// set
-	void SetModule(char c)                             { m_Callsign.SetModule(c); }
+	void SetModule(char c)                               { m_Callsign.SetModule(c); }
 	void SetReflectorModule(char c)                      { m_ReflectorModule = c; }
 
 	// identity
-	virtual EProtocol GetProtocol(void) const            = 0;
+	EProtocol GetProtocol(void) const                    { return m_Protocol; }
+	const std::string &GetProtocolName(void) const;
 	virtual EProtoRev GetProtocolRevision(void) const    { return EProtoRev::ambe; }
-	virtual const char *GetProtocolName(void) const      { return "none"; }
 	virtual bool IsPeer(void) const                      { return false; }
 	virtual bool IsDextraDongle(void) const              { return false; }
 	virtual void SetDextraDongle(void)                   { }
@@ -81,9 +81,10 @@ protected:
 	// data
 
 	// identity
-	CCallsign   m_Callsign;
-	CIp         m_Ip;
-	char        m_ReflectorModule;
+	CCallsign       m_Callsign;
+	const CIp       m_Ip;
+	char            m_ReflectorModule;
+	const EProtocol m_Protocol;
 
 	// status
 	char        m_ModuleMastered;

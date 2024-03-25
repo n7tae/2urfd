@@ -23,14 +23,12 @@ class CDStarDirectClient : public CClient
 {
 public:
 	// constructors
-	CDStarDirectClient(const CCallsign &callsign, const CCallsign &repeater, const CIp &ip, char mod);
+	CDStarDirectClient(const CCallsign &callsign, EProtocol protocol, const CCallsign &repeater, const CIp &ip, char mod);
 
 	// destructor
 	virtual ~CDStarDirectClient() {};
 
 	// identity
-	EProtocol GetProtocol(void) const           { return EProtocol::dsd; }
-	const char *GetProtocolName(void) const     { return "DStarDirect"; }
 	const CCallsign &GetRepeater(void) const    { return m_Repeater; }
 
 	// status

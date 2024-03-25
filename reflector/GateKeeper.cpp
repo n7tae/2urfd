@@ -75,7 +75,7 @@ bool CGateKeeper::MayLink(const CCallsign &callsign, const CIp &ip, EProtocol pr
 	bool ok;
 	const std::string base(callsign.GetBase());
 
-	// URF and BM interlinks
+	// URF interlinks
 	if ( protocol == EProtocol::urf )
 		ok = IsPeerListedOk(base, ip, modules);
 	else

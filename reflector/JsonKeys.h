@@ -29,8 +29,8 @@ struct SJsonKeys {
 	m17 { "M17Port" },
 	urf { "URFPort" };
 
-	struct DSD { const std::string ircServer, ircLogin; }
-	dsd { "ircServer", "ircLogin" };
+	struct DSD { const std::string port, ircServer, ircLogin; }
+	dsd { "DSDPort", "ircServer", "ircLogin" };
 
 	struct MMDVM { const std::string port, defaultid; }
 	mmdvm { "MMDVMPort", "mmdvmdefaultid" };
