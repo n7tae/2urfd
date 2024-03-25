@@ -26,13 +26,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructor
 
-
-CURFPeer::CURFPeer()
-{
-}
-
-CURFPeer::CURFPeer(const CCallsign &callsign, const CIp &ip, const char *modules, const CVersion &version)
-	: CPeer(callsign, ip, modules, version)
+CURFPeer::CURFPeer(const CCallsign &callsign, EProtocol protocol, const CIp &ip, const char *modules, const CVersion &version)
+	: CPeer(callsign, protocol, ip, modules, version)
 {
 	// get protocol revision
 	EProtoRev protrev = GetProtocolRevision(version);

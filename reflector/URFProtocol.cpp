@@ -131,7 +131,7 @@ void CURFProtocol::Task(void)
 				{
 					// create the new peer
 					// this also create one client per module
-					std::shared_ptr<CPeer>peer = std::make_shared<CURFPeer>(Callsign, Ip, Modules, Version);
+					std::shared_ptr<CPeer>peer = std::make_shared<CURFPeer>(Callsign, EProtocol::urf, Ip, Modules, Version);
 
 					// append the peer to reflector peer list
 					// this also add all new clients to reflector client list

@@ -18,6 +18,8 @@
 
 #include <nlohmann/json.hpp>
 #include <string.h>
+
+#include "Global.h"
 #include "Reflector.h"
 #include "Peer.h"
 
@@ -25,24 +27,26 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructor
 
+// CPeer::CPeer()
+// {
+// 	memset(m_ReflectorModules, 0, sizeof(m_ReflectorModules));
+// 	m_ConnectTime = std::time(nullptr);
+// 	m_LastHeardTime = std::time(nullptr);
+// }
 
-CPeer::CPeer()
+CPeer::CPeer(const CCallsign &callsign, EProtocol protocol, const CIp &ip, const char *modules, const CVersion &version) : m_Callsign(callsign), m_Protocol(protocol), m_Ip(ip)
 {
-	memset(m_ReflectorModules, 0, sizeof(m_ReflectorModules));
-	m_ConnectTime = std::time(nullptr);
-	m_LastHeardTime = std::time(nullptr);
-}
-
-CPeer::CPeer(const CCallsign &callsign, const CIp &ip, const char *modules, const CVersion &version)
-{
-	m_Callsign = callsign;
-	m_Ip = ip;
 	memset(m_ReflectorModules, 0, sizeof(m_ReflectorModules));
 	::strncpy(m_ReflectorModules, modules, sizeof(m_ReflectorModules)-1);
 	m_Version = version;
 	m_LastKeepaliveTime.start();
 	m_ConnectTime = std::time(nullptr);
 	m_LastHeardTime = std::time(nullptr);
+}
+
+const std::string &CPeer::GetProtocolName() const
+{
+	return g_Reflector.GetProtocolName(m_Protocol);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
