@@ -46,9 +46,12 @@
 #define JDHTSAVEPATH             "DHTSavePath"
 #define JDMRIDDB                 "DMR ID DB"
 #define JDPLUS                   "DPlus"
+#define JDSTARDIRECT             "DStarDirect"
 #define JENABLE                  "Enable"
 #define JFILES                   "Files"
 #define JFILEPATH                "FilePath"
+#define JIRCLOGIN                "IRCLogin"
+#define JIRCSERVER               "IRCServer"
 #define JINTERLINKPATH           "InterlinkPath"
 #define JIPADDRESS               "IPAddress"
 #define JIPADDRESSES             "IP Addresses"
@@ -168,6 +171,8 @@ bool CConfigure::ReadData(const std::string &path)
 				section = ESection::dcs;
 			else if (0 == hname.compare(JDPLUS))
 				section = ESection::dplus;
+			else if (0 == hname.compare(JDSTARDIRECT))
+				section = ESection::dsd;
 			else if (0 == hname.compare(JP25))
 				section = ESection::p25;
 			else if (0 == hname.compare(JM17))
@@ -305,6 +310,16 @@ bool CConfigure::ReadData(const std::string &path)
 					data[g_Keys.dplus.port] = getUnsigned(value, "DPlus Port", 1024, 65535, 20001);
 				else
 					badParam(key);
+				break;
+			case ESection::dsd:
+#ifndef NO_DSD
+				if (0 == key.compare(JIRCLOGIN))
+					data[g_Keys.dsd.ircLogin] = value;
+				else if (0 == key.compare(JIRCSERVER))
+					data[g_Keys.dsd.ircServer] = value;
+				else
+					badParam(key);
+#endif
 				break;
 			case ESection::m17:
 				if (0 == key.compare(JPORT))
@@ -593,9 +608,26 @@ bool CConfigure::ReadData(const std::string &path)
 	isDefined(ErrorLevel::fatal, JM17, JPORT, g_Keys.m17.port, rval);
 	isDefined(ErrorLevel::fatal, JURF, JPORT, g_Keys.urf.port, rval);
 
+	// DSD
+#ifndef NO_DSD
+	isDefined(ErrorLevel::fatal, JDSTARDIRECT, JIRCSERVER, g_Keys.dsd.ircServer, rval);
+	if (isDefined(ErrorLevel::fatal, JDSTARDIRECT, JIRCLOGIN, g_Keys.dsd.ircLogin, rval))
+	{
+		const auto cs = data[g_Keys.dsd.ircLogin].get<std::string>();
+		auto IRCCSRegEx = std::regex("^[1-9]?[A-Z]{1,2}[0-9]{1,2}[A-Z]{1,4}$", std::regex::extended);
+
+		if (! std::regex_match(cs, IRCCSRegEx))
+		{
+			std::cerr << "DStarDirect IRC Login '" << cs << "' doesn't look like a valid Callsign!" << std::endl;
+			rval = true;
+		}
+	}
+#endif
+
 	// MMDVM
 	isDefined(ErrorLevel::fatal, JMMDVM, JPORT, g_Keys.mmdvm.port, rval);
 	isDefined(ErrorLevel::fatal, JMMDVM, JDEFAULTID, g_Keys.mmdvm.defaultid, rval);
+
 	// P25
 	isDefined(ErrorLevel::fatal, JP25, JPORT, g_Keys.p25.port, rval);
 	checkAutoLink(JP25, JAUTOLINKMODULE, g_Keys.p25.autolinkmod, rval);

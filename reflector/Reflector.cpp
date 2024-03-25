@@ -55,7 +55,7 @@ bool CReflector::Start(void)
 	const auto cs(g_Configure.GetString(g_Keys.names.callsign));
 	m_Callsign.SetCallsign(cs, false);
 	m_Modules.assign(g_Configure.GetString(g_Keys.modules.modules));
-	std::string tcmods(g_Configure.GetString(g_Keys.modules.tcmodules));
+	const std::string tcmods(g_Configure.GetString(g_Keys.modules.tcmodules));
 
 #ifndef NO_DHT
 	const auto path = g_Configure.GetString(g_Keys.files.dhtsave);
@@ -122,22 +122,22 @@ bool CReflector::Start(void)
 	// start one thread per reflector module
 	for (auto c : m_Modules)
 	{
-		auto stream = std::make_shared<CPacketStream>(c);
-		if (stream)
+		auto rv = m_Stream.emplace(std::pair<char, std::unique_ptr<CPacketStream>>(c, std::make_unique<CPacketStream>(c)));
+		if (rv.second)
 		{
 			// if it's a transcoded module, then we need to initialize the codec stream
 			if (std::string::npos != tcmods.find(c))
 			{
-				if (stream->InitCodecStream())
+				if (rv.first->second->InitCodecStream())
 					return true;
 			}
-			m_Stream[c] = stream;
 		}
 		else
 		{
-			std::cerr << "Could not make a CPacketStream for module '" << c << "'" << std::endl;
+			std::cerr << "Could not emplace a CPacketStream for module '" << c << "'" << std::endl;
 			return true;
 		}
+
 		try
 		{
 			m_ModuleFuture[c] = std::async(std::launch::async, &CReflector::ModuleThread, this, c);
@@ -223,7 +223,7 @@ void CReflector::Stop(void)
 // stream opening & closing
 
 // clients MUST have bee locked by the caller so we can freely access it within the function
-std::shared_ptr<CPacketStream> CReflector::OpenStream(std::unique_ptr<CDvHeaderPacket> &DvHeader, std::shared_ptr<CClient>client)
+CPacketStream *CReflector::OpenStream(std::unique_ptr<CDvHeaderPacket> &DvHeader, std::shared_ptr<CClient>client)
 {
 	// check sid is not zero
 	if ( 0U == DvHeader->GetStreamId() )
@@ -250,15 +250,15 @@ std::shared_ptr<CPacketStream> CReflector::OpenStream(std::unique_ptr<CDvHeaderP
 	DvHeader->SetPacketModule(client->GetReflectorModule());
 	// get the module's queue
 	char module = DvHeader->GetRpt2Module();
-	auto stream = GetStream(module);
-	if ( stream == nullptr )
+	auto it = m_Stream.find(module);
+	if ( it == m_Stream.end() )
 	{
 		std::cerr << "Can't find module '" << module << "' for Client " << client->GetCallsign() << std::endl;
 		return nullptr;
 	}
 
 	// is it available ?
-	if ( stream->OpenPacketStream(*DvHeader, client) )
+	if ( it->second->OpenPacketStream(*DvHeader, client) )
 	{
 		// stream open, mark client as master
 		// so that it can't be deleted
@@ -273,16 +273,16 @@ std::shared_ptr<CPacketStream> CReflector::OpenStream(std::unique_ptr<CDvHeaderP
 		std::cout << std::noshowbase << std::dec;
 
 		// and push header packet
-		stream->Push(std::move(DvHeader));
+		it->second->Push(std::move(DvHeader));
 
 		// notify
 		//OnStreamOpen(stream->GetUserCallsign());
 
 	}
-	return stream;
+	return it->second.get();
 }
 
-void CReflector::CloseStream(std::shared_ptr<CPacketStream> stream)
+void CReflector::CloseStream(CPacketStream *stream)
 {
 	if ( stream != nullptr )
 	{
@@ -306,7 +306,7 @@ void CReflector::CloseStream(std::shared_ptr<CPacketStream> stream)
 			// notify
 			//OnStreamClose(stream->GetUserCallsign());
 
-			std::cout << "Closing stream of module " << GetStreamModule(stream) << std::endl;
+			std::cout << "Closing stream of module " << stream->GetModule() << std::endl;
 		}
 
 		// release clients
@@ -328,7 +328,7 @@ void CReflector::ModuleThread(const char ThisModule)
 		std::cerr << "Module '" << ThisModule << " CPacketStream doesn't exist! aborting ModuleThread()" << std::endl;
 		return;
 	}
-	const auto streamIn = pitem->second;
+	auto &streamIn = pitem->second;
 	while (true)
 	{
 		// wait until something shows up
@@ -352,7 +352,7 @@ void CReflector::ModuleThread(const char ThisModule)
 				CCallsign csRPT = m_Protocols.Get(i)->GetReflectorCallsign();
 				csRPT.SetModule(ThisModule);
 				// and put it in the copy
-				(dynamic_cast<CDvHeaderPacket *>(copy.get()))->SetRpt2Callsign(csRPT);
+				(static_cast<CDvHeaderPacket *>(copy.get()))->SetRpt2Callsign(csRPT);
 			}
 
 			m_Protocols.Get(i)->Push(std::move(copy));
@@ -469,33 +469,14 @@ void CReflector::OnUsersChanged(void)
 ////////////////////////////////////////////////////////////////////////////////////////
 // modules & queues
 
-std::shared_ptr<CPacketStream> CReflector::GetStream(char module)
-{
-	auto it=m_Stream.find(module);
-	if (it!=m_Stream.end())
-		return it->second;
-
-	return nullptr;
-}
-
 bool CReflector::IsStreamOpen(const std::unique_ptr<CDvHeaderPacket> &DvHeader)
 {
-	for (auto it=m_Stream.begin(); it!=m_Stream.end(); it++)
+	for (auto &c : m_Modules)
 	{
-		if ( (it->second->GetStreamId() == DvHeader->GetStreamId()) && (it->second->IsOpen()) )
+		if ( (m_Stream[c]->GetStreamId() == DvHeader->GetStreamId()) && (m_Stream[c]->IsOpen()) )
 			return true;
 	}
 	return false;
-}
-
-char CReflector::GetStreamModule(std::shared_ptr<CPacketStream> stream)
-{
-	for (auto it=m_Stream.begin(); it!=m_Stream.end(); it++)
-	{
-		if ( it->second == stream )
-			return it->first;
-	}
-	return ' ';
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

@@ -180,7 +180,7 @@ void CProtocol::OnDvFramePacketIn(std::unique_ptr<CDvFramePacket> &Frame, const 
 ////////////////////////////////////////////////////////////////////////////////////////
 // stream handle helpers
 
-std::shared_ptr<CPacketStream> CProtocol::GetStream(uint16_t uiStreamId, const CIp *Ip)
+CPacketStream *CProtocol::GetStream(uint16_t uiStreamId, const CIp *Ip)
 {
 	auto it = m_Streams.find(uiStreamId);
 	if (it == m_Streams.end())

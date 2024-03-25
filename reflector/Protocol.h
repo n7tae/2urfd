@@ -89,7 +89,7 @@ protected:
 	virtual void OnDvFramePacketIn(std::unique_ptr<CDvFramePacket> &, const CIp * = nullptr);
 
 	// stream handle helpers
-	std::shared_ptr<CPacketStream> GetStream(uint16_t, const CIp * = nullptr);
+	CPacketStream *GetStream(uint16_t, const CIp * = nullptr);
 	void CheckStreamsTimeout(void);
 
 	// queue helper
@@ -125,7 +125,7 @@ protected:
 	CUdpSocket m_Socket6;
 
 	// streams
-	std::unordered_map<uint16_t, std::shared_ptr<CPacketStream>> m_Streams;
+	std::unordered_map<uint16_t, CPacketStream *> m_Streams;
 
 	// queue
 	CSafePacketQueue<std::unique_ptr<CPacket>> m_Queue;

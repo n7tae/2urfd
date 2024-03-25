@@ -61,9 +61,11 @@ public:
 	CPeers   *GetPeers(void)                        { m_Peers.Lock(); return &m_Peers; }
 	void      ReleasePeers(void)                    { m_Peers.Unlock(); }
 
-	// stream opening & closing
-	std::shared_ptr<CPacketStream> OpenStream(std::unique_ptr<CDvHeaderPacket> &, std::shared_ptr<CClient>);
-	void CloseStream(std::shared_ptr<CPacketStream>);
+	// streams & modules
+	CPacketStream *OpenStream(std::unique_ptr<CDvHeaderPacket> &, std::shared_ptr<CClient>);
+	void CloseStream(CPacketStream *);
+	const std::string &GetModules() const { return m_Modules; }
+
 
 	// get
 	const CCallsign &GetCallsign(void) const        { return m_Callsign; }
@@ -98,9 +100,7 @@ protected:
 	void StateReportThread(void);
 
 	// streams
-	std::shared_ptr<CPacketStream> GetStream(char);
 	bool IsStreamOpen(const std::unique_ptr<CDvHeaderPacket> &);
-	char GetStreamModule(std::shared_ptr<CPacketStream>);
 
 	// xml helpers
 	void WriteXmlFile(std::ofstream &);
@@ -117,7 +117,7 @@ protected:
 	CProtocols m_Protocols;        // list of supported protocol handlers
 
 	// queues
-	std::unordered_map<char, std::shared_ptr<CPacketStream>> m_Stream;
+	std::unordered_map<char, std::unique_ptr<CPacketStream>> m_Stream;
 
 	// threads
 	std::atomic<bool> keep_running;

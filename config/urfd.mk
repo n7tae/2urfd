@@ -3,9 +3,6 @@ REFLECTOR = urfd
 TRANSCODER = tcd
 INICHECK = inicheck
 DBUTIL = dbutil
-IVOCODER = ivocode.a
-C2VOCODER = c2vocode.a
-IRCDDB = ircddb.a
 
 # this is where the binary will be installed
 BINDIR = /usr/local/bin
@@ -14,8 +11,11 @@ BINDIR = /usr/local/bin
 # this will also provide some additional log messsage
 debug = false
 
-# To disable DHT support, set DHT to false.
+# Passed to the -j option of make for compiling on a multi-threaded processor
+JOBS = 1
+
+# To disable DHT support, set DHT to false
 DHT = true
 
-# Passed to the -j option of make for concurrent compiling
-JOBS = 1
+# To disable DStarDirect, set DSD to false
+DSD = true;

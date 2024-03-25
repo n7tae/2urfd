@@ -178,11 +178,5 @@ void CDvHeaderPacket::ConvertToDstarStruct(struct dstar_header *buffer) const
 
 bool CDvHeaderPacket::IsValid(void) const
 {
-	bool valid = CPacket::IsValid();
-
-	valid &= m_csRPT1.IsValid();
-	valid &= m_csRPT2.IsValid();
-	valid &= m_csMY.IsValid();
-
-	return valid;
+	return CPacket::IsValid() && m_csRPT1.IsValid() && m_csRPT2.IsValid() && m_csMY.IsValid();
 }

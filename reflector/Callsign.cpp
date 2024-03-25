@@ -312,9 +312,8 @@ void CCallsign::GetCallsignString(char *sz) const
 
 const std::string CCallsign::GetCS() const
 {
-	std::string rval(m_Callsign.c, CALLSIGN_LEN);
-	if (' ' != m_Module)
-		rval.append(1, m_Module);
+	std::string rval(m_Callsign.c, CALLSIGN_LEN-1);
+	rval.append(1, m_Module);
 	return rval;
 }
 

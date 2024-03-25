@@ -40,7 +40,15 @@ else
 CFLAGS += -DNO_DHT
 endif
 
-SRCS = $(wildcard *.cpp) $(wildcard ../common/*.cpp)
+REFSRCS = BlackWhiteSet.cpp BPTC19696.cpp Buffer.cpp Callsign.cpp Client.cpp Clients.cpp CodecStream.cpp Configure.cpp CRC.cpp CurlGet.cpp DCSClient.cpp DCSProtocol.cpp DExtraClient.cpp DExtraProtocol.cpp DMRMMDVMClient.cpp DMRMMDVMProtocol.cpp DPlusClient.cpp DPlusProtocol.cpp DVFramePacket.cpp DVHeaderPacket.cpp GateKeeper.cpp Golay2087.cpp Golay24128.cpp Hamming.cpp InterlinkMap.cpp InterlinkMapItem.cpp IP.cpp Lookup.cpp LookupDmr.cpp LookupYsf.cpp M17Client.cpp M17CRC.cpp M17Packet.cpp M17Protocol.cpp Main.cpp P25Client.cpp P25Protocol.cpp Packet.cpp PacketStream.cpp Peer.cpp Peers.cpp Protocol.cpp Protocols.cpp QR1676.cpp Reflector.cpp RS129.cpp Semaphore.cpp UDPSocket.cpp URFClient.cpp URFPeer.cpp URFProtocol.cpp User.cpp Users.cpp Utils.cpp Version.cpp WiresXCmd.cpp WiresXCmdHandler.cpp WiresXInfo.cpp YSFClient.cpp YSFConvolution.cpp YSFFich.cpp YSFNode.cpp YSFPayload.cpp YSFProtocol.cpp YSFUtils.cpp
+
+ifeq ($(DSD), false)
+CFLAGS += -DNO_DSD
+else
+REFSRCS += DStarDirectClient.cpp DStarDirectProtocol.cpp
+endif
+
+SRCS = $(REFSRCS) $(wildcard ../common/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 DBUTILOBJS = Configure.o CurlGet.o Lookup.o LookupDmr.o LookupYsf.o YSFNode.o Callsign.o

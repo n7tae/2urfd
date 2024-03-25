@@ -16,7 +16,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
+#ifndef NO_DSD
+#include "DStarDirectProtocol.h"
+#endif
 #include "DCSProtocol.h"
 #include "DExtraProtocol.h"
 #include "DPlusProtocol.h"
@@ -54,6 +56,12 @@ bool CProtocols::Init(void)
 		Get(EProtocol::dplus) = std::make_unique<CDplusProtocol>("DPlus");
 		if (! Get(EProtocol::dplus)->Initialize("REF", EProtocol::dplus, uint16_t(g_Configure.GetUnsigned(g_Keys.dplus.port)), DSTAR_IPV4, DSTAR_IPV6))
 			return false;
+
+#ifndef NO_DSD
+		Get(EProtocol::dsd) = std::make_unique<CDStarDirectProtocol>("DStarDirect");
+		if (! Get(EProtocol::dsd)->Initialize("DSD", EProtocol::dsd, 40000, DSD_IPV4, DSD_IPV6))
+			return false;
+#endif
 
 		Get(EProtocol::mmdvm) = std::make_unique<CDmrmmdvmProtocol>("MMDVM");
 		if (! Get(EProtocol::mmdvm)->Initialize(nullptr, EProtocol::mmdvm, uint16_t(g_Configure.GetUnsigned(g_Keys.mmdvm.port)), DMR_IPV4, DMR_IPV6))
