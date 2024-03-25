@@ -123,7 +123,7 @@ bool CReflector::Start(void)
 	for (auto c : m_Modules)
 	{
 		auto rv = m_Stream.emplace(std::pair<char, std::unique_ptr<CPacketStream>>(c, std::make_unique<CPacketStream>(c)));
-		if (rv.second)
+		if (rv.second || (nullptr == rv.first->second))
 		{
 			// if it's a transcoded module, then we need to initialize the codec stream
 			if (std::string::npos != tcmods.find(c))
