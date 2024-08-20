@@ -36,13 +36,12 @@ public:
 	// constructor
 	CCodecStream(CPacketStream *packetstream, char module);
 	bool InitCodecStream();
-	void StopCodecThread();
 
 	void ResetStats(uint16_t streamid, ECodecType codectype);
 	void ReportStats();
 
 	// destructor
-	virtual ~CCodecStream() {}
+	virtual ~CCodecStream();
 
 	// get
 	uint16_t GetStreamId(void) const          { return m_uiStreamId; }
@@ -52,7 +51,6 @@ public:
 	void Task(void);
 
 	// pass-through
-	bool IsEmpty() const { return m_LocalQueue.IsEmpty() && m_Queue.IsEmpty(); }
 	void Push(std::unique_ptr<CPacket> p) { m_Queue.Push(std::move(p)); }
 
 protected:

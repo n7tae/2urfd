@@ -19,20 +19,40 @@
 
 #include <string.h>
 #include "Client.h"
-#include "Global.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CClient::CClient(const CCallsign &callsign, EProtocol protocol, const CIp &ip, char reflectorModule) : m_Protocol(protocol), m_Ip(ip)
+CClient::CClient()
 {
-	m_ReflectorModule = reflectorModule;
-	m_Callsign = callsign;
+	m_ReflectorModule = ' ';
 	m_ModuleMastered = ' ';
 	m_LastKeepaliveTime.start();
 	m_ConnectTime = std::time(nullptr);
 	m_LastHeardTime = std::time(nullptr);
+}
+
+CClient::CClient(const CCallsign &callsign, const CIp &ip, char reflectorModule)
+{
+	m_ReflectorModule = reflectorModule;
+	m_Callsign = callsign;
+	m_Ip = ip;
+	m_ModuleMastered = ' ';
+	m_LastKeepaliveTime.start();
+	m_ConnectTime = std::time(nullptr);
+	m_LastHeardTime = std::time(nullptr);
+}
+
+CClient::CClient(const CClient &client)
+{
+	m_Callsign = client.m_Callsign;
+	m_Ip = client.m_Ip;
+	m_ReflectorModule = client.m_ReflectorModule;
+	m_ModuleMastered = client.m_ModuleMastered;
+	m_LastKeepaliveTime = client.m_LastKeepaliveTime;
+	m_ConnectTime = client.m_ConnectTime;
+	m_LastHeardTime = client.m_LastHeardTime;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -43,10 +63,6 @@ void CClient::Alive(void)
 	m_LastKeepaliveTime.start();
 }
 
-const std::string &CClient::GetProtocolName(void) const
-{
-	return g_Reflector.GetProtocolName(m_Protocol);
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // operators
@@ -68,14 +84,14 @@ void CClient::WriteXml(std::ofstream &xmlFile)
 	xmlFile << "\t<IP>" << m_Ip.GetAddress() << "</IP>" << std::endl;
 	xmlFile << "\t<LinkedModule>" << m_ReflectorModule << "</LinkedModule>" << std::endl;
 	xmlFile << "\t<Protocol>" << GetProtocolName() << "</Protocol>" << std::endl;
-	char mbstr[100];
-	if (std::strftime(mbstr, sizeof(mbstr), "%A %c", std::localtime(&m_ConnectTime)))
+	char s[100];
+	if (std::strftime(s, sizeof(s), "%FT%TZ", std::gmtime(&m_ConnectTime)))
 	{
-		xmlFile << "\t<ConnectTime>" << mbstr << "</ConnectTime>" << std::endl;
+		xmlFile << "\t<ConnectTime>" << s << "</ConnectTime>" << std::endl;
 	}
-	if (std::strftime(mbstr, sizeof(mbstr), "%A %c", std::localtime(&m_LastHeardTime)))
+	if (std::strftime(s, sizeof(s), "%FT%TZ", std::gmtime(&m_LastHeardTime)))
 	{
-		xmlFile << "\t<LastHeardTime>" << mbstr << "</LastHeardTime>" << std::endl;
+		xmlFile << "\t<LastHeardTime>" << s << "</LastHeardTime>" << std::endl;
 	}
 	xmlFile << "</NODE>" << std::endl;
 }

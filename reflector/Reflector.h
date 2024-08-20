@@ -61,17 +61,15 @@ public:
 	CPeers   *GetPeers(void)                        { m_Peers.Lock(); return &m_Peers; }
 	void      ReleasePeers(void)                    { m_Peers.Unlock(); }
 
-	// streams & modules
-	CPacketStream *OpenStream(std::unique_ptr<CDvHeaderPacket> &, std::shared_ptr<CClient>);
-	void CloseStream(CPacketStream *);
-	const std::string &GetModules() const { return m_Modules; }
-
+	// stream opening & closing
+	std::shared_ptr<CPacketStream> OpenStream(std::unique_ptr<CDvHeaderPacket> &, std::shared_ptr<CClient>);
+	bool IsStreaming(char);
+	void CloseStream(std::shared_ptr<CPacketStream>);
 
 	// get
 	const CCallsign &GetCallsign(void) const        { return m_Callsign; }
 	CUsers  *GetUsers(void)                         { m_Users.Lock(); return &m_Users; }
 	void    ReleaseUsers(void)                      { m_Users.Unlock(); }
-	const std::string &GetProtocolName(EProtocol type) const { return m_Protocols.Get(type)->GetName(); }
 
 	// check
 	bool IsValidModule(char c) const                { return m_Modules.npos!=m_Modules.find(c); }
@@ -92,15 +90,16 @@ protected:
 	void PutDHTPeers();
 	void PutDHTClients();
 	void PutDHTUsers();
-	void SaveDHTState(const std::string &path) const;
 #endif
 
 	// threads
-	void ModuleThread(const char);
+	void RouterThread(const char);
 	void StateReportThread(void);
 
 	// streams
+	std::shared_ptr<CPacketStream> GetStream(char);
 	bool IsStreamOpen(const std::unique_ptr<CDvHeaderPacket> &);
+	char GetStreamModule(std::shared_ptr<CPacketStream>);
 
 	// xml helpers
 	void WriteXmlFile(std::ofstream &);
@@ -117,11 +116,11 @@ protected:
 	CProtocols m_Protocols;        // list of supported protocol handlers
 
 	// queues
-	std::unordered_map<char, std::unique_ptr<CPacketStream>> m_Stream;
+	std::unordered_map<char, std::shared_ptr<CPacketStream>> m_Stream;
 
 	// threads
 	std::atomic<bool> keep_running;
-	std::unordered_map<char, std::future<void>> m_ModuleFuture;
+	std::unordered_map<char, std::future<void>> m_RouterFuture;
 	std::future<void> m_XmlReportFuture;
 
 #ifndef NO_DHT

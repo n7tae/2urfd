@@ -25,10 +25,17 @@ class CYsfClient : public CClient
 {
 public:
 	// constructors
-	CYsfClient(const CCallsign &, EProtocol, const CIp &, char = ' ');
+	CYsfClient();
+	CYsfClient(const CCallsign &, const CIp &, char = ' ');
+	CYsfClient(const CYsfClient &);
 
 	// destructor
 	virtual ~CYsfClient() {};
+
+	// identity
+	EProtocol GetProtocol(void) const           { return EProtocol::ysf; }
+	const char *GetProtocolName(void) const     { return "YSF"; }
+	bool IsNode(void) const                     { return true; }
 
 	// status
 	bool IsAlive(void) const;

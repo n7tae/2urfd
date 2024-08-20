@@ -25,13 +25,18 @@ class CDextraClient : public CClient
 {
 public:
 	// constructors
-	CDextraClient(const CCallsign &, EProtocol, const CIp &, char, EProtoRev);
+	CDextraClient();
+	CDextraClient(const CCallsign &, const CIp &, char, EProtoRev);
+//	CDextraClient(const CDextraClient &);
 
 	// destructor
 	virtual ~CDextraClient() {};
 
 	// identity
+	EProtocol GetProtocol(void) const           { return EProtocol::dextra; }
 	EProtoRev GetProtocolRevision(void) const   { return m_ProtRev; }
+	const char *GetProtocolName(void) const     { return "DExtra"; }
+	bool IsNode(void) const                     { return true; }
 
 	// status
 	bool IsAlive(void) const;

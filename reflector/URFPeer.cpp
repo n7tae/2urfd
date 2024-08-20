@@ -26,8 +26,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructor
 
-CURFPeer::CURFPeer(const CCallsign &callsign, EProtocol protocol, const CIp &ip, const char *modules, const CVersion &version)
-	: CPeer(callsign, protocol, ip, modules, version)
+
+CURFPeer::CURFPeer()
+{
+}
+
+CURFPeer::CURFPeer(const CCallsign &callsign, const CIp &ip, const char *modules, const CVersion &version)
+	: CPeer(callsign, ip, modules, version)
 {
 	// get protocol revision
 	EProtoRev protrev = GetProtocolRevision(version);
@@ -37,7 +42,7 @@ CURFPeer::CURFPeer(const CCallsign &callsign, EProtocol protocol, const CIp &ip,
 	for ( unsigned i = 0; i < ::strlen(modules); i++ )
 	{
 		// create and append to vector
-		m_Clients.push_back(std::make_shared<CURFClient>(callsign, EProtocol::urf, ip, modules[i], protrev));
+		m_Clients.push_back(std::make_shared<CURFClient>(callsign, ip, modules[i], protrev));
 	}
 }
 

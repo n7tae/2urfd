@@ -1,10 +1,14 @@
-﻿# Universal, Another Multi-protocol Digital Voice Reflector
+﻿# Another Multi-protocol Digital Voice Reflector
 
-The URF Multi-protocol Gateway Reflector Server, ***urfd***, is part of the software system for a Digital Voice Network. The sources are published under GPL Licenses.
+Smaller and faster *urfd* reflecttor. The sources are published under GPL Licenses.
+
+## Some preliminaries
+
+This is based on the full-blown, do-anything *urfd* reflector hosted by [nostar](https://github.com/nostar/urfd), but this *urfd* does not support all modes. Compared to the nostar version, it's missing DMR+, G3, and USRP. It also **requires** a local transcoder with *two* AMBE devices, one for DStar and the other for DMR/YSF/NXDN. Instances of this *urfd* reflector will **not interlink** with instances of the version available from nostar.
 
 ## Introduction
 
-This will build a new kind of digital voice reflector. A *urfd* supports DStar protocols (DCS, DExtra) DMR protocols (MMDVMHost), M17, YSF, and P25 (Phase 1, using IMBE). A key part of this is the hybrid transcoder, *tcd*, is in this repository. You can't interlink urfd with xlxd. This reflector can be built without a transcoder, but clients will only hear other clients using the same codec. Please note that currently, urfd only supports the tcd transcoder when run locally. As a local device, urfd and tcd uses UNIX DGRAM sockets for inter-process communications. These kernel-base sockets are significantly faster than conventional UDP/IP sockets. It should be noted that tcd supports DVSI-3003 nad DVSI-3000 devices, which it uses for AMBE vocoding.
+A this trimmed-down *urfd* supports DStar protocols (DPlus, DCS, DExtra) DMR protocols (MMDVMHost, NXDN), M17, YSF, and P25 (Phase 1, using IMBE). A key part of this is the hybrid transcoder, *tcd*, is in this repository. Please note this reflector only supports the tcd transcoder when run locally. As a local device, urfd and tcd uses UNIX DGRAM sockets for inter-process communications. These kernel-base sockets are significantly faster than conventional UDP/IP sockets. It should be noted that tcd supports DVSI-3003 and DVSI-3000 devices, which it uses for AMBE vocoding. A pair of them is required.
 
 This build support *dual-stack* operation, so the server on which it's running, must have both an IPv4 and IPv6 routeable address if you are going to configure a dual-stack reflector.
 
@@ -25,14 +29,14 @@ The transcoder is in a separate repository, but you can install and monitor the 
 
 ### After a clean installation of Debian make sure to run update and upgrade
 
-```bash
+```
 sudo apt update
 sudo apt upgrade
 ```
 
 ### Required packages (some of these may already be installed)
 
-```bash
+```
 sudo apt install git apache2 php build-essential nlohmann-json3-dev libcurl4-gnutls-dev
 ```
 
@@ -40,9 +44,17 @@ sudo apt install git apache2 php build-essential nlohmann-json3-dev libcurl4-gnu
 
 **Ham-DHT**, a DHT network for hams, is implemented using a distributed hash table provided by OpenDHT.
 
+On Ubuntu 24.04 and Debian 12, or newer, can install the OpenDHT developer's library directly:
+
+```
+sudo apt install libopendht-dev
+```
+
+On older systems you may need to build the OpenDHT library...
+
 OpenDHT is available [here](https://github./com/savoirfairelinux/opendht.git). Building and installing instructions are in the [OpenDHT Wiki](https://github.com/savoirfairelinux/opendht/wiki/Build-the-library). Pascal support and proxy-server support (RESTinio) is not required for urfd and so can be considered optional. With this in mind, this should work on Debian/Ubuntu-based systems:
 
-```bash
+```
 # Install OpenDHT dependencies
 sudo apt install libncurses5-dev libreadline-dev nettle-dev libgnutls28-dev libargon2-0-dev libmsgpack-dev  libssl-dev libfmt-dev libjsoncpp-dev libhttp-parser-dev libasio-dev cmake pkg-config libcppunit-dev
 
@@ -61,7 +73,7 @@ Please note that there is no easy way to uninstall OpenDHT once it's been instal
 
 ### Download and build the repository and enter the build directory.
 
-```bash
+```
 git clone https://github.com/n7tae/2urfd.git
 cd urfd
 ```
@@ -98,6 +110,7 @@ You can configure any modules, from **A** to **Z**. Up to three modules can be t
 
 There are three databases needed by *urfd*:
 1. The *DMR ID* database maps a DMR ID to a callsign and *vis versa*.
+2. The *NXDN ID* database maps a NXDN ID to a callsign and *vis versa*.
 3. The *YSF Tx/Rx* database maps a callsign to a transmit/receive RF frequencies.
 These databases can come from a URL or a file, or both. If you specify "both", then the file will be read after the URL. Using "both" is what you want if you need to supply some custom values for your setup, but still want the latest values from the web.
 
@@ -110,13 +123,13 @@ There are two, very useful helper applications, *inicheck* and *dbutil*. Both ap
 The *inicheck* app will use the exact same code that urfd uses to validate your `urfd.ini` file. Do `reflector/inicheck -q urefd.ini` to check your infile for errors. If you see any messages containing `ERROR`, that means that *urfd* won't start. You'll have to fix the errors described in the message(s). If you only see messages containing `WARNING`, *urfd* will start, but it may not perform as expected. You will have to decide if the warning should be fixed. If you don't see any messages, it means that *urfd* and *tcd* will start without any configuration problems. The **one exception** is that bad things will happen if you don't have identical **Transcoded** lines in the two ini files.
 
 The *dbutil* app can be used for several tasks relating to the three databases that *urfd* uses. The usage is: `./dbutil DATABASE SOURCE ACTION INIFILE`, where:
-- DATABASE is "dmr" or "ysf"
+- DATABASE is "dmr", "nxdn" or "ysf"
 - SOURCE is "html" or "file"
 - ACTION is "parse" or "errors"
 - INIFILE is the path to the infile that defines the location of the http and file sources for these three databases.
 One at a time, *dbutil* can work with either of the two DATABASEs. It can read either the http or the file SOURCE. It can either show you the data entries that are syntactically correct or incorrect (ACTION). Using the "parse" ACTION, you can create a file that can be subsequently read by urfd:
 
-```bash
+```
 reflector/dbutil dmr html parse urfd.ini > /home/user/urfd/dmrid.dat
 ```
 
@@ -157,7 +170,7 @@ Please note that your www root directory might be some place else. There is one 
 
 URF Server requires the following ports to be open and forwarded properly for in- and outgoing network traffic:
 
-```text
+```
 TCP port    80         (http) optional TCP port 443 (https)
 UDP port 10017         (URF interlinking)
 UDP port 17000         (M17 protocol)
@@ -166,6 +179,7 @@ UDP port 30001         (DExtra protocol)
 UDP port 30051         (DCS protocol)
 UDP port 40000         (DSD Protocol)
 UDP port 41000         (P25 port)
+UDP port 41400         (NXDN port)
 UDP port 42000         (YSF protocol)
 UDP port 62030         (MMDVM protocol)
 ```
@@ -179,6 +193,7 @@ A new dashboard is on the to-do list!
 
 ## Copyright
 
+- Copyright © 2016-2018 Jonathan Naylor G4KLX
 - Copyright © 2016 Jean-Luc Deltombe LX3JL and Luc Engelmann LX1IQ
 - Copyright © 2022 Doug McLain AD8DP
 - Copyright © 2024 Thomas A. Early N7TAE

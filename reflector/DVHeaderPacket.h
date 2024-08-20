@@ -57,7 +57,7 @@ public:
 	CDvHeaderPacket(const struct dstar_header *, uint16_t, uint8_t);
 	CDvHeaderPacket(uint32_t, const CCallsign &, const CCallsign &, const CCallsign &, uint16_t, uint8_t, uint8_t);
 	CDvHeaderPacket(const CCallsign &, const CCallsign &, const CCallsign &, const CCallsign &, uint16_t, uint8_t);
-	CDvHeaderPacket(const CCallsign &, const CCallsign &, const CCallsign &, const CCallsign &, uint16_t);
+	CDvHeaderPacket(const CCallsign &, const CCallsign &, const CCallsign &, const CCallsign &, uint16_t, bool);
 	CDvHeaderPacket(const CM17Packet &);
 
 	// network
@@ -83,14 +83,14 @@ public:
 	const CCallsign &GetMyCallsign(void) const      { return m_csMY; }
 
 	// get modules
-	char GetUrModule(void) const                    { return m_csUR.GetModule(); }
-	char GetRpt1Module(void) const                  { return m_csRPT1.GetModule(); }
-	char GetRpt2Module(void) const                  { return m_csRPT2.GetModule(); }
-	char GetMyModule(void) const                    { return m_csMY.GetModule(); }
+	char GetUrModule(void) const                    { return m_csUR.GetCSModule(); }
+	char GetRpt1Module(void) const                  { return m_csRPT1.GetCSModule(); }
+	char GetRpt2Module(void) const                  { return m_csRPT2.GetCSModule(); }
+	char GetMyModule(void) const                    { return m_csMY.GetCSModule(); }
 
 	// set callsigns
 	void SetRpt2Callsign(const CCallsign &cs)       { m_csRPT2 = cs; }
-	void SetRpt2Module(char c)                      { m_csRPT2.SetModule(c); }
+	void SetRpt2Module(char c)                      { m_csRPT2.SetCSModule(c); }
 
 protected:
 	// data

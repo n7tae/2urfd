@@ -106,7 +106,7 @@ void CDextraProtocol::Task(void)
 					Send(Buffer, Ip);
 
 					// create the client and append
-					g_Reflector.GetClients()->AddClient(std::make_shared<CDextraClient>(Callsign, EProtocol::dextra, Ip, ToLinkModule, ProtRev));
+					g_Reflector.GetClients()->AddClient(std::make_shared<CDextraClient>(Callsign, Ip, ToLinkModule, ProtRev));
 					g_Reflector.ReleaseClients();
 				}
 				else
@@ -200,12 +200,7 @@ void CDextraProtocol::HandleQueue(void)
 
 		// encode it
 		CBuffer buffer;
-		bool encoded = false;
-		if ( packet->IsDvFrame() )
-			encoded = EncodeDvFramePacket((CDvFramePacket &)packet, buffer);
-		else if ( packet->IsDvHeader() )
-			encoded = EncodeDvHeaderPacket((CDvHeaderPacket &)packet, buffer);
-		if ( encoded )
+		if ( EncodeDvPacket(*packet, buffer) )
 		{
 			// and push it to all our clients linked to the module and who are not streaming in
 			CClients *clients = g_Reflector.GetClients();
@@ -343,7 +338,7 @@ void CDextraProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Heade
 				// the module the client is linked to
 				auto m = client->GetReflectorModule();
 				Header->SetRpt2Module(m);
-				rpt2.SetModule(m);
+				rpt2.SetCSModule(m);
 			}
 			// and try to open the stream
 			if ( (stream = g_Reflector.OpenStream(Header, client)) != nullptr )
@@ -370,7 +365,7 @@ bool CDextraProtocol::IsValidConnectPacket(const CBuffer &Buffer, CCallsign &cal
 	if ((Buffer.size() == 11) && (Buffer.data()[9] != ' '))
 	{
 		callsign.SetCallsign(Buffer.data(), 8);
-		callsign.SetModule(Buffer.data()[8]);
+		callsign.SetCSModule(Buffer.data()[8]);
 		module = Buffer.data()[9];
 		valid = (callsign.IsValid() && IsLetter(module));
 		// detect revision
@@ -396,7 +391,7 @@ bool CDextraProtocol::IsValidDisconnectPacket(const CBuffer &Buffer, CCallsign *
 	if ((Buffer.size() == 11) && (Buffer.data()[9] == ' '))
 	{
 		callsign->SetCallsign(Buffer.data(), 8);
-		callsign->SetModule(Buffer.data()[8]);
+		callsign->SetCSModule(Buffer.data()[8]);
 		valid = callsign->IsValid();
 	}
 	return valid;
@@ -418,7 +413,7 @@ bool CDextraProtocol::IsValidDvHeaderPacket(const CBuffer &Buffer, std::unique_p
 	if ( 56==Buffer.size() && 0==Buffer.Compare((uint8_t *)"DSVT", 4) && 0x10U==Buffer.data()[4] && 0x20U==Buffer.data()[8] )
 	{
 		// create packet
-		header = std::make_unique<CDvHeaderPacket>((struct dstar_header *)&(Buffer.data()[15]), *((uint16_t *)&(Buffer.data()[12])), 0x80);
+		header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket((struct dstar_header *)&(Buffer.data()[15]), *((uint16_t *)&(Buffer.data()[12])), 0x80));
 		// check validity of packet
 		if ( header && header->IsValid() )
 			return true;
@@ -431,7 +426,7 @@ bool CDextraProtocol::IsValidDvFramePacket(const CBuffer &Buffer, std::unique_pt
 	if ( 27==Buffer.size() && 0==Buffer.Compare((uint8_t *)"DSVT", 4) && 0x20U==Buffer.data()[4] && 0x20U==Buffer.data()[8] )
 	{
 		// create packet
-		dvframe = std::make_unique<CDvFramePacket>((SDStarFrame *)&(Buffer.data()[15]), *((uint16_t *)&(Buffer.data()[12])), Buffer.data()[14]);
+		dvframe = std::unique_ptr<CDvFramePacket>(new CDvFramePacket((SDStarFrame *)&(Buffer.data()[15]), *((uint16_t *)&(Buffer.data()[12])), Buffer.data()[14]));
 		// check validity of packet
 		if ( dvframe && dvframe->IsValid() )
 			return true;

@@ -44,9 +44,6 @@ public:
 class CP25Protocol : public CProtocol
 {
 public:
-	// constructor
-	CP25Protocol(const std::string &name) : CProtocol(name) {}
-
 	// initialization
 	bool Initialize(const char *type, const EProtocol ptype, const uint16_t port, const bool has_ipv4, const bool has_ipv6);
 

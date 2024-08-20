@@ -1,5 +1,7 @@
+//  Copyright © 2016 Jean-Luc Deltombe (LX3JL). All rights reserved.
+
 // urfd -- The universal reflector
-// Copyright © 2024 Thomas A. Early N7TAE
+// Copyright © 2021 Thomas A. Early N7TAE
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,16 +16,33 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "DStarDirectClient.h"
+#pragma once
+
+#include "Peer.h"
+#include "BMClient.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////
-// constructor
+// define
 
-CDStarDirectClient::CDStarDirectClient(const CCallsign &callsign, EProtocol protocol, const CCallsign &repeater, const CIp &ip, char reflectorModule) : CClient(callsign, protocol, ip, reflectorModule), m_Repeater(repeater)
-{
-}
 
-bool CDStarDirectClient::IsAlive(void) const
+////////////////////////////////////////////////////////////////////////////////////////
+// class
+
+class CBmPeer : public CPeer
 {
-	return (m_LastKeepaliveTime.time() < DSD_KEEPALIVE_TIMEOUT);
-}
+public:
+	// constructors
+	CBmPeer();
+	CBmPeer(const CCallsign &, const CIp &, const char *, const CVersion &);
+	CBmPeer(const CBmPeer &) = delete;
+
+	// status
+	bool IsAlive(void) const;
+
+	// identity
+	EProtocol GetProtocol(void) const           { return EProtocol::bm; }
+	const char *GetProtocolName(void) const     { return "XLX"; }
+
+	// revision helper
+	static EProtoRev GetProtocolRevision(const CVersion &);
+};

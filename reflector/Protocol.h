@@ -62,8 +62,7 @@ class CProtocol
 {
 public:
 	// constructor
-	CProtocol() = delete;
-	CProtocol(const std::string &name);
+	CProtocol();
 
 	// destructor
 	virtual ~CProtocol();
@@ -73,9 +72,8 @@ public:
 	virtual void Close(void);
 
 	// get
-	const CCallsign &GetReflectorCallsign(void) const { return m_ReflectorCallsign; }
+	const CCallsign &GetReflectorCallsign(void)const { return m_ReflectorCallsign; }
 	uint16_t GetPort(void) const { return m_Port; }
-	const std::string &GetName() const { return m_Name; }
 
 	// task
 	void Thread(void);
@@ -89,7 +87,7 @@ protected:
 	virtual void OnDvFramePacketIn(std::unique_ptr<CDvFramePacket> &, const CIp * = nullptr);
 
 	// stream handle helpers
-	CPacketStream *GetStream(uint16_t, const CIp * = nullptr);
+	std::shared_ptr<CPacketStream> GetStream(uint16_t, const CIp * = nullptr);
 	void CheckStreamsTimeout(void);
 
 	// queue helper
@@ -125,7 +123,7 @@ protected:
 	CUdpSocket m_Socket6;
 
 	// streams
-	std::unordered_map<uint16_t, CPacketStream *> m_Streams;
+	std::unordered_map<uint16_t, std::shared_ptr<CPacketStream>> m_Streams;
 
 	// queue
 	CSafePacketQueue<std::unique_ptr<CPacket>> m_Queue;
@@ -141,7 +139,4 @@ protected:
 	uint16_t m_Port;
 	// debug
 	CTimer      m_DebugTimer;
-
-	// name of this protocol
-	const std::string m_Name;
 };

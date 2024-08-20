@@ -119,7 +119,7 @@ void CP25Protocol::Task(void)
 					std::cout << "P25 connect packet from " << Callsign << " at " << Ip << std::endl;
 
 					// create the client
-					auto newclient = std::make_shared<CP25Client>(Callsign, EProtocol::p25, Ip);
+					auto newclient = std::make_shared<CP25Client>(Callsign, Ip);
 
 					// aautolink, if enabled
 					if (m_AutolinkModule)
@@ -207,7 +207,7 @@ void CP25Protocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header, 
 			rpt1 = client->GetCallsign();
 			auto m = client->GetReflectorModule();
 			Header->SetRpt2Module(m);
-			rpt2.SetModule(m);
+			rpt2.SetCSModule(m);
 			// and try to open the stream
 			if ( (stream = g_Reflector.OpenStream(Header, client)) != nullptr )
 			{
@@ -359,7 +359,7 @@ bool CP25Protocol::IsValidDvPacket(const CIp &Ip, const CBuffer &Buffer, std::un
 			break;
 		}
 
-		frame = std::make_unique<CDvFramePacket>(&(Buffer.data()[offset]), m_uiStreamId, last);
+		frame = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(&(Buffer.data()[offset]), m_uiStreamId, last));
 		return true;
 	}
 	return false;
@@ -376,9 +376,9 @@ bool CP25Protocol::IsValidDvHeaderPacket(const CIp &Ip, const CBuffer &Buffer, s
 			CCallsign csMY = CCallsign("", uiSrcId);
 			CCallsign rpt1 = CCallsign("", uiSrcId);
 			CCallsign rpt2 = m_ReflectorCallsign;
-			rpt1.SetModule(P25_MODULE_ID);
-			rpt2.SetModule(' ');
-			header = std::make_unique<CDvHeaderPacket>(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, m_uiStreamId, false);
+			rpt1.SetCSModule(P25_MODULE_ID);
+			rpt2.SetCSModule(' ');
+			header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, m_uiStreamId, false));
 		}
 		return true;
 	}

@@ -30,7 +30,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructor
-CYsfProtocol::CYsfProtocol(const std::string &name) : CProtocol(name)
+CYsfProtocol::CYsfProtocol()
 {
 	m_seqNo = 0;
 }
@@ -161,7 +161,7 @@ void CYsfProtocol::Task(void)
 					std::cout << "YSF connect packet from " << Callsign << " at " << Ip << std::endl;
 
 					// create the client
-					auto newclient = std::make_shared<CYsfClient>(Callsign, EProtocol::ysf, Ip);
+					auto newclient = std::make_shared<CYsfClient>(Callsign, Ip);
 
 					// aautolink, if enabled
 					if (m_AutolinkModule)
@@ -278,7 +278,7 @@ void CYsfProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header, 
 			// get module it's linked to
 			auto m = client->GetReflectorModule();
 			Header->SetRpt2Module(m);
-			rpt2.SetModule(m);
+			rpt2.SetCSModule(m);
 
 			// and try to open the stream
 			if ( (stream = g_Reflector.OpenStream(Header, client)) != nullptr )
@@ -291,7 +291,7 @@ void CYsfProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header, 
 		g_Reflector.ReleaseClients();
 
 		// update last heard
-		if ( g_Reflector.IsValidModule(rpt2.GetModule()) )
+		if ( g_Reflector.IsValidModule(rpt2.GetCSModule()) )
 		{
 			g_Reflector.GetUsers()->Hearing(my, rpt1, rpt2);
 			g_Reflector.ReleaseUsers();
@@ -414,7 +414,7 @@ bool CYsfProtocol::IsValidConnectPacket(const CBuffer &Buffer, CCallsign *callsi
 	if ( (Buffer.size() == 14) && (Buffer.Compare(tag, sizeof(tag)) == 0) )
 	{
 		callsign->SetCallsign(Buffer.data()+4, 8);
-		callsign->SetModule(YSF_MODULE_ID);
+		callsign->SetCSModule(YSF_MODULE_ID);
 		valid = (callsign->IsValid());
 	}
 	return valid;
@@ -477,22 +477,22 @@ bool CYsfProtocol::IsValidDvHeaderPacket(const CIp &Ip, const CYSFFICH &Fich, co
 			memcpy(sz, &(Buffer.data()[4]), YSF_CALLSIGN_LENGTH);
 			sz[YSF_CALLSIGN_LENGTH] = 0;
 			CCallsign rpt1 = CCallsign((const char *)sz);
-			rpt1.SetModule(YSF_MODULE_ID);
+			rpt1.SetCSModule(YSF_MODULE_ID);
 			CCallsign rpt2 = m_ReflectorCallsign;
 			// as YSF protocol does not provide a module-tranlatable
 			// destid, set module to none and rely on OnDvHeaderPacketIn()
 			// to later fill it with proper value
-			rpt2.SetModule(' ');
+			rpt2.SetCSModule(' ');
 
 			// and packet
-			header = std::make_unique<CDvHeaderPacket>(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, uiStreamId, Fich.getFN());
+			header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, uiStreamId, Fich.getFN()));
 		}
 		// and 2 DV Frames
 		{
 			uint8_t  uiAmbe[9];
 			memset(uiAmbe, 0x00, sizeof(uiAmbe));
-			frames[0] = std::make_unique<CDvFramePacket>(uiAmbe, uiStreamId, Fich.getFN(), 0, 0, csMY, false);
-			frames[1] = std::make_unique<CDvFramePacket>(uiAmbe, uiStreamId, Fich.getFN(), 1, 0, csMY, false);
+			frames[0] = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(uiAmbe, uiStreamId, Fich.getFN(), 0, 0, csMY, false));
+			frames[1] = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(uiAmbe, uiStreamId, Fich.getFN(), 1, 0, csMY, false));
 		}
 
 		// check validity of packets
@@ -530,10 +530,10 @@ bool CYsfProtocol::IsValidDvFramePacket(const CIp &Ip, const CYSFFICH &Fich, con
 			memcpy(sz, &(Buffer.data()[4]), YSF_CALLSIGN_LENGTH);
 			sz[YSF_CALLSIGN_LENGTH] = 0;
 			CCallsign rpt1 = CCallsign((const char *)sz);
-			rpt1.SetModule(YSF_MODULE_ID);
+			rpt1.SetCSModule(YSF_MODULE_ID);
 			CCallsign rpt2 = m_ReflectorCallsign;
-			rpt2.SetModule(' ');
-			header = std::make_unique<CDvHeaderPacket>(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, uiStreamId, Fich.getFN());
+			rpt2.SetCSModule(' ');
+			header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, uiStreamId, Fich.getFN()));
 
 			if ( g_GateKeeper.MayTransmit(header->GetMyCallsign(), Ip, EProtocol::ysf, header->GetRpt2Module())  )
 			{
@@ -564,11 +564,11 @@ bool CYsfProtocol::IsValidDvFramePacket(const CIp &Ip, const CYSFFICH &Fich, con
 
 		// get DV frames
 		uint8_t fid = Buffer.data()[34];
-		frames[0] = std::make_unique<CDvFramePacket>(ambe0, uiStreamId, Fich.getFN(), 0, fid, csMY, false);
-		frames[1] = std::make_unique<CDvFramePacket>(ambe1, uiStreamId, Fich.getFN(), 1, fid, csMY, false);
-		frames[2] = std::make_unique<CDvFramePacket>(ambe2, uiStreamId, Fich.getFN(), 2, fid, csMY, false);
-		frames[3] = std::make_unique<CDvFramePacket>(ambe3, uiStreamId, Fich.getFN(), 3, fid, csMY, false);
-		frames[4] = std::make_unique<CDvFramePacket>(ambe4, uiStreamId, Fich.getFN(), 4, fid, csMY, false);
+		frames[0] = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(ambe0, uiStreamId, Fich.getFN(), 0, fid, csMY, false));
+		frames[1] = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(ambe1, uiStreamId, Fich.getFN(), 1, fid, csMY, false));
+		frames[2] = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(ambe2, uiStreamId, Fich.getFN(), 2, fid, csMY, false));
+		frames[3] = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(ambe3, uiStreamId, Fich.getFN(), 3, fid, csMY, false));
+		frames[4] = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(ambe4, uiStreamId, Fich.getFN(), 4, fid, csMY, false));
 
 		// check validity of packets
 		if ( frames[0] && frames[0]->IsValid() && frames[1] && frames[1]->IsValid() && frames[2] && frames[2]->IsValid() && frames[3] && frames[3]->IsValid() && frames[4] && frames[4]->IsValid() )
@@ -602,8 +602,8 @@ bool CYsfProtocol::IsValidDvLastFramePacket(const CIp &Ip, const CYSFFICH &Fich,
 
 			CCallsign csMY = CCallsign((const char *)sz);
 
-			oneframe  = std::make_unique<CDvFramePacket>(uiAmbe, uiStreamId, Fich.getFN(), 0, 0, csMY, false);
-			lastframe = std::make_unique<CDvFramePacket>(uiAmbe, uiStreamId, Fich.getFN(), 1, 0, csMY, true);
+			oneframe  = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(uiAmbe, uiStreamId, Fich.getFN(), 0, 0, csMY, false));
+			lastframe = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(uiAmbe, uiStreamId, Fich.getFN(), 1, 0, csMY, true));
 		}
 
 		// check validity of packets
@@ -853,7 +853,7 @@ bool CYsfProtocol::IsValidwirexPacket(const CBuffer &Buffer, CYSFFICH *Fich, CCa
 			{
 				// get callsign
 				Callsign->SetCallsign(&(Buffer.data()[4]), CALLSIGN_LEN, false);
-				Callsign->SetModule(YSF_MODULE_ID);
+				Callsign->SetCSModule(YSF_MODULE_ID);
 				// decode payload
 				if ( Fich->getFN() == 0U )
 				{

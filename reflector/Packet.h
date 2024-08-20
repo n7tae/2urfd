@@ -34,8 +34,10 @@ public:
 	CPacket(const CBuffer &Buffer);
 	CPacket(uint16_t sid, uint8_t dstarpid);
 	CPacket(uint16_t sid, uint8_t dmrpid, uint8_t dmrsubpid, bool lastpacket);
+	CPacket(uint16_t sid, uint8_t pid, bool lastpacket);
 	CPacket(uint16_t sid, bool lastpacket);
 	CPacket(uint16_t sid, uint8_t ysfpid, uint8_t ysfsubpid, uint8_t ysfsubpidmax, bool lastpacket);
+	CPacket(uint16_t sid, uint8_t dstarpid, uint8_t dmrpid, uint8_t dmrsubpid, uint8_t ysfpid, uint8_t ysfsubpid, uint8_t ysfsubpidmax, ECodecType, bool lastpacket);
 	CPacket(const CM17Packet &);
 
 	// identity
@@ -55,6 +57,7 @@ public:
 	uint8_t      GetYsfPacketId(void) const      { return m_uiYsfPacketId; }
 	uint8_t      GetYsfPacketSubId(void) const   { return m_uiYsfPacketSubId; }
 	uint8_t      GetYsfPacketFrameId(void) const { return m_uiYsfPacketFrameId; }
+	uint8_t      GetNXDNPacketId(void) const     { return m_uiNXDNPacketId; }
 	char         GetPacketModule(void) const     { return m_cModule; }
 	bool         IsLocalOrigin(void) const       { return (m_eOrigin == EOrigin::local); }
 	ECodecType   GetCodecIn(void) const          { return m_eCodecIn; }
@@ -85,4 +88,5 @@ protected:
 	uint8_t    m_uiYsfPacketId;
 	uint8_t    m_uiYsfPacketSubId;
 	uint8_t    m_uiYsfPacketFrameId;
+	uint8_t    m_uiNXDNPacketId;
 };

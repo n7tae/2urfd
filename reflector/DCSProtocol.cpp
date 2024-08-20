@@ -89,7 +89,7 @@ void CDcsProtocol::Task(void)
 					Send(Buffer, Ip);
 
 					// create the client and append
-					g_Reflector.GetClients()->AddClient(std::make_shared<CDcsClient>(Callsign, EProtocol::dcs, Ip, ToLinkModule));
+					g_Reflector.GetClients()->AddClient(std::make_shared<CDcsClient>(Callsign, Ip, ToLinkModule));
 					g_Reflector.ReleaseClients();
 				}
 				else
@@ -327,7 +327,7 @@ bool CDcsProtocol::IsValidConnectPacket(const CBuffer &Buffer, CCallsign *callsi
 	if ( Buffer.size() == 519 )
 	{
 		callsign->SetCallsign(Buffer.data(), 8);
-		callsign->SetModule(Buffer.data()[8]);
+		callsign->SetCSModule(Buffer.data()[8]);
 		*reflectormodule = Buffer.data()[9];
 		valid = (callsign->IsValid() && IsLetter(*reflectormodule));
 	}
@@ -340,13 +340,13 @@ bool CDcsProtocol::IsValidDisconnectPacket(const CBuffer &Buffer, CCallsign *cal
 	if ((Buffer.size() == 11) && (Buffer.data()[9] == ' '))
 	{
 		callsign->SetCallsign(Buffer.data(), 8);
-		callsign->SetModule(Buffer.data()[8]);
+		callsign->SetCSModule(Buffer.data()[8]);
 		valid = callsign->IsValid();
 	}
 	else if ((Buffer.size() == 19) && (Buffer.data()[9] == ' ') && (Buffer.data()[10] == 0x00))
 	{
 		callsign->SetCallsign(Buffer.data(), 8);
-		callsign->SetModule(Buffer.data()[8]);
+		callsign->SetCSModule(Buffer.data()[8]);
 		valid = callsign->IsValid();
 	}
 	return valid;
@@ -370,10 +370,10 @@ bool CDcsProtocol::IsValidDvPacket(const CBuffer &Buffer, std::unique_ptr<CDvHea
 	if ( (Buffer.size() >= 100) && (Buffer.Compare(tag, sizeof(tag)) == 0) )
 	{
 		// get the header
-		header = std::make_unique<CDvHeaderPacket>((struct dstar_header *)&(Buffer.data()[4]), *((uint16_t *)&(Buffer.data()[43])), 0x80);
+		header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket((struct dstar_header *)&(Buffer.data()[4]), *((uint16_t *)&(Buffer.data()[43])), 0x80));
 
 		// get the frame
-		frame = std::make_unique<CDvFramePacket>((SDStarFrame *)&(Buffer.data()[46]), *((uint16_t *)&(Buffer.data()[43])), Buffer.data()[45]);
+		frame = std::unique_ptr<CDvFramePacket>(new CDvFramePacket((SDStarFrame *)&(Buffer.data()[46]), *((uint16_t *)&(Buffer.data()[43])), Buffer.data()[45]));
 
 		// check validity of packets
 		if ( header && header->IsValid() && frame && frame->IsValid() )
@@ -408,8 +408,8 @@ void CDcsProtocol::EncodeKeepAlivePacket(CBuffer *Buffer, std::shared_ptr<CClien
 	Buffer->Append((uint8_t)Client->GetReflectorModule());
 	Buffer->Append((uint8_t)' ');
 	Buffer->Append((uint8_t *)(const char *)Client->GetCallsign(), CALLSIGN_LEN-1);
-	Buffer->Append((uint8_t)Client->GetClientModule());
-	Buffer->Append((uint8_t)Client->GetClientModule());
+	Buffer->Append((uint8_t)Client->GetCSModule());
+	Buffer->Append((uint8_t)Client->GetCSModule());
 	Buffer->Append(tag, sizeof(tag));
 }
 
@@ -421,7 +421,7 @@ void CDcsProtocol::EncodeConnectAckPacket(const CCallsign &Callsign, char Reflec
 	Callsign.GetCallsign(cs);
 	Buffer->Set(cs, CALLSIGN_LEN-1);
 	Buffer->Append((uint8_t)' ');
-	Buffer->Append((uint8_t)Callsign.GetModule());
+	Buffer->Append((uint8_t)Callsign.GetCSModule());
 	Buffer->Append((uint8_t)ReflectorModule);
 	Buffer->Append(tag, sizeof(tag));
 }
@@ -434,7 +434,7 @@ void CDcsProtocol::EncodeConnectNackPacket(const CCallsign &Callsign, char Refle
 	Callsign.GetCallsign(cs);
 	Buffer->Set(cs, CALLSIGN_LEN-1);
 	Buffer->Append((uint8_t)' ');
-	Buffer->Append((uint8_t)Callsign.GetModule());
+	Buffer->Append((uint8_t)Callsign.GetCSModule());
 	Buffer->Append((uint8_t)ReflectorModule);
 	Buffer->Append(tag, sizeof(tag));
 }
@@ -443,7 +443,7 @@ void CDcsProtocol::EncodeDisconnectPacket(CBuffer *Buffer, std::shared_ptr<CClie
 {
 	Buffer->Set((uint8_t *)(const char *)Client->GetCallsign(), CALLSIGN_LEN-1);
 	Buffer->Append((uint8_t)' ');
-	Buffer->Append((uint8_t)Client->GetClientModule());
+	Buffer->Append((uint8_t)Client->GetCSModule());
 	Buffer->Append((uint8_t)0x00);
 	Buffer->Append((uint8_t *)(const char *)GetReflectorCallsign(), CALLSIGN_LEN-1);
 	Buffer->Append((uint8_t)' ');

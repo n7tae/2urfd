@@ -16,7 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <csignal>
 #include <sys/stat.h>
 
 #include "Global.h"
@@ -29,33 +28,15 @@ SJsonKeys   g_Keys;
 CReflector  g_Reflector;
 CGateKeeper g_GateKeeper;
 CConfigure  g_Configure;
-CVersion    g_Version(2,5,0); // The major byte should only change if the interlink packet changes!
+CVersion    g_Version(3,1,3); // The major byte should only change if the interlink packet changes!
 CLookupDmr  g_LDid;
+CLookupNxdn g_LNid;
 CLookupYsf  g_LYtr;
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-void SigHandler(int sig)
-{
-	switch (sig)
-	{
-	case SIGINT:
-	case SIGHUP:
-	case SIGTERM:
-		std::cout << "caught a signal=" << sig << std::endl;
-		break;
-	default:
-		std::cerr << "caught an unexpected signal=" << sig << std::endl;
-		break;
-	}
-}
-
 int main(int argc, char *argv[])
 {
-	std::signal(SIGINT, SigHandler);
-	std::signal(SIGHUP, SigHandler);
-	std::signal(SIGTERM, SigHandler);
-
 	if (argc != 2)
 	{
 		std::cerr << "No configuration file specified! Usage: " << argv[0] << " /pathname/to/configuration/file" << std::endl;
@@ -105,6 +86,7 @@ int main(int argc, char *argv[])
 SJsonKeys   g_Keys;
 CConfigure  g_Configure;
 CLookupDmr  g_LDid;
+CLookupNxdn g_LNid;
 CLookupYsf  g_LYtr;
 
 static void usage(std::ostream &os, const char *name)
@@ -112,6 +94,7 @@ static void usage(std::ostream &os, const char *name)
 	os << "\nUsage: " << name << " DATABASE SOURCE ACTION INIFILE\n";
 	os << "DATABASE (choose one)\n"
 		"    dmr   : The  DmrId <==> Callsign databases.\n"
+		"    nxdn  : The NxdnId <==> Callsign databases.\n"
 		"    ysf   : The Callsign => Tx/Rx frequency database.\n"
 		"SOURCE (choose one)\n"
 		"    file  : The file specified by the FilePath ini parameter.\n"
@@ -124,7 +107,7 @@ static void usage(std::ostream &os, const char *name)
         "Example: " << name << " y f e urfd.ini  # Check your YSF Tx/Rx database file specified in urfd.ini for syntax errors.\n\n";
 }
 
-enum class Edb { none, dmr, ysf };
+enum class Edb { none, dmr, nxdn, ysf };
 
 int main(int argc, char *argv[])
 {
@@ -144,6 +127,11 @@ int main(int argc, char *argv[])
 		case 'D':
 		db = Edb::dmr;
 		break;
+		case 'n':
+		case 'N':
+		db = Edb::nxdn;
+		break;
+
 		case 'y':
 		case 'Y':
 		db = Edb::ysf;
@@ -204,6 +192,10 @@ int main(int argc, char *argv[])
 	{
 		case Edb::dmr:
 		g_LDid.Utility(action, source);
+		break;
+
+		case Edb::nxdn:
+		g_LNid.Utility(action, source);
 		break;
 
 		case Edb::ysf:

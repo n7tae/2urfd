@@ -16,15 +16,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "DStarDirectProtocol.h"
-#include "DCSProtocol.h"
+
 #include "DExtraProtocol.h"
 #include "DPlusProtocol.h"
-#include "DMRMMDVMProtocol.h"
-#include "M17Protocol.h"
-#include "P25Protocol.h"
+#include "DCSProtocol.h"
 #include "URFProtocol.h"
+#include "DMRMMDVMProtocol.h"
 #include "YSFProtocol.h"
+#include "M17Protocol.h"
+#include "BMProtocol.h"
+#include "P25Protocol.h"
+#include "NXDNProtocol.h"
 #include "Protocols.h"
 #include "Global.h"
 
@@ -43,68 +45,48 @@ bool CProtocols::Init(void)
 {
 	m_Mutex.lock();
 	{
-		if (g_Configure.GetUnsigned(g_Keys.dcs.port))
+		m_Protocols.emplace_back(std::unique_ptr<CDextraProtocol>(new CDextraProtocol));
+		if (! m_Protocols.back()->Initialize("XRF", EProtocol::dextra, uint16_t(g_Configure.GetUnsigned(g_Keys.dextra.port)), DSTAR_IPV4, DSTAR_IPV6))
+			return false;
+
+		m_Protocols.emplace_back(std::unique_ptr<CDplusProtocol>(new CDplusProtocol));
+		if (! m_Protocols.back()->Initialize("REF", EProtocol::dplus, uint16_t(g_Configure.GetUnsigned(g_Keys.dplus.port)), DSTAR_IPV4, DSTAR_IPV6))
+			return false;
+
+		m_Protocols.emplace_back(std::unique_ptr<CDcsProtocol>(new CDcsProtocol));
+		if (! m_Protocols.back()->Initialize("DCS", EProtocol::dcs, uint16_t(g_Configure.GetUnsigned(g_Keys.dcs.port)), DSTAR_IPV4, DSTAR_IPV6))
+			return false;
+
+		m_Protocols.emplace_back(std::unique_ptr<CDmrmmdvmProtocol>(new CDmrmmdvmProtocol));
+		if (! m_Protocols.back()->Initialize(nullptr, EProtocol::dmrmmdvm, uint16_t(g_Configure.GetUnsigned(g_Keys.mmdvm.port)), DMR_IPV4, DMR_IPV6))
+			return false;
+
+		if (g_Configure.GetBoolean(g_Keys.bm.enable))
 		{
-			Get(EProtocol::dcs) = std::make_unique<CDcsProtocol>("DCS");
-			if (! Get(EProtocol::dcs)->Initialize("DCS", EProtocol::dcs, uint16_t(g_Configure.GetUnsigned(g_Keys.dcs.port)), DSTAR_IPV4, DSTAR_IPV6))
+			m_Protocols.emplace_back(std::unique_ptr<CBMProtocol>(new CBMProtocol));
+			if (! m_Protocols.back()->Initialize("XLX", EProtocol::bm, uint16_t(g_Configure.GetUnsigned(g_Keys.bm.port)), DMR_IPV4, DMR_IPV6))
 				return false;
 		}
 
-		if (g_Configure.GetUnsigned(g_Keys.dextra.port))
-		{
-			Get(EProtocol::dextra) = std::make_unique<CDextraProtocol>("DExtra");
-			if (! Get(EProtocol::dextra)->Initialize("XRF", EProtocol::dextra, uint16_t(g_Configure.GetUnsigned(g_Keys.dextra.port)), DSTAR_IPV4, DSTAR_IPV6))
-				return false;
-		}
+		m_Protocols.emplace_back(std::unique_ptr<CYsfProtocol>(new CYsfProtocol));
+		if (! m_Protocols.back()->Initialize("YSF", EProtocol::ysf, uint16_t(g_Configure.GetUnsigned(g_Keys.ysf.port)), YSF_IPV4, YSF_IPV6))
+			return false;
 
-		if (g_Configure.GetUnsigned(g_Keys.dplus.port))
-		{
-			Get(EProtocol::dplus) = std::make_unique<CDplusProtocol>("DPlus");
-			if (! Get(EProtocol::dplus)->Initialize("REF", EProtocol::dplus, uint16_t(g_Configure.GetUnsigned(g_Keys.dplus.port)), DSTAR_IPV4, DSTAR_IPV6))
-				return false;
-		}
+		m_Protocols.emplace_back(std::unique_ptr<CM17Protocol>(new CM17Protocol));
+		if (! m_Protocols.back()->Initialize("URF", EProtocol::m17, uint16_t(g_Configure.GetUnsigned(g_Keys.m17.port)), M17_IPV4, M17_IPV6))
+			return false;
 
-		if (g_Configure.GetUnsigned(g_Keys.dsd.port))
-		{
-			Get(EProtocol::dsd) = std::make_unique<CDStarDirectProtocol>("DStarDirect");
-			if (! Get(EProtocol::dsd)->Initialize("DSD", EProtocol::dsd, uint16_t(g_Configure.GetUnsigned(g_Keys.dsd.port)), DSTAR_IPV4, DSTAR_IPV6))
-				return false;
-		}
+		m_Protocols.emplace_back(std::unique_ptr<CP25Protocol>(new CP25Protocol));
+		if (! m_Protocols.back()->Initialize("P25", EProtocol::p25, uint16_t(g_Configure.GetUnsigned(g_Keys.p25.port)), P25_IPV4, P25_IPV6))
+			return false;
 
-		if (g_Configure.GetUnsigned(g_Keys.mmdvm.port))
-		{
-			Get(EProtocol::mmdvm) = std::make_unique<CDmrmmdvmProtocol>("MMDVM");
-			if (! Get(EProtocol::mmdvm)->Initialize(nullptr, EProtocol::mmdvm, uint16_t(g_Configure.GetUnsigned(g_Keys.mmdvm.port)), DMR_IPV4, DMR_IPV6))
-				return false;
-		}
+		m_Protocols.emplace_back(std::unique_ptr<CNXDNProtocol>(new CNXDNProtocol));
+		if (! m_Protocols.back()->Initialize("NXDN", EProtocol::nxdn, uint16_t(g_Configure.GetUnsigned(g_Keys.nxdn.port)), NXDN_IPV4, NXDN_IPV6))
+			return false;
 
-		if (g_Configure.GetUnsigned(g_Keys.m17.port))
-		{
-			Get(EProtocol::m17) = std::make_unique<CM17Protocol>("M17");
-			if (! Get(EProtocol::m17)->Initialize("URF", EProtocol::m17, uint16_t(g_Configure.GetUnsigned(g_Keys.m17.port)), M17_IPV4, M17_IPV6))
-				return false;
-		}
-
-		if (g_Configure.GetUnsigned(g_Keys.p25.port))
-		{
-			Get(EProtocol::p25) = std::make_unique<CP25Protocol>("P25");
-			if (! Get(EProtocol::p25)->Initialize("P25", EProtocol::p25, uint16_t(g_Configure.GetUnsigned(g_Keys.p25.port)), P25_IPV4, P25_IPV6))
-				return false;
-		}
-
-		if (g_Configure.GetUnsigned(g_Keys.urf.port))
-		{
-			Get(EProtocol::urf) = std::make_unique<CURFProtocol>("URF");
-			if (! Get(EProtocol::urf)->Initialize("URF", EProtocol::urf, uint16_t(g_Configure.GetUnsigned(g_Keys.urf.port)), URF_IPV4, URF_IPV6))
-				return false;
-		}
-
-		if (g_Configure.GetUnsigned(g_Keys.ysf.port))
-		{
-			Get(EProtocol::ysf) = std::make_unique<CYsfProtocol>("YSF");
-			if (! Get(EProtocol::ysf)->Initialize("YSF", EProtocol::ysf, uint16_t(g_Configure.GetUnsigned(g_Keys.ysf.port)), YSF_IPV4, YSF_IPV6))
-				return false;
-		}
+		m_Protocols.emplace_back(std::unique_ptr<CURFProtocol>(new CURFProtocol));
+		if (! m_Protocols.back()->Initialize("URF", EProtocol::urf, uint16_t(g_Configure.GetUnsigned(g_Keys.urf.port)), URF_IPV4, URF_IPV6))
+			return false;
 	}
 	m_Mutex.unlock();
 
@@ -115,10 +97,6 @@ bool CProtocols::Init(void)
 void CProtocols::Close(void)
 {
 	m_Mutex.lock();
-	for (unsigned int i=0; i<toUType(EProtocol::SIZE); i++)
-	{
-		m_Protocols[i]->Close();
-		m_Protocols[i].reset();
-	}
+	m_Protocols.clear();
 	m_Mutex.unlock();
 }

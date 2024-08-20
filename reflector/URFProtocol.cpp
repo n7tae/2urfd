@@ -85,7 +85,7 @@ void CURFProtocol::Task(void)
 		else if ( IsValidDvHeaderPacket(Buffer, Header) )
 		{
 			// callsign allowed?
-			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::urf) )
+			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip) )
 			{
 				OnDvHeaderPacketIn(Header, Ip);
 			}
@@ -131,7 +131,7 @@ void CURFProtocol::Task(void)
 				{
 					// create the new peer
 					// this also create one client per module
-					std::shared_ptr<CPeer>peer = std::make_shared<CURFPeer>(Callsign, EProtocol::urf, Ip, Modules, Version);
+					std::shared_ptr<CPeer>peer = std::make_shared<CURFPeer>(Callsign, Ip, Modules, Version);
 
 					// append the peer to reflector peer list
 					// this also add all new clients to reflector client list
@@ -212,12 +212,7 @@ void CURFProtocol::HandleQueue(void)
 		{
 			// encode it
 			CBuffer buffer;
-			bool encoded = false;
-			if ( packet->IsDvFrame() )
-				encoded = EncodeDvFramePacket( (CDvFramePacket &)packet, buffer);
-			else if ( packet->IsDvHeader() )
-				encoded = EncodeDvHeaderPacket( (CDvHeaderPacket &)packet, buffer);
-			if ( encoded )
+			if ( EncodeDvPacket(*packet, buffer) )
 			{
 				// and push it to all our clients linked to the module and who are not streaming in
 				CClients *clients = g_Reflector.GetClients();
@@ -519,7 +514,7 @@ bool CURFProtocol::IsValidDvHeaderPacket(const CBuffer &Buffer, std::unique_ptr<
 	uint8_t magic[] = { 'U', 'R', 'F', 'H' };
 	if (Buffer.size()==CDvHeaderPacket::GetNetworkSize() && 0==Buffer.Compare(magic, 4))
 	{
-		header = std::make_unique<CDvHeaderPacket>(Buffer);
+		header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(Buffer));
 		if (header)
 		{
 			if (header->IsValid())
@@ -536,7 +531,7 @@ bool CURFProtocol::IsValidDvFramePacket(const CBuffer &Buffer, std::unique_ptr<C
 	uint8_t magic[] = { 'U', 'R', 'F', 'F' };
 	if (Buffer.size()==CDvFramePacket::GetNetworkSize() && 0==Buffer.Compare(magic, 4))
 	{
-		dvframe = std::make_unique<CDvFramePacket>(Buffer);
+		dvframe = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(Buffer));
 		if (dvframe)
 		{
 			if (dvframe->IsValid())

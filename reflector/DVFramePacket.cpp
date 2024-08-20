@@ -78,6 +78,18 @@ CDvFramePacket::CDvFramePacket(const uint8_t *ambe, uint16_t sid, uint8_t pid, u
     m_Callsign.SetCallsign((char *)c);
 }
 
+// bm constructor
+CDvFramePacket::CDvFramePacket
+(uint16_t sid, uint8_t dstarpid, const uint8_t *dstarambe, const uint8_t *dstardvdata, uint8_t dmrpid, uint8_t dprspid, const uint8_t *dmrambe, const uint8_t *dmrsync, ECodecType codecInType, bool islast)
+	: CPacket(sid, dstarpid, dmrpid, dprspid, 0xFF, 0xFF, 0xFF, codecInType, islast)
+{
+	::memcpy(m_TCPack.dstar, dstarambe, 9);
+	::memcpy(m_uiDvData, dstardvdata, 3);
+	::memcpy(m_TCPack.dmr, dmrambe, 9);
+	::memcpy(m_uiDvSync, dmrsync, 7);
+	m_TCPack.codec_in = codecInType;
+}
+
 // m17 constructor
 
 CDvFramePacket::CDvFramePacket(const CM17Packet &m17) : CPacket(m17)
@@ -105,7 +117,7 @@ CDvFramePacket::CDvFramePacket(const CM17Packet &m17) : CPacket(m17)
 
 // p25 constructor
 CDvFramePacket::CDvFramePacket(const uint8_t *imbe, uint16_t streamid, bool islast)
-	: CPacket(streamid, islast)
+	: CPacket(streamid, false, islast)
 {
 	memcpy(m_TCPack.p25, imbe, 11);
 	memset(m_TCPack.dmr, 0, 9);
@@ -117,9 +129,23 @@ CDvFramePacket::CDvFramePacket(const uint8_t *imbe, uint16_t streamid, bool isla
 	m_TCPack.codec_in = ECodecType::p25;
 }
 
+// nxdn constructor
+CDvFramePacket::CDvFramePacket(const uint8_t *ambe, uint16_t sid, uint8_t pid, bool islast)
+	: CPacket(sid, pid, islast)
+{
+	memcpy(m_TCPack.dmr, ambe, 9);
+	memset(m_uiDvSync, 0, 7);
+	memset(m_TCPack.dstar, 0, 9);
+	memset(m_uiDvData, 0, 3);
+	memset(m_TCPack.m17, 0, 16);
+	memset(m_TCPack.p25, 0, 11);
+	memset(m_Nonce, 0, 14);
+	m_TCPack.codec_in = ECodecType::dmr;
+}
+
 std::unique_ptr<CPacket> CDvFramePacket::Copy(void)
 {
-	return std::make_unique<CDvFramePacket>(*this);
+	return std::unique_ptr<CPacket>(new CDvFramePacket(*this));
 }
 
 // Network

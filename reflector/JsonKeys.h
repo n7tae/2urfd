@@ -29,8 +29,8 @@ struct SJsonKeys {
 	m17 { "M17Port" },
 	urf { "URFPort" };
 
-	struct DSD { const std::string port, ircServer, ircLogin; }
-	dsd { "DSDPort", "ircServer", "ircLogin" };
+	struct BM { const std::string enable, port; }
+	bm { "bmEnable", "bmPort" };
 
 	struct MMDVM { const std::string port, defaultid; }
 	mmdvm { "MMDVMPort", "mmdvmdefaultid" };
@@ -38,15 +38,16 @@ struct SJsonKeys {
 	struct NAMES { const std::string callsign, bootstrap, url, email, country, sponsor; }
 	names { "Callsign", "bootstrap", "DashboardUrl", "SysopEmail", "Country", "Sponsor" };
 
-	struct IP { const std::string ipv4bind, ipv4address, ipv6bind, ipv6address, transcoder; }
-	ip { "ipv4bind", "IPv4Address", "ipv6bind", "IPv6Address", "tcaddress" };
+	struct IP { const std::string ipv4bind, ipv4address, ipv6bind, ipv6address; }
+	ip { "ipv4bind", "IPv4Address", "ipv6bind", "IPv6Address" };
 
 	struct MODULES { const std::string modules, tcmodules, descriptor[26]; }
 	modules { "Modules", "TranscodedModules",
 		"DescriptionA", "DescriptionB", "DescriptionC", "DescriptionD", "DescriptionE", "DescriptionF", "DescriptionG", "DescriptionH", "DescriptionI", "DescriptionJ", "DescriptionK", "DescriptionL", "DescriptionM", "DescriptionN", "DescriptionO", "DescriptionP", "DescriptionQ", "DescriptionR", "DescriptionS", "DescriptionT", "DescriptionU", "DescriptionV", "DescriptionW", "DescriptionX", "DescriptionY", "DescriptionZ" };
 
-	struct P25 { const std::string port, autolinkmod, reflectorid; }
-	p25 { "P25Port",  "P25AutolinkMod",   "P25ReflectorID" };
+	struct P25NXDN { const std::string port, autolinkmod, reflectorid; }
+	p25 { "P25Port",  "P25AutolinkMod",   "P25ReflectorID" },
+	nxdn { "NXDNPort", "NXDNAutolinkMod", "NXDNReflectorID" };
 
 	struct YSF { const std::string port, autolinkmod, defaulttxfreq, defaultrxfreq;
 		struct YSLREG { const std::string id, name, description; } ysfreflectordb; }
@@ -55,8 +56,9 @@ struct SJsonKeys {
 
 	struct DB { const std::string url, mode, refreshmin, filepath; }
 	dmriddb   {  "dmrIdDbUrl",  "dmrIdDbMode",  "dmrIdDbRefresh",  "dmrIdDbFilePath" },
+	nxdniddb  { "nxdnIdDbUrl", "nxdnIdDbMode", "nxdnIdDbRefresh", "nxdnIdDbFilePath" },
 	ysftxrxdb {  "ysfIdDbUrl",  "ysfIdDbMode",  "ysfIdDbRefresh",  "ysfIdDbFilePath" };
 
-	struct FILES { const std::string pid, xml, json, white, black, interlink, dhtsave; }
-	files { "pidFilePath", "xmlFilePath", "jsonFilePath", "whitelistFilePath", "blacklistFilePath", "interlinkFilePath", "dhtSavePath" };
+	struct FILES { const std::string pid, xml, json, white, black, interlink; }
+	files { "pidFilePath", "xmlFilePath", "jsonFilePath", "whitelistFilePath", "blacklistFilePath", "interlinkFilePath" };
 };

@@ -1,5 +1,9 @@
+#pragma once
+
+//  Copyright © 2015 Jean-Luc Deltombe (LX3JL). All rights reserved.
+
 // urfd -- The universal reflector
-// Copyright © 2024 Thomas A. Early N7TAE
+// Copyright © 2021 Thomas A. Early N7TAE
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,22 +18,22 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#pragma once
-
 #include "Defines.h"
+#include "Version.h"
 #include "Timer.h"
-#include "Protocol.h"
-#include "DVHeaderPacket.h"
-#include "DVFramePacket.h"
-#include "DSDAction.h"
-#include "Random.h"
+#include "SEProtocol.h"
+#include "Clients.h"
 
-class CDStarDirectProtocol : public CProtocol
+////////////////////////////////////////////////////////////////////////////////////////
+
+class CPeer;
+
+////////////////////////////////////////////////////////////////////////////////////////
+// class
+
+class CBMProtocol : public CSEProtocol
 {
 public:
-	// constructor
-	CDStarDirectProtocol(const std::string &);
-
 	// initialization
 	bool Initialize(const char *type, const EProtocol ptype, const uint16_t port, const bool has_ipv4, const bool has_ipv6);
 
@@ -41,34 +45,34 @@ protected:
 	void HandleQueue(void);
 
 	// keepalive helpers
+	void HandlePeerLinks(void);
 	void HandleKeepalives(void);
 
 	// stream helpers
 	void OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &, const CIp &);
 
 	// packet decoding helpers
-	bool IsValidKeepAlivePacket(  const CBuffer &, CCallsign *);
-	bool IsValidDvHeaderPacket(   const CBuffer &, std::unique_ptr<CDvHeaderPacket> &);
-	bool IsValidDvFramePacket(    const CBuffer &, std::unique_ptr<CDvFramePacket> &);
+	bool IsValidDvHeaderPacket(const CBuffer &, std::unique_ptr<CDvHeaderPacket> &);
+	bool IsValidKeepAlivePacket(const CBuffer &, CCallsign *);
+	bool IsValidConnectPacket(const CBuffer &, CCallsign *, char *, CVersion *);
+	bool IsValidDisconnectPacket(const CBuffer &, CCallsign *);
+	bool IsValidAckPacket(const CBuffer &, CCallsign *, char *, CVersion *);
+	bool IsValidNackPacket(const CBuffer &, CCallsign *);
+	bool IsValidDvFramePacket(const CBuffer &, std::unique_ptr<CDvFramePacket> &);
 
 	// packet encoding helpers
 	void EncodeKeepAlivePacket(CBuffer *);
+	void EncodeConnectPacket(CBuffer *, const char *);
+	void EncodeDisconnectPacket(CBuffer *);
+	void EncodeConnectAckPacket(CBuffer *, const char *);
+	void EncodeConnectNackPacket(CBuffer *);
 	bool EncodeDvHeaderPacket(const CDvHeaderPacket &, CBuffer &) const;
 	bool EncodeDvFramePacket(const CDvFramePacket &, CBuffer &) const;
 
-	// response action
-	void SendResponse(CDSDAction &);
-	void DoAction(CDSDAction &);
-	void CheckActionMap(void);
-
-	const CCallsign m_IRCLogin;
-
+protected:
 	// time
 	CTimer m_LastKeepaliveTime;
-
-	// action
-	std::unordered_map<uint16_t, CDSDAction> m_ActionMap;
-
-	// misc
-	CRandom m_Random;
+	CTimer m_LastPeersLinkTime;
+	// config data;
+	bool m_HasTranscoder;
 };

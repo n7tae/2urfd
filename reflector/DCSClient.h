@@ -25,10 +25,17 @@ class CDcsClient : public CClient
 {
 public:
 	// constructors
-	CDcsClient(const CCallsign &, EProtocol, const CIp &, char = ' ');
+	CDcsClient();
+	CDcsClient(const CCallsign &, const CIp &, char = ' ');
+	CDcsClient(const CDcsClient &);
 
 	// destructor
 	virtual ~CDcsClient() {};
+
+	// identity
+	EProtocol GetProtocol(void) const           { return EProtocol::dcs; }
+	const char *GetProtocolName(void) const     { return "DCS"; }
+	bool IsNode(void) const                     { return true; }
 
 	// status
 	bool IsAlive(void) const;

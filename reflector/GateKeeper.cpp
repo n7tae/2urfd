@@ -75,16 +75,40 @@ bool CGateKeeper::MayLink(const CCallsign &callsign, const CIp &ip, EProtocol pr
 	bool ok;
 	const std::string base(callsign.GetBase());
 
-	// URF interlinks
-	if ( protocol == EProtocol::urf )
-		ok = IsPeerListedOk(base, ip, modules);
-	else
+	switch (protocol)
+	{
+	// repeaters
+	case EProtocol::dextra:
+	case EProtocol::dplus:
+	case EProtocol::dcs:
+	case EProtocol::dmrplus:
+	case EProtocol::dmrmmdvm:
+	case EProtocol::ysf:
+	case EProtocol::m17:
+	case EProtocol::p25:
+	case EProtocol::usrp:
+	case EProtocol::nxdn:
+	case EProtocol::g3:
+		// is callsign listed OK
 		ok = IsNodeListedOk(base);
+		break;
+
+	// URF and BM interlinks
+	case EProtocol::bm:
+	case EProtocol::urf:
+		ok = IsPeerListedOk(base, ip, modules);
+		break;
+
+	// unsupported
+	default:
+		ok = false;
+		break;
+	}
 
 	// report
 	if ( ! ok )
 	{
-		std::cout << "Gatekeeper blocking linking of " << callsign << " @ " << ip << " using protocol " << g_Reflector.GetProtocolName(protocol) << std::endl;
+		std::cout << "Gatekeeper blocking linking of " << callsign << " @ " << ip << " using protocol " << ProtocolName(protocol) << std::endl;
 	}
 
 	// done
@@ -97,15 +121,43 @@ bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EP
 
 	const std::string base(callsign.GetBase());
 
-	if ( protocol == EProtocol::urf )
-		ok = IsPeerListedOk(base, module);
-	else
+	switch (protocol)
+	{
+	// repeaters, protocol specific
+	case EProtocol::any:
+	case EProtocol::dextra:
+	case EProtocol::dplus:
+	case EProtocol::dcs:
+	case EProtocol::dmrplus:
+	case EProtocol::dmrmmdvm:
+	case EProtocol::ysf:
+	case EProtocol::m17:
+	case EProtocol::p25:
+	case EProtocol::nxdn:
+	case EProtocol::usrp:
+	case EProtocol::g3:
+		// first check is IP & callsigned listed OK
 		ok = IsNodeListedOk(base);
+		// todo: then apply any protocol specific authorisation for the operation
+		break;
+
+	// URF interlinks
+	case EProtocol::urf:
+	case EProtocol::bm:
+		ok = IsPeerListedOk(base, module);
+		break;
+
+	// unsupported
+	case EProtocol::none:
+	default:
+		ok = false;
+		break;
+	}
 
 	// report
 	if ( !ok )
 	{
-		std::cout << "Gatekeeper blocking transmitting of " << callsign << " @ " << ip << " using protocol " << g_Reflector.GetProtocolName(protocol) << std::endl;
+		std::cout << "Gatekeeper blocking transmitting of " << callsign << " @ " << ip << " using protocol " << ProtocolName(protocol) << std::endl;
 	}
 
 	// done
@@ -119,6 +171,10 @@ void CGateKeeper::Thread()
 {
 	while (keep_running)
 	{
+		// Wait 30 seconds
+		for (int i=0; i<15 && keep_running; i++)
+			std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
 		// have lists files changed ?
 		if ( m_WhiteSet.NeedReload() )
 		{
@@ -132,9 +188,6 @@ void CGateKeeper::Thread()
 		{
 			m_InterlinkMap.ReloadFromFile();
 		}
-		// Wait 30 seconds
-		for (int i=0; i<10 && keep_running; i++)
-			std::this_thread::sleep_for(std::chrono::seconds(3));
 	}
 }
 
@@ -213,4 +266,36 @@ bool CGateKeeper::IsPeerListedOk(const std::string &callsign, const CIp &ip, cha
 
 	// done
 	return ok;
+}
+
+const std::string CGateKeeper::ProtocolName(const EProtocol p) const
+{
+	switch (p) {
+		case EProtocol::any:
+			return "ANY";
+		case EProtocol::dcs:
+			return "DCS";
+		case EProtocol::dextra:
+			return "DExtra";
+		case EProtocol::dmrmmdvm:
+			return "MMDVM DMR";
+		case EProtocol::dmrplus:
+			return "DMR+";
+		case EProtocol::urf:
+			return "URF";
+		case EProtocol::ysf:
+			return "YSF";
+		case EProtocol::p25:
+			return "P25";
+		case EProtocol::nxdn:
+			return "NXDN";
+		case EProtocol::usrp:
+			return "USRP";
+		case EProtocol::bm:
+			return "Brandmeister";
+		case EProtocol::g3:
+			return "Icom G3";
+		default:
+			return "NONE";
+	}
 }

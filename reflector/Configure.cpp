@@ -34,6 +34,7 @@
 #define JAUTOLINKMODULE          "AutoLinkModule"
 #define JBLACKLISTPATH           "BlacklistPath"
 #define JBOOTSTRAP               "Bootstrap"
+#define JBRANDMEISTER            "Brandmeister"
 #define JCALLSIGN                "Callsign"
 #define JCOUNTRY                 "Country"
 #define JDASHBOARDURL            "DashboardUrl"
@@ -43,15 +44,11 @@
 #define JDEFAULTTXFREQ           "DefaultTxFreq"
 #define JDESCRIPTION             "Description"
 #define JDEXTRA                  "DExtra"
-#define JDHTSAVEPATH             "DHTSavePath"
 #define JDMRIDDB                 "DMR ID DB"
 #define JDPLUS                   "DPlus"
-#define JDSTARDIRECT             "DStarDirect"
 #define JENABLE                  "Enable"
 #define JFILES                   "Files"
 #define JFILEPATH                "FilePath"
-#define JIRCLOGIN                "IRCLogin"
-#define JIRCSERVER               "IRCServer"
 #define JINTERLINKPATH           "InterlinkPath"
 #define JIPADDRESS               "IPAddress"
 #define JIPADDRESSES             "IP Addresses"
@@ -66,6 +63,8 @@
 #define JMODULE                  "Module"
 #define JMODULES                 "Modules"
 #define JNAMES                   "Names"
+#define JNXDNIDDB                "NXDN ID DB"
+#define JNXDN                    "NXDN"
 #define JP25                     "P25"
 #define JPIDPATH                 "PidPath"
 #define JPORT                    "Port"
@@ -137,6 +136,24 @@ bool CConfigure::ReadData(const std::string &path)
 		return true;
 	}
 
+	std::string ipv4, ipv6;
+
+	{
+		CCurlGet curl;
+		std::stringstream ss;
+		if (CURLE_OK == curl.GetURL("https://ipv4.icanhazip.com", ss))
+		{
+			ipv4.assign(ss.str());
+			trim(ipv4);
+		}
+		ss.str(std::string());
+		if (CURLE_OK == curl.GetURL("https://ipv6.icanhazip.com", ss))
+		{
+			ipv6.assign(ss.str());
+			trim(ipv6);
+		}
+	}
+
 	std::string line;
 	while (std::getline(cfgfile, line))
 	{
@@ -161,18 +178,20 @@ bool CConfigure::ReadData(const std::string &path)
 				section = ESection::ip;
 			else if (0 == hname.compare(JMODULES))
 				section = ESection::modules;
+			else if (0 == hname.compare(JDPLUS))
+				section = ESection::dplus;
 			else if (0 == hname.compare(JDEXTRA))
 				section = ESection::dextra;
 			else if (0 == hname.compare(JMMDVM))
 				section = ESection::mmdvm;
+			else if (0 == hname.compare(JNXDN))
+				section = ESection::nxdn;
+			else if (0 == hname.compare(JBRANDMEISTER))
+				section = ESection::bm;
 			else if (0 == hname.compare(JYSF))
 				section = ESection::ysf;
 			else if (0 == hname.compare(JDCS))
 				section = ESection::dcs;
-			else if (0 == hname.compare(JDPLUS))
-				section = ESection::dplus;
-			else if (0 == hname.compare(JDSTARDIRECT))
-				section = ESection::dsd;
 			else if (0 == hname.compare(JP25))
 				section = ESection::p25;
 			else if (0 == hname.compare(JM17))
@@ -181,6 +200,8 @@ bool CConfigure::ReadData(const std::string &path)
 				section = ESection::urf;
 			else if (0 == hname.compare(JDMRIDDB))
 				section = ESection::dmrid;
+			else if (0 == hname.compare(JNXDNIDDB))
+				section = ESection::nxdnid;
 			else if (0 == hname.compare(JYSFTXRXDB))
 				section = ESection::ysffreq;
 			else if (0 == hname.compare(JFILES))
@@ -251,14 +272,6 @@ bool CConfigure::ReadData(const std::string &path)
 				{
 					data[g_Keys.ip.ipv6address] = value;
 				}
-				else if (0 == key.compare(JTRANSCODER))
-				{
-					if (value.compare("local"))
-					{
-						std::cout << "WARNING: Line #" << counter << ": malformed transcoder address, '" << value << "', resetting..." << std::endl;
-					}
-					data[g_Keys.ip.transcoder] = "local";
-				}
 				else
 					badParam(key);
 				break;
@@ -293,6 +306,14 @@ bool CConfigure::ReadData(const std::string &path)
 				else
 					badParam(key);
 				break;
+			case ESection::bm:
+				if (0 == key.compare(JPORT))
+					data[g_Keys.bm.port] = getUnsigned(value, "Brandmeister Port", 1024, 65535, 10002);
+				else if (0 == key.compare(JENABLE))
+					data[g_Keys.bm.enable] = IS_TRUE(value[0]);
+				else
+					badParam(key);
+				break;
 			case ESection::dcs:
 				if (0 == key.compare(JPORT))
 					data[g_Keys.dcs.port] = getUnsigned(value, "DCS Port", 1024, 65535, 30051);
@@ -311,16 +332,6 @@ bool CConfigure::ReadData(const std::string &path)
 				else
 					badParam(key);
 				break;
-			case ESection::dsd:
-				if (0 == key.compare(JPORT))
-					data[g_Keys.dsd.port] = getUnsigned(value, "DSD Port", 1024, 65535, 40000);
-				else if (0 == key.compare(JIRCLOGIN))
-					data[g_Keys.dsd.ircLogin] = value;
-				else if (0 == key.compare(JIRCSERVER))
-					data[g_Keys.dsd.ircServer] = value;
-				else
-					badParam(key);
-				break;
 			case ESection::m17:
 				if (0 == key.compare(JPORT))
 					data[g_Keys.m17.port] = getUnsigned(value, "M17 Port", 1024, 65535, 17000);
@@ -332,6 +343,16 @@ bool CConfigure::ReadData(const std::string &path)
 					data[g_Keys.mmdvm.port] = getUnsigned(value, "MMDVM Port", 1024, 65535, 62030);
 				else if (0 == key.compare(JDEFAULTID))
 					data[g_Keys.mmdvm.defaultid] = getUnsigned(value, "MMDVM DefaultID", 0, 9999999, 0);
+				else
+					badParam(key);
+				break;
+			case ESection::nxdn:
+				if (0 == key.compare(JPORT))
+					data[g_Keys.nxdn.port] = getUnsigned(value, "NDXN Port", 1024, 65535, 41400);
+				else if (0 == key.compare(JAUTOLINKMODULE))
+					setAutolink(JNXDN, g_Keys.nxdn.autolinkmod, value);
+				else if (0 == key.compare(JREFLECTORID))
+					data[g_Keys.nxdn.reflectorid] = getUnsigned(value, "NXDN ReflectorID", 0, 65535, 0);
 				else
 					badParam(key);
 				break;
@@ -378,10 +399,12 @@ bool CConfigure::ReadData(const std::string &path)
 					badParam(key);
 				break;
 			case ESection::dmrid:
+			case ESection::nxdnid:
 			case ESection::ysffreq:
 				switch (section)
 				{
 					case ESection::dmrid:   pdb = &g_Keys.dmriddb;   break;
+					case ESection::nxdnid:  pdb = &g_Keys.nxdniddb;  break;
 					case ESection::ysffreq: pdb = &g_Keys.ysftxrxdb; break;
 				}
 				if (0 == key.compare(JURL))
@@ -416,8 +439,6 @@ bool CConfigure::ReadData(const std::string &path)
 					data[g_Keys.files.black] = value;
 				else if (0 == key.compare(JINTERLINKPATH))
 					data[g_Keys.files.interlink] = value;
-				else if (0 == key.compare(JDHTSAVEPATH))
-					data[g_Keys.files.dhtsave] = value;
 				else
 					badParam(key);
 				break;
@@ -455,16 +476,6 @@ bool CConfigure::ReadData(const std::string &path)
 	{
 		if (std::regex_match(data[g_Keys.ip.ipv4bind].get<std::string>(), IPv4RegEx))
 		{
-			// use curl to find the ipv4 external address
-			std::string ipv4;
-			CCurlGet curl;
-			std::stringstream ss;
-			if (CURLE_OK == curl.GetURL("https://ipv4.icanhazip.com", ss))
-			{
-				ipv4.assign(ss.str());
-				trim(ipv4);
-			}
-
 			if (data.contains(g_Keys.ip.ipv4address))
 			{
 				auto v4 = data[g_Keys.ip.ipv4address].get<std::string>();
@@ -503,16 +514,6 @@ bool CConfigure::ReadData(const std::string &path)
 	{
 		if (std::regex_match(data[g_Keys.ip.ipv6bind].get<std::string>(), IPv6RegEx))
 		{
-			// use curl to find the ipv6 external address
-			std::string ipv6;
-			CCurlGet curl;
-			std::stringstream ss;
-			if (CURLE_OK == curl.GetURL("https://ipv6.icanhazip.com", ss))
-			{
-				ipv6.assign(ss.str());
-				trim(ipv6);
-			}
-
 			if (data.contains(g_Keys.ip.ipv6address))
 			{
 				auto v6 = data[g_Keys.ip.ipv6address].get<std::string>();
@@ -608,24 +609,23 @@ bool CConfigure::ReadData(const std::string &path)
 	isDefined(ErrorLevel::fatal, JM17, JPORT, g_Keys.m17.port, rval);
 	isDefined(ErrorLevel::fatal, JURF, JPORT, g_Keys.urf.port, rval);
 
-	// DSD
-	isDefined(ErrorLevel::fatal, JDSTARDIRECT, JPORT, g_Keys.dsd.port, rval);
-	isDefined(ErrorLevel::fatal, JDSTARDIRECT, JIRCSERVER, g_Keys.dsd.ircServer, rval);
-	if (isDefined(ErrorLevel::fatal, JDSTARDIRECT, JIRCLOGIN, g_Keys.dsd.ircLogin, rval))
+	// BM
+	if (isDefined(ErrorLevel::fatal, JBRANDMEISTER, JENABLE, g_Keys.bm.enable, rval))
 	{
-		const auto cs = data[g_Keys.dsd.ircLogin].get<std::string>();
-		auto IRCCSRegEx = std::regex("^[1-9]?[A-Z]{1,2}[0-9]{1,2}[A-Z]{1,4}$", std::regex::extended);
-
-		if (! std::regex_match(cs, IRCCSRegEx))
+		if (GetBoolean(g_Keys.bm.enable))
 		{
-			std::cerr << "DStarDirect IRC Login '" << cs << "' doesn't look like a valid Callsign!" << std::endl;
-			rval = true;
+			isDefined(ErrorLevel::fatal, JBRANDMEISTER, JPORT, g_Keys.bm.port, rval);
 		}
 	}
 
 	// MMDVM
 	isDefined(ErrorLevel::fatal, JMMDVM, JPORT, g_Keys.mmdvm.port, rval);
 	isDefined(ErrorLevel::fatal, JMMDVM, JDEFAULTID, g_Keys.mmdvm.defaultid, rval);
+
+	// NXDN
+	isDefined(ErrorLevel::fatal, JNXDN, JPORT, g_Keys.nxdn.port, rval);
+	checkAutoLink(JNXDN, JAUTOLINKMODULE, g_Keys.nxdn.autolinkmod, rval);
+	isDefined(ErrorLevel::fatal, JNXDN, JREFLECTORID, g_Keys.nxdn.reflectorid, rval);
 
 	// P25
 	isDefined(ErrorLevel::fatal, JP25, JPORT, g_Keys.p25.port, rval);
@@ -644,6 +644,7 @@ bool CConfigure::ReadData(const std::string &path)
 	// Databases
 	std::list<std::pair<const std::string, const struct SJsonKeys::DB *>> dbs = {
 		{ JDMRIDDB,   &g_Keys.dmriddb   },
+		{ JNXDNIDDB,  &g_Keys.nxdniddb  },
 		{ JYSFTXRXDB, &g_Keys.ysftxrxdb }
 	};
 	for ( auto &item : dbs )
@@ -672,7 +673,6 @@ bool CConfigure::ReadData(const std::string &path)
 		checkFile(JFILES, JBLACKLISTPATH, data[g_Keys.files.black]);
 	if (isDefined(ErrorLevel::fatal, JFILES, JINTERLINKPATH, g_Keys.files.interlink, rval))
 		checkFile(JFILES, JINTERLINKPATH, data[g_Keys.files.interlink]);
-	isDefined(ErrorLevel::fatal, JFILES, JDHTSAVEPATH, g_Keys.files.dhtsave, rval);
 
 	return rval;
 }
@@ -894,7 +894,7 @@ int main(int argc, char *argv[])
 			d.Dump(('n' == argv[1][1]) ? true : false);
 		return rval ? EXIT_FAILURE : EXIT_SUCCESS;
 	}
-	std::cerr << "Usage: " << argv[0] << " -(q|n|v) FILENAME\nWhere:\n\t-q just prints warnings and errors.\n\t-n just prints keys that begin with an uppercase letter.\n\t-v prints all keys, warnings and errors." << std::endl;
+	std::cerr << "Usage: " << argv[0] << " -(q|n|v) FILENAME\nWhere:\n\t-q just prints warnings and errors.\n\t-n also prints keys that begin with an uppercase letter.\n\t-v prints all keys, warnings and errors." << std::endl;
 	return EXIT_SUCCESS;
 }
 #endif

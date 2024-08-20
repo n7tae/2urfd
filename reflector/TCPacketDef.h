@@ -1,5 +1,6 @@
-// urfd -- The universal reflector
-// Copyright © 2024 Thomas A. Early N7TAE
+#pragma once
+
+// Copyright © 2021 Thomas A. Early N7TAE
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,25 +15,25 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#pragma once
+#include <cstdint>
 
-#include "Defines.h"
-#include "Client.h"
+#include "Timer.h"
 
-class CDStarDirectClient : public CClient
-{
-public:
-	// constructors
-	CDStarDirectClient(const CCallsign &callsign, EProtocol protocol, const CCallsign &repeater, const CIp &ip, char mod);
+// unix socket names
+#define TC2REF "TC2URFMod"
+#define REF2TC "URF2TC"
 
-	// destructor
-	virtual ~CDStarDirectClient() {};
+enum class ECodecType : std::uint8_t { none = 0, dstar = 1, dmr = 2, c2_1600 = 3, c2_3200 = 4, p25 = 5 };
 
-	// identity
-	const CCallsign &GetRepeater(void) const    { return m_Repeater; }
-
-	// status
-	bool IsAlive(void) const;
-protected:
-	CCallsign m_Repeater;
+using STCPacket = struct tcpacket_tag {
+	CTimer rt_timer;
+	uint32_t sequence;
+	char module;
+	bool is_last;
+	uint16_t streamid;
+	ECodecType codec_in;
+	uint8_t dstar[9];
+	uint8_t dmr[9];
+	uint8_t m17[16];
+	uint8_t p25[11];
 };

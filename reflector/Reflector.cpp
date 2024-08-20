@@ -38,10 +38,10 @@ CReflector::~CReflector()
 
 	for (auto it=m_Modules.cbegin(); it!=m_Modules.cend(); it++)
 	{
-		if (m_ModuleFuture[*it].valid())
-			m_ModuleFuture[*it].get();
+		if (m_RouterFuture[*it].valid())
+			m_RouterFuture[*it].get();
 	}
-	m_ModuleFuture.clear();
+	m_RouterFuture.clear();
 	m_Stream.clear();
 }
 
@@ -55,49 +55,13 @@ bool CReflector::Start(void)
 	const auto cs(g_Configure.GetString(g_Keys.names.callsign));
 	m_Callsign.SetCallsign(cs, false);
 	m_Modules.assign(g_Configure.GetString(g_Keys.modules.modules));
-	const std::string tcmods(g_Configure.GetString(g_Keys.modules.tcmodules));
+	std::string tcmods(g_Configure.GetString(g_Keys.modules.tcmodules));
 
 #ifndef NO_DHT
-	const auto path = g_Configure.GetString(g_Keys.files.dhtsave);
 	// start the dht instance
 	refhash = dht::InfoHash::get(cs);
-	node.run(17171, dht::crypto::generateIdentity(cs), true);
-
-	// if there is a saved network state saved the bootstrap from it.
-	// Try to import nodes from binary file
-	std::ifstream myfile;
-	if (path.size() > 0)
-		myfile.open(path, std::ios::binary|std::ios::ate);
-	if (myfile.is_open())
-	{
-		msgpack::unpacker pac;
-		auto size = myfile.tellg();
-		myfile.seekg (0, std::ios::beg);
-		pac.reserve_buffer(size);
-		myfile.read (pac.buffer(), size);
-		pac.buffer_consumed(size);
-		// Import nodes
-		msgpack::object_handle oh;
-		while (pac.next(oh)) {
-			auto imported_nodes = oh.get().as<std::vector<dht::NodeExport>>();
-			std::cout << "Importing " << imported_nodes.size() << " ham-dht nodes from " << path << std::endl;
-			node.bootstrap(imported_nodes);
-		}
-		myfile.close();
-	}
-	else
-	{
-		const auto bsnode = g_Configure.GetString(g_Keys.names.bootstrap);
-		if (bsnode.size())
-		{
-			std::cout << "Bootstrapping from " << bsnode << std::endl;
-			node.bootstrap(bsnode, "17171");
-		}
-		else
-		{
-			std::cout << "WARNING: The DHT is not bootstrapping from any node!" << std::endl;
-		}
-	}
+	node.run(17171, dht::crypto::generateIdentity(cs), true, 59973);
+	node.bootstrap(g_Configure.GetString(g_Keys.names.bootstrap), "17171");
 #endif
 
 	// let's go!
@@ -108,6 +72,9 @@ bool CReflector::Start(void)
 
 	// init dmrid directory. No need to check the return value.
 	g_LDid.LookupInit();
+
+	// init dmrid directory. No need to check the return value.
+	g_LNid.LookupInit();
 
 	// init wiresx node directory. Likewise with the return vale.
 	g_LYtr.LookupInit();
@@ -122,25 +89,25 @@ bool CReflector::Start(void)
 	// start one thread per reflector module
 	for (auto c : m_Modules)
 	{
-		auto rv = m_Stream.emplace(std::pair<char, std::unique_ptr<CPacketStream>>(c, std::make_unique<CPacketStream>(c)));
-		if (rv.second || (nullptr == rv.first->second))
+		auto stream = std::make_shared<CPacketStream>(c);
+		if (stream)
 		{
 			// if it's a transcoded module, then we need to initialize the codec stream
 			if (std::string::npos != tcmods.find(c))
 			{
-				if (rv.first->second->InitCodecStream())
+				if (stream->InitCodecStream())
 					return true;
 			}
+			m_Stream[c] = stream;
 		}
 		else
 		{
-			std::cerr << "Could not emplace a CPacketStream for module '" << c << "'" << std::endl;
+			std::cerr << "Could not make a CPacketStream for module '" << c << "'" << std::endl;
 			return true;
 		}
-
 		try
 		{
-			m_ModuleFuture[c] = std::async(std::launch::async, &CReflector::ModuleThread, this, c);
+			m_RouterFuture[c] = std::async(std::launch::async, &CReflector::RouterThread, this, c);
 		}
 		catch(const std::exception& e)
 		{
@@ -169,7 +136,6 @@ bool CReflector::Start(void)
 
 void CReflector::Stop(void)
 {
-	std::cout << "Shutting down " << m_Callsign.GetCS() << "..." << std::endl;
 	// stop & delete all threads
 	keep_running = false;
 
@@ -178,52 +144,46 @@ void CReflector::Stop(void)
 	{
 		m_XmlReportFuture.get();
 	}
-	std::cout << "XML report stopped" << std::endl;
 
 	// stop & delete all router thread
 	for (auto c : m_Modules)
 	{
-		m_Stream[c]->StopCodecStream();	// if it has a codecstream, this will stop its processing thread
-
-		// push an empty Frame Packet to the stream to unlock PopWait() in the module thread
-		m_Stream[c]->Push(std::make_unique<CDvFramePacket>());
-		if (m_ModuleFuture[c].valid())
-			m_ModuleFuture[c].get();
+		if (m_RouterFuture[c].valid())
+			m_RouterFuture[c].get();
 	}
 
 	// close protocols
 	m_Protocols.Close();
-	std::cout << "All Protocols stopped" << std::endl;
 
 	// close gatekeeper
 	g_GateKeeper.Close();
-	std::cout << "GateKeeper stopped" << std::endl;
 
 	// close databases
 	g_LDid.LookupClose();
-	std::cout << "DMR Id DB stopped" << std::endl;
+	g_LNid.LookupClose();
 	g_LYtr.LookupClose();
-	std::cout << "YSF node DB stopped" << std::endl;
 
 #ifndef NO_DHT
 	// kill the DHT
-	SaveDHTState(g_Configure.GetString(g_Keys.files.dhtsave));
 	node.cancelPut(refhash, toUType(EUrfdValueID::Config));
 	node.cancelPut(refhash, toUType(EUrfdValueID::Peers));
 	node.cancelPut(refhash, toUType(EUrfdValueID::Clients));
 	node.cancelPut(refhash, toUType(EUrfdValueID::Users));
 	node.shutdown({}, true);
 	node.join();
-	std::cout << "DHT network stopped" << std::endl;
 #endif
-	std::cout << "All " << m_Callsign.GetCS() << " processes stopped" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // stream opening & closing
 
+bool CReflector::IsStreaming(char module)
+{
+	return false;
+}
+
 // clients MUST have bee locked by the caller so we can freely access it within the function
-CPacketStream *CReflector::OpenStream(std::unique_ptr<CDvHeaderPacket> &DvHeader, std::shared_ptr<CClient>client)
+std::shared_ptr<CPacketStream> CReflector::OpenStream(std::unique_ptr<CDvHeaderPacket> &DvHeader, std::shared_ptr<CClient>client)
 {
 	// check sid is not zero
 	if ( 0U == DvHeader->GetStreamId() )
@@ -250,15 +210,15 @@ CPacketStream *CReflector::OpenStream(std::unique_ptr<CDvHeaderPacket> &DvHeader
 	DvHeader->SetPacketModule(client->GetReflectorModule());
 	// get the module's queue
 	char module = DvHeader->GetRpt2Module();
-	auto it = m_Stream.find(module);
-	if ( it == m_Stream.end() )
+	auto stream = GetStream(module);
+	if ( stream == nullptr )
 	{
 		std::cerr << "Can't find module '" << module << "' for Client " << client->GetCallsign() << std::endl;
 		return nullptr;
 	}
 
 	// is it available ?
-	if ( it->second->OpenPacketStream(*DvHeader, client) )
+	if ( stream->OpenPacketStream(*DvHeader, client) )
 	{
 		// stream open, mark client as master
 		// so that it can't be deleted
@@ -273,16 +233,16 @@ CPacketStream *CReflector::OpenStream(std::unique_ptr<CDvHeaderPacket> &DvHeader
 		std::cout << std::noshowbase << std::dec;
 
 		// and push header packet
-		it->second->Push(std::move(DvHeader));
+		stream->Push(std::move(DvHeader));
 
 		// notify
 		//OnStreamOpen(stream->GetUserCallsign());
 
 	}
-	return it->second.get();
+	return stream;
 }
 
-void CReflector::CloseStream(CPacketStream *stream)
+void CReflector::CloseStream(std::shared_ptr<CPacketStream> stream)
 {
 	if ( stream != nullptr )
 	{
@@ -306,7 +266,7 @@ void CReflector::CloseStream(CPacketStream *stream)
 			// notify
 			//OnStreamClose(stream->GetUserCallsign());
 
-			std::cout << "Closing stream of module " << stream->GetModule() << std::endl;
+			std::cout << "Closing stream of module " << GetStreamModule(stream) << std::endl;
 		}
 
 		// release clients
@@ -320,28 +280,25 @@ void CReflector::CloseStream(CPacketStream *stream)
 ////////////////////////////////////////////////////////////////////////////////////////
 // router threads
 
-void CReflector::ModuleThread(const char ThisModule)
+void CReflector::RouterThread(const char ThisModule)
 {
 	auto pitem = m_Stream.find(ThisModule);
 	if (m_Stream.end() == pitem)
 	{
-		std::cerr << "Module '" << ThisModule << " CPacketStream doesn't exist! aborting ModuleThread()" << std::endl;
+		std::cerr << "Module '" << ThisModule << " CPacketStream doesn't exist! aborting RouterThread()" << std::endl;
 		return;
 	}
-	auto &streamIn = pitem->second;
-	while (true)
+	const auto streamIn = pitem->second;
+	while (keep_running)
 	{
 		// wait until something shows up
 		auto packet = streamIn->PopWait();
-
-		if (! keep_running)
-			break;
 
 		packet->SetPacketModule(ThisModule);
 
 		// iterate on all protocols
 		m_Protocols.Lock();
-		for ( unsigned int i=0; i<toUType(EProtocol::SIZE); i++ )
+		for ( auto it=m_Protocols.begin(); it!=m_Protocols.end(); it++ )
 		{
 			auto copy = packet->Copy();
 
@@ -349,17 +306,16 @@ void CReflector::ModuleThread(const char ThisModule)
 			if ( copy->IsDvHeader() )
 			{
 				// make the protocol-patched reflector callsign
-				CCallsign csRPT = m_Protocols.Get(i)->GetReflectorCallsign();
-				csRPT.SetModule(ThisModule);
+				CCallsign csRPT = (*it)->GetReflectorCallsign();
+				csRPT.SetCSModule(ThisModule);
 				// and put it in the copy
-				(static_cast<CDvHeaderPacket *>(copy.get()))->SetRpt2Callsign(csRPT);
+				(dynamic_cast<CDvHeaderPacket *>(copy.get()))->SetRpt2Callsign(csRPT);
 			}
 
-			m_Protocols.Get(i)->Push(std::move(copy));
+			(*it)->Push(std::move(copy));
 		}
 		m_Protocols.Unlock();
 	}
-	std::cout << "Module " << ThisModule << " stopped" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -469,14 +425,33 @@ void CReflector::OnUsersChanged(void)
 ////////////////////////////////////////////////////////////////////////////////////////
 // modules & queues
 
+std::shared_ptr<CPacketStream> CReflector::GetStream(char module)
+{
+	auto it=m_Stream.find(module);
+	if (it!=m_Stream.end())
+		return it->second;
+
+	return nullptr;
+}
+
 bool CReflector::IsStreamOpen(const std::unique_ptr<CDvHeaderPacket> &DvHeader)
 {
-	for (auto &c : m_Modules)
+	for (auto it=m_Stream.begin(); it!=m_Stream.end(); it++)
 	{
-		if ( (m_Stream[c]->GetStreamId() == DvHeader->GetStreamId()) && (m_Stream[c]->IsOpen()) )
+		if ( (it->second->GetStreamId() == DvHeader->GetStreamId()) && (it->second->IsOpen()) )
 			return true;
 	}
 	return false;
+}
+
+char CReflector::GetStreamModule(std::shared_ptr<CPacketStream> stream)
+{
+	for (auto it=m_Stream.begin(); it!=m_Stream.end(); it++)
+	{
+		if ( it->second == stream )
+			return it->first;
+	}
+	return ' ';
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -499,8 +474,7 @@ void CReflector::JsonReport(nlohmann::json &report)
 	report["Clients"] = nlohmann::json::array();
 	auto clients = GetClients();
 	for (auto cit=clients->cbegin(); cit!=clients->cend(); cit++)
-		if (! ((*cit)->IsPeer()))
-			(*cit)->JsonReport(report);
+		(*cit)->JsonReport(report);
 	ReleaseClients();
 
 	report["Users"] = nlohmann::json::array();
@@ -541,7 +515,7 @@ void CReflector::WriteXmlFile(std::ofstream &xmlFile)
 	// iterate on clients
 	for ( auto cit=clients->cbegin(); cit!=clients->cend(); cit++ )
 	{
-		if ( ! ((*cit)->IsPeer()) )
+		if ( (*cit)->IsNode() )
 		{
 			(*cit)->WriteXml(xmlFile);
 		}
@@ -587,7 +561,11 @@ void CReflector::PutDHTPeers()
 	node.putSigned(
 		refhash,
 		nv,
+#ifdef DEBUG
 		[](bool success){ std::cout << "PutDHTPeers() " << (success ? "successful" : "unsuccessful") << std::endl; },
+#else
+		[](bool success){ if (! success) std::cout << "PutDHTPeers() unsuccessful" << std::endl; },
+#endif
 		true	// permanent!
 	);
 }
@@ -595,18 +573,18 @@ void CReflector::PutDHTPeers()
 void CReflector::PutDHTClients()
 {
 	const std::string cs(g_Configure.GetString(g_Keys.names.callsign));
-	SUrfdClients2 c;
+	SUrfdClients1 c;
 	time(&c.timestamp);
 	c.sequence = clients_put_count++;
 	auto clients = GetClients();
 	for (auto cit=clients->cbegin(); cit!=clients->cend(); cit++)
 	{
-		c.list.emplace_back((*cit)->GetCallsign().GetCS(), (*cit)->GetProtocolName(), std::string((*cit)->GetIp().GetAddress()), (*cit)->GetReflectorModule(), (*cit)->GetConnectTime(), (*cit)->GetLastHeardTime());
+		c.list.emplace_back((*cit)->GetCallsign().GetCS(), std::string((*cit)->GetIp().GetAddress()), (*cit)->GetReflectorModule(), (*cit)->GetConnectTime(), (*cit)->GetLastHeardTime());
 	}
 	ReleaseClients();
 
 	auto nv = std::make_shared<dht::Value>(c);
-	nv->user_type.assign(URFD_CLIENTS_2);
+	nv->user_type.assign(URFD_CLIENTS_1);
 	nv->id = toUType(EUrfdValueID::Clients);
 
 	node.putSigned(
@@ -617,7 +595,7 @@ void CReflector::PutDHTClients()
 #else
 		[](bool success){ if (! success) std::cout << "PutDHTClients() unsuccessful" << std::endl; },
 #endif
-		true	// permanent!
+		false	// not permanent!
 	);
 }
 
@@ -646,14 +624,14 @@ void CReflector::PutDHTUsers()
 #else
 		[](bool success){ if (! success) std::cout << "PutDHTUsers() unsuccessful" << std::endl; },
 #endif
-		true	// permanent!
+		false	// not permanent
 	);
 }
 
 void CReflector::PutDHTConfig()
 {
 	const std::string cs(g_Configure.GetString(g_Keys.names.callsign));
-	SUrfdConfig2 cfg;
+	SUrfdConfig1 cfg;
 	time(&cfg.timestamp);
 	cfg.callsign.assign(cs);
 	cfg.ipv4addr.assign(g_Configure.GetString(g_Keys.ip.ipv4address));
@@ -667,42 +645,46 @@ void CReflector::PutDHTConfig()
 	std::ostringstream ss;
 	ss << g_Version;
 	cfg.version.assign(ss.str());
-	cfg.almod[toUType(EUrfdAlMod::nxdn)]   = ' ';
+	cfg.almod[toUType(EUrfdAlMod::nxdn)]   = g_Configure.GetString(g_Keys.nxdn.autolinkmod).at(0);
 	cfg.almod[toUType(EUrfdAlMod::p25)]    = g_Configure.GetString(g_Keys.p25.autolinkmod).at(0);
 	cfg.almod[toUType(EUrfdAlMod::ysf)]    = g_Configure.GetString(g_Keys.ysf.autolinkmod).at(0);
 	cfg.ysffreq[toUType(EUrfdTxRx::rx)]    = g_Configure.GetUnsigned(g_Keys.ysf.defaultrxfreq);
 	cfg.ysffreq[toUType(EUrfdTxRx::tx)]    = g_Configure.GetUnsigned(g_Keys.ysf.defaulttxfreq);
-	cfg.refid[toUType(EUrfdRefId::nxdn)]   = 0;
+	cfg.refid[toUType(EUrfdRefId::nxdn)]   = g_Configure.GetUnsigned(g_Keys.nxdn.reflectorid);
 	cfg.refid[toUType(EUrfdRefId::p25)]    = g_Configure.GetUnsigned(g_Keys.p25.reflectorid);
-	cfg.port[toUType(EUrfdPorts2::dcs)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.dcs.port);
-	cfg.port[toUType(EUrfdPorts2::dextra)]  = (uint16_t)g_Configure.GetUnsigned(g_Keys.dextra.port);
-	cfg.port[toUType(EUrfdPorts2::dmrplus)] = (uint16_t)0;
-	cfg.port[toUType(EUrfdPorts2::dplus)]   = (uint16_t)g_Configure.GetUnsigned(g_Keys.dplus.port);
-	cfg.port[toUType(EUrfdPorts2::dsd)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.dsd.port);
-	cfg.port[toUType(EUrfdPorts2::m17)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.m17.port);
-	cfg.port[toUType(EUrfdPorts2::mmdvm)]   = (uint16_t)g_Configure.GetUnsigned(g_Keys.mmdvm.port);
-	cfg.port[toUType(EUrfdPorts2::nxdn)]    = (uint16_t)0;
-	cfg.port[toUType(EUrfdPorts2::p25)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.p25.port);
-	cfg.port[toUType(EUrfdPorts2::urf)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.urf.port);
-	cfg.port[toUType(EUrfdPorts2::ysf)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.ysf.port);
+	cfg.port[toUType(EUrfdPorts::dcs)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.dcs.port);
+	cfg.port[toUType(EUrfdPorts::dextra)]  = (uint16_t)g_Configure.GetUnsigned(g_Keys.dextra.port);
+	cfg.port[toUType(EUrfdPorts::dmrplus)] = 0;
+	cfg.port[toUType(EUrfdPorts::dplus)]   = (uint16_t)g_Configure.GetUnsigned(g_Keys.dplus.port);
+	cfg.port[toUType(EUrfdPorts::m17)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.m17.port);
+	cfg.port[toUType(EUrfdPorts::mmdvm)]   = (uint16_t)g_Configure.GetUnsigned(g_Keys.mmdvm.port);
+	cfg.port[toUType(EUrfdPorts::nxdn)]    = (uint16_t)g_Configure.GetUnsigned(g_Keys.nxdn.port);
+	cfg.port[toUType(EUrfdPorts::p25)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.p25.port);
+	cfg.port[toUType(EUrfdPorts::urf)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.urf.port);
+	cfg.port[toUType(EUrfdPorts::ysf)]     = (uint16_t)g_Configure.GetUnsigned(g_Keys.ysf.port);
+	cfg.g3enabled = false;
 	for (const auto m : cfg.modules)
 		cfg.description[m] = g_Configure.GetString(g_Keys.modules.descriptor[m-'A']);
 
 	auto nv = std::make_shared<dht::Value>(cfg);
-	nv->user_type.assign(URFD_CONFIG_2);
+	nv->user_type.assign(URFD_CONFIG_1);
 	nv->id = toUType(EUrfdValueID::Config);
 
 	node.putSigned(
 		refhash,
 		nv,
+#ifdef DEBUG
 		[](bool success){ std::cout << "PutDHTConfig() " << (success ? "successful" : "unsuccessful") << std::endl; },
+#else
+		[](bool success){ if(! success) std::cout << "PutDHTConfig() unsuccessful" << std::endl; },
+#endif
 		true
 	);
 }
 
 void CReflector::GetDHTConfig(const std::string &cs)
 {
-	static SUrfdConfig2 cfg;
+	static SUrfdConfig1 cfg;
 	cfg.timestamp = 0;	// every time this is called, zero the timestamp
 
 	std::cout << "Getting " << cs << " connection info..." << std::endl;
@@ -714,13 +696,13 @@ void CReflector::GetDHTConfig(const std::string &cs)
 	node.get(
 		dht::InfoHash::get(cs),
 		[](const std::shared_ptr<dht::Value> &v) {
-			if (0 == v->user_type.compare(URFD_CONFIG_2))
+			if (0 == v->user_type.compare(URFD_CONFIG_1))
 			{
-				auto rdat = dht::Value::unpack<SUrfdConfig2>(*v);
+				auto rdat = dht::Value::unpack<SUrfdConfig1>(*v);
 				if (rdat.timestamp > cfg.timestamp)
 				{
 					// the time stamp is the newest so far, so put it in the static cfg struct
-					cfg = dht::Value::unpack<SUrfdConfig2>(*v);
+					cfg = dht::Value::unpack<SUrfdConfig1>(*v);
 				}
 			}
 			else
@@ -735,7 +717,7 @@ void CReflector::GetDHTConfig(const std::string &cs)
 				if (cfg.timestamp)
 				{
 					// if the get() call was successful and there is a nonzero timestamp, then do the update
-					g_GateKeeper.GetInterlinkMap()->Update(cfg.callsign, cfg.modules, cfg.ipv4addr, cfg.ipv6addr, cfg.port[toUType(EUrfdPorts2::urf)], cfg.transcodedmods);
+					g_GateKeeper.GetInterlinkMap()->Update(cfg.callsign, cfg.modules, cfg.ipv4addr, cfg.ipv6addr, cfg.port[toUType(EUrfdPorts::urf)], cfg.transcodedmods);
 					g_GateKeeper.ReleaseInterlinkMap();
 				}
 				else
@@ -751,28 +733,6 @@ void CReflector::GetDHTConfig(const std::string &cs)
 		{}, // empty filter
 		w	// just the configuration section
 	);
-}
-
-void CReflector::SaveDHTState(const std::string &path) const
-{
-	if (0 == path.size())
-		return;
-	auto exnodes = node.exportNodes();
-	if (exnodes.size())
-	{
-		// Export nodes to binary file
-		std::ofstream myfile(path, std::ios::binary | std::ios::trunc);
-		if (myfile.is_open())
-		{
-			std::cout << "Saving " << exnodes.size() << " nodes to " << path << std::endl;
-			msgpack::pack(myfile, exnodes);
-			myfile.close();
-		}
-		else
-			std::cerr << "Trouble opening " << path << std::endl;
-	}
-	else
-		std::cerr << "There are no DHT network nodes to save!" << std::endl;
 }
 
 #endif

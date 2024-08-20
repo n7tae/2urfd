@@ -73,7 +73,7 @@ void CM17Protocol::Task(void)
 				OnDvHeaderPacketIn(Header, Ip);
 
 				// xrf needs a voice frame every 20 ms and an M17 frame is 40 ms, so we need a duplicate
-				auto secondFrame = std::make_unique<CDvFramePacket>(*Frame.get());
+				auto secondFrame = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(*Frame.get()));
 
 				// This is not a second packet, so clear the last packet status, since the real last packet it the secondFrame
 				if (Frame->IsLastPacket())
@@ -99,7 +99,7 @@ void CM17Protocol::Task(void)
 					Send("ACKN", Ip);
 
 					// create the client and append
-					g_Reflector.GetClients()->AddClient(std::make_shared<CM17Client>(Callsign, EProtocol::m17, Ip, ToLinkModule));
+					g_Reflector.GetClients()->AddClient(std::make_shared<CM17Client>(Callsign, Ip, ToLinkModule));
 					g_Reflector.ReleaseClients();
 				}
 				else
@@ -364,10 +364,10 @@ bool CM17Protocol::IsValidDvPacket(const CBuffer &Buffer, std::unique_ptr<CDvHea
 		// Make the M17 header
 		CM17Packet m17(Buffer.data());
 		// get the header
-		header = std::make_unique<CDvHeaderPacket>(m17);
+		header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(m17));
 
 		// get the frame
-		frame = std::make_unique<CDvFramePacket>(m17);
+		frame = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(m17));
 
 		// check validity of packets
 		if ( header && header->IsValid() && frame && frame->IsValid() )

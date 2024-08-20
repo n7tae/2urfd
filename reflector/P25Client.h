@@ -25,10 +25,17 @@ class CP25Client : public CClient
 {
 public:
 	// constructors
-	CP25Client(const CCallsign &, EProtocol, const CIp &, char = ' ');
+	CP25Client();
+	CP25Client(const CCallsign &, const CIp &, char = ' ');
+	CP25Client(const CP25Client &);
 
 	// destructor
 	virtual ~CP25Client() {};
+
+	// identity
+	EProtocol GetProtocol(void) const           { return EProtocol::p25; }
+	const char *GetProtocolName(void) const     { return "P25"; }
+	bool IsNode(void) const                     { return true; }
 
 	// status
 	bool IsAlive(void) const;

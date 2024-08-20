@@ -25,7 +25,7 @@
 // constructor
 
 
-CProtocol::CProtocol(const std::string &name) : keep_running(true), m_Name(name) {}
+CProtocol::CProtocol() : keep_running(true) {}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -33,6 +33,9 @@ CProtocol::CProtocol(const std::string &name) : keep_running(true), m_Name(name)
 
 CProtocol::~CProtocol()
 {
+	// kill threads
+	Close();
+
 	// empty queue
 	while ( !m_Queue.IsEmpty() )
 	{
@@ -66,6 +69,7 @@ bool CProtocol::Initialize(const char *type, const EProtocol ptype, const uint16
 			if (! m_Socket4.Open(ip4))
 				return false;
 		}
+		std::cout << "Listening on " << ip4 << std::endl;
 	}
 
 	if (g_Configure.IsString(g_Keys.ip.ipv6bind))
@@ -81,6 +85,7 @@ bool CProtocol::Initialize(const char *type, const EProtocol ptype, const uint16
 					m_Socket4.Close();
 					return false;
 				}
+				std::cout << "Listening on " << ip6 << std::endl;
 			}
 		}
 	}
@@ -96,18 +101,6 @@ bool CProtocol::Initialize(const char *type, const EProtocol ptype, const uint16
 		m_Socket6.Close();
 		return false;
 	}
-
-	std::string stacks;
-	if (has_ipv4)
-	{
-		stacks.assign("IPv4");
-		if (has_ipv6)
-			stacks.append(" and IPv6");
-	}
-	else
-		stacks.assign("IPv4");
-
-	std::cout << m_Name << " using Port " << port << " listening on " << stacks << std::endl;
 
 	return true;
 }
@@ -129,7 +122,6 @@ void CProtocol::Close(void)
 	}
 	m_Socket4.Close();
 	m_Socket6.Close();
-	std::cout << "Protocol " << m_Name << " stopped" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -138,35 +130,13 @@ void CProtocol::Close(void)
 void CProtocol::OnDvFramePacketIn(std::unique_ptr<CDvFramePacket> &Frame, const CIp *Ip)
 {
 	// find the stream
-	const auto streamID = Frame->GetStreamId();
-	auto stream = GetStream(streamID, Ip);
+	auto stream = GetStream(Frame->GetStreamId(), Ip);
 	if ( stream )
 	{
 		// set the packet module, the transcoder needs this
-//		const auto wasLast = Frame->IsLastPacket();
-//		const auto mod = stream->GetOwnerClient()->GetReflectorModule();
-//		Frame->SetPacketModule(mod);
 		Frame->SetPacketModule(stream->GetOwnerClient()->GetReflectorModule());
 		// and push
 		stream->Push(std::move(Frame));
-
-//		if (wasLast)
-//		{
-//			// this is the last packet, we'll close the stream
-//			while (keep_running)
-//			{
-//				if (stream->IsCompletelyEmpty())	// this also checks if an associated codec stream is empty
-//					break;
-//				else
-//					// we'll wait until the sream is empty
-//					std::this_thread::sleep_for(std::chrono::milliseconds(10));
-//			}
-//
-//			HandleQueue(); // proactively make sure every client has the last packet
-//
-//			g_Reflector.CloseStream(stream); // now we can close the stream
-//			m_Streams.erase(streamID);	// and delete the map entry
-//		}
 	}
 #ifdef DEBUG
 	else
@@ -180,7 +150,7 @@ void CProtocol::OnDvFramePacketIn(std::unique_ptr<CDvFramePacket> &Frame, const 
 ////////////////////////////////////////////////////////////////////////////////////////
 // stream handle helpers
 
-CPacketStream *CProtocol::GetStream(uint16_t uiStreamId, const CIp *Ip)
+std::shared_ptr<CPacketStream> CProtocol::GetStream(uint16_t uiStreamId, const CIp *Ip)
 {
 	auto it = m_Streams.find(uiStreamId);
 	if (it == m_Streams.end())

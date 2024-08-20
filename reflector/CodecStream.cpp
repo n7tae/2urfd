@@ -30,6 +30,21 @@ CCodecStream::CCodecStream(CPacketStream *PacketStream, char module) : m_CSModul
 	m_PacketStream = PacketStream;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////
+// destructor
+
+CCodecStream::~CCodecStream()
+{
+	// kill the thread
+	keep_running = false;
+	if ( m_Future.valid() )
+	{
+		m_Future.get();
+	}
+	// and close the socket
+	m_TCReader.Close();
+}
+
 void CCodecStream::ResetStats(uint16_t streamid, ECodecType type)
 {
 	m_IsOpen = true;
@@ -70,7 +85,7 @@ bool CCodecStream::InitCodecStream()
 	name.append(1, m_CSModule);
 	if (m_TCReader.Open(name.c_str()))
 		return true;
-	std::cout << "Listening on Unix socket " << name << std::endl;
+	std::cout << "Initialized CodecStream receive socket " << name << std::endl;
 	keep_running = true;
 	try
 	{
@@ -83,18 +98,6 @@ bool CCodecStream::InitCodecStream()
 		return true;
 	}
 	return false;
-}
-
-void CCodecStream::StopCodecThread()
-{
-	// kill the thread
-	keep_running = false;
-	if ( m_Future.valid() )
-	{
-		m_Future.get();
-	}
-	// and close the socket
-	m_TCReader.Close();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -140,30 +143,36 @@ void CCodecStream::Task(void)
 		{
 			// pop the original packet
 			auto Packet = m_LocalQueue.Pop();
-			auto Frame = (CDvFramePacket *)Packet.get();
+			auto Frame = static_cast<CDvFramePacket *>(Packet.get());
 
-			// do things look okay?
-			if (pack.module != m_CSModule)
-				std::cerr << "CodecStream '" << m_CSModule << "' received a transcoded packet from module '" << pack.module << "'" << std::dec << std::noshowbase << std::endl;
-			if ((10 == pack.sequence) && (pack.sequence != Frame->GetCodecPacket()->sequence)) // only do this once
-				std::cerr << "Sequence mismatch: this voice frame=" << Frame->GetCodecPacket()->sequence << " returned transcoder packet=" << pack.sequence << std::endl;
-			if (pack.streamid != Frame->GetCodecPacket()->streamid)
-				std::cerr << std::hex  << std::showbase << "StreamID mismatch: this voice frame=" << ntohs(Frame->GetCodecPacket()->streamid) << " returned transcoder packet=" << ntohs(pack.streamid) << std::dec << std::noshowbase << std::endl;
-
-			// update content with transcoded data
-			Frame->SetCodecData(&pack);
-			// mark the DStar sync frames if the source isn't dstar
-			if (ECodecType::dstar!=Frame->GetCodecIn() && 0==Frame->GetPacketId()%21)
+			// make sure this is the correct packet
+			if ((pack.streamid == Frame->GetCodecPacket()->streamid) && (pack.sequence == Frame->GetCodecPacket()->sequence))
 			{
-				const uint8_t DStarSync[] = { 0x55, 0x2D, 0x16 };
-				Frame->SetDvData(DStarSync);
-			}
+				// update content with transcoded data
+				Frame->SetCodecData(&pack);
+				// mark the DStar sync frames if the source isn't dstar
+				if (ECodecType::dstar!=Frame->GetCodecIn() && 0==Frame->GetPacketId()%21)
+				{
+					const uint8_t DStarSync[] = { 0x55, 0x2D, 0x16 };
+					Frame->SetDvData(DStarSync);
+				}
 
-			// and push it back to client
-			m_PacketStream->ReturnPacket(std::move(Packet));
+				// and push it back to client
+				m_PacketStream->ReturnPacket(std::move(Packet));
+			}
+			else
+			{
+				// Not the correct packet! It will be ignored
+				// Report it
+				if (pack.streamid != Frame->GetCodecPacket()->streamid)
+					std::cerr << std::hex  << std::showbase << "StreamID mismatch: this voice frame=" << ntohs(Frame->GetCodecPacket()->streamid) << " returned transcoder packet=" << ntohs(pack.streamid) << std::dec << std::noshowbase << std::endl;
+				if (pack.sequence != Frame->GetCodecPacket()->sequence)
+					std::cerr << "Sequence mismatch: this voice frame=" << Frame->GetCodecPacket()->sequence << " returned transcoder packet=" << pack.sequence << std::endl;
+			}
 		}
 		else
 		{
+			// Likewise, this packet will be ignored
 			std::cout << "Transcoder packet received but CodecStream[" << m_CSModule << "] is closed: Module='" << pack.module << "' StreamID=" << std::hex << std::showbase << ntohs(pack.streamid) << std::endl;
 		}
 	}

@@ -28,8 +28,8 @@ class CPeer
 {
 public:
 	// constructors
-	CPeer() = delete;
-	CPeer(const CCallsign &, EProtocol, const CIp &, const char *, const CVersion &);
+	CPeer();
+	CPeer(const CCallsign &, const CIp &, const char *, const CVersion &);
 	CPeer(const CPeer &) = delete;
 
 	// destructor
@@ -47,9 +47,9 @@ public:
 	// set
 
 	// identity
-	EProtocol GetProtocol(void) const                   { return m_Protocol; }
+	virtual EProtocol GetProtocol(void) const           { return EProtocol::none; }
 	virtual EProtoRev GetProtocolRevision(void) const   { return EProtoRev::original; }
-	const std::string &GetProtocolName(void) const;
+	virtual const char *GetProtocolName(void) const     { return "NONE"; }
 
 	// status
 	virtual bool IsAMaster(void) const;
@@ -73,9 +73,8 @@ public:
 
 protected:
 	// data
-	const CCallsign       m_Callsign;
-	const EProtocol       m_Protocol;
-	const CIp             m_Ip;
+	CCallsign             m_Callsign;
+	CIp                   m_Ip;
 	char                  m_ReflectorModules[27];
 	CVersion              m_Version;
 	std::list<std::shared_ptr<CClient>> m_Clients;

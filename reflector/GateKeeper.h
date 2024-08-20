@@ -46,7 +46,7 @@ public:
 
 	// authorizations
 	bool MayLink(const CCallsign &, const CIp &, const EProtocol, char * = nullptr) const;
-	bool MayTransmit(const CCallsign &, const CIp &, const EProtocol, char = ' ') const;
+	bool MayTransmit(const CCallsign &, const CIp &, EProtocol = EProtocol::any, char = ' ') const;
 
 protected:
 	// thread
@@ -56,6 +56,7 @@ protected:
 	bool IsNodeListedOk(const std::string &) const;
 	bool IsPeerListedOk(const std::string &, char) const;
 	bool IsPeerListedOk(const std::string &, const CIp &, char *) const;
+	const std::string ProtocolName(EProtocol) const;
 
 protected:
 	// data

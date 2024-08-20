@@ -19,6 +19,7 @@
 #include "Configure.h"
 #include "Version.h"
 #include "LookupDmr.h"
+#include "LookupNxdn.h"
 #include "LookupYsf.h"
 #include "JsonKeys.h"
 
@@ -27,5 +28,6 @@ extern CGateKeeper g_GateKeeper;
 extern CConfigure  g_Configure;
 extern CVersion    g_Version;
 extern CLookupDmr  g_LDid;
+extern CLookupNxdn g_LNid;
 extern CLookupYsf  g_LYtr;
 extern SJsonKeys   g_Keys;

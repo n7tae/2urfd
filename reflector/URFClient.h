@@ -25,13 +25,17 @@ class CURFClient : public CClient
 {
 public:
 	// constructors
-	CURFClient(const CCallsign &, EProtocol, const CIp &, char = ' ', EProtoRev = EProtoRev::original);
+	CURFClient();
+	CURFClient(const CCallsign &, const CIp &, char = ' ', EProtoRev = EProtoRev::original);
+	CURFClient(const CURFClient &);
 
 	// destructor
 	virtual ~CURFClient() {};
 
 	// identity
+	EProtocol GetProtocol(void) const         { return EProtocol::urf; }
 	EProtoRev GetProtocolRevision(void) const { return m_ProtRev; }
+	const char *GetProtocolName(void) const   { return "URF"; }
 	bool IsPeer(void) const                   { return true; }
 
 	// status

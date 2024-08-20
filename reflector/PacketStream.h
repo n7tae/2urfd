@@ -36,7 +36,6 @@ class CPacketStream
 public:
 	CPacketStream(char module);
 	bool InitCodecStream();
-	void StopCodecStream();
 
 	// open / close
 	bool OpenPacketStream(const CDvHeaderPacket &, std::shared_ptr<CClient>);
@@ -55,13 +54,11 @@ public:
 	uint16_t         GetStreamId(void) const        { return m_uiStreamId; }
 	const CCallsign &GetUserCallsign(void) const    { return m_DvHeader.GetMyCallsign(); }
 	char             GetRpt2Module(void) const      { return m_DvHeader.GetRpt2Module(); }
-	char             GetModule(void) const          { return m_PSModule; }
 
 	// pass-through
 	std::unique_ptr<CPacket> Pop()        { return m_Queue.Pop(); }
 	std::unique_ptr<CPacket> PopWait()    { return m_Queue.PopWait(); }
-	bool IsEmpty() const                  { return m_Queue.IsEmpty(); }
-//	bool IsCompletelyEmpty() const;
+	bool IsEmpty()                        { return m_Queue.IsEmpty(); }
 
 protected:
 	// data

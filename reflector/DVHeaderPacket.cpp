@@ -83,6 +83,7 @@ void CDvHeaderPacket::EncodeInterlinkPacket(CBuffer &buf) const
 }
 
 // dstar constructor
+
 CDvHeaderPacket::CDvHeaderPacket(const struct dstar_header *buffer, uint16_t sid, uint8_t pid)
 	: CPacket(sid, pid)
 {
@@ -98,6 +99,7 @@ CDvHeaderPacket::CDvHeaderPacket(const struct dstar_header *buffer, uint16_t sid
 }
 
 // dmr constructor
+
 CDvHeaderPacket::CDvHeaderPacket(uint32_t my, const CCallsign &ur, const CCallsign &rpt1, const CCallsign &rpt2, uint16_t sid, uint8_t pid, uint8_t spid)
 	: CPacket(sid, pid, spid, false)
 {
@@ -112,6 +114,7 @@ CDvHeaderPacket::CDvHeaderPacket(uint32_t my, const CCallsign &ur, const CCallsi
 }
 
 // YSF constructor
+
 CDvHeaderPacket::CDvHeaderPacket(const CCallsign &my, const CCallsign &ur, const CCallsign &rpt1, const CCallsign &rpt2, uint16_t sid, uint8_t pid)
 	: CPacket(sid, pid, 0, 0)
 {
@@ -125,9 +128,10 @@ CDvHeaderPacket::CDvHeaderPacket(const CCallsign &my, const CCallsign &ur, const
 	m_csMY = my;
 }
 
-// P25
-CDvHeaderPacket::CDvHeaderPacket(const CCallsign &my, const CCallsign &ur, const CCallsign &rpt1, const CCallsign &rpt2, uint16_t sid)
-	: CPacket(sid, false)
+// P25 / USRP constructor
+
+CDvHeaderPacket::CDvHeaderPacket(const CCallsign &my, const CCallsign &ur, const CCallsign &rpt1, const CCallsign &rpt2, uint16_t sid, bool usrp)
+	: CPacket(sid, usrp, false)
 {
 	m_uiFlag1 = 0;
 	m_uiFlag2 = 0;
@@ -140,19 +144,30 @@ CDvHeaderPacket::CDvHeaderPacket(const CCallsign &my, const CCallsign &ur, const
 }
 
 // M17
+
 CDvHeaderPacket::CDvHeaderPacket(const CM17Packet &m17) : CPacket(m17)
 {
 	m_uiFlag1 = m_uiFlag2 = m_uiFlag3 = 0;
 	m_uiCrc = 0;
 	m_csUR = CCallsign("CQCQCQ");
 	m_csMY = m17.GetSourceCallsign();
-	m_csRPT1 = m_csRPT2 = m17.GetDestCallsign();
-	m_csRPT1.SetModule('G');
+	auto str = m17.GetDestCallsign().GetCS();
+	if (0 == str.compare(0, 4, "URF-"))
+	{
+		// take care of WPSD M17Host file format
+		str.erase(str.begin()+3);
+		m_csRPT1 = m_csRPT2 = CCallsign(str);
+	}
+	else
+	{
+		m_csRPT1 = m_csRPT2 = m17.GetDestCallsign();
+	}
+	m_csRPT1.SetCSModule('G');
 }
 
 std::unique_ptr<CPacket> CDvHeaderPacket::Copy(void)
 {
-	return std::make_unique<CDvHeaderPacket>(*this);
+	return std::unique_ptr<CPacket>(new CDvHeaderPacket(*this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -178,5 +193,11 @@ void CDvHeaderPacket::ConvertToDstarStruct(struct dstar_header *buffer) const
 
 bool CDvHeaderPacket::IsValid(void) const
 {
-	return CPacket::IsValid() && m_csRPT1.IsValid() && m_csRPT2.IsValid() && m_csMY.IsValid();
+	bool valid = CPacket::IsValid();
+
+	valid &= m_csRPT1.IsValid();
+	valid &= m_csRPT2.IsValid();
+	valid &= m_csMY.IsValid();
+
+	return valid;
 }

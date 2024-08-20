@@ -1,6 +1,6 @@
 /*
  *   Copyright (C) 2016,2017 by Jonathan Naylor G4KLX
- *   Copyright (C) 2024 Thomas A. Early
+ *   Copyright (C) 2020 Thomas A. Early
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -17,29 +17,28 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#pragma once
+#if !defined(YSFPayload_H)
+#define    YSFPayload_H
 
 #include <string>
 #include <memory>
-#include <cstdint>
 
 class CYSFPayload
 {
 public:
 	CYSFPayload() : m_uplink(nullptr), m_downlink(nullptr), m_source(nullptr), m_dest(nullptr) {}
-	~CYSFPayload();
-	bool processHeaderData(uint8_t* bytes);
+	bool processHeaderData(unsigned char* bytes);
 
-	void writeVDMode2Data(uint8_t* data, const uint8_t* dt);
-	bool readVDMode1Data(const uint8_t* data, uint8_t* dt);
-	bool readVDMode2Data(const uint8_t* data, uint8_t* dt);
+	void writeVDMode2Data(unsigned char* data, const unsigned char* dt);
+	bool readVDMode1Data(const unsigned char* data, unsigned char* dt);
+	bool readVDMode2Data(const unsigned char* data, unsigned char* dt);
 
-	void writeHeader(uint8_t* data, const uint8_t* csd1, const uint8_t* csd2);
+	void writeHeader(unsigned char* data, const unsigned char* csd1, const unsigned char* csd2);
 
-	void writeDataFRModeData1(const uint8_t* dt, uint8_t* data);
-	void writeDataFRModeData2(const uint8_t* dt, uint8_t* data);
-	bool readDataFRModeData1(const uint8_t* data, uint8_t* dt);
-	bool readDataFRModeData2(const uint8_t* data, uint8_t* dt);
+	void writeDataFRModeData1(const unsigned char* dt, unsigned char* data);
+	void writeDataFRModeData2(const unsigned char* dt, unsigned char* data);
+	bool readDataFRModeData1(const unsigned char* data, unsigned char* dt);
+	bool readDataFRModeData2(const unsigned char* data, unsigned char* dt);
 
 	std::string getSource();
 	std::string getDest();
@@ -50,5 +49,10 @@ public:
 	void reset();
 
 private:
-	uint8_t *m_uplink, *m_downlink, *m_source, *m_dest;
+	std::unique_ptr<unsigned char[]> m_uplink;
+	std::unique_ptr<unsigned char[]> m_downlink;
+	std::unique_ptr<unsigned char[]> m_source;
+	std::unique_ptr<unsigned char[]> m_dest;
 };
+
+#endif

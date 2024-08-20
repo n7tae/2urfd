@@ -38,10 +38,11 @@ CCallsign::CCallsign()
 	m_coded = 0;
 }
 
-CCallsign::CCallsign(const std::string &cs, uint32_t dmrid) : CCallsign()
+CCallsign::CCallsign(const std::string &cs, uint32_t dmrid, uint16_t nxdnid) : CCallsign()
 {
 	// and populate
 	m_uiDmrid = dmrid;
+	m_uiNXDNid = nxdnid;
 	auto len = cs.size();
 	if ( len > 0 )
 	{
@@ -59,6 +60,13 @@ CCallsign::CCallsign(const std::string &cs, uint32_t dmrid) : CCallsign()
 			m_uiDmrid = g_LDid.FindDmrid(key);
 			g_LDid.Unlock();
 		}
+
+		if (0 == m_uiNXDNid)
+		{
+			g_LNid.Lock();
+			m_uiNXDNid = g_LNid.FindNXDNid(key);
+			g_LNid.Unlock();
+		}
 	}
 	else if (dmrid)
 	{
@@ -67,6 +75,28 @@ CCallsign::CCallsign(const std::string &cs, uint32_t dmrid) : CCallsign()
 		if (pItem)
 			m_Callsign = *pItem;
 		g_LDid.Unlock();
+
+		if (m_Callsign.l && 0 == nxdnid)
+		{
+			g_LNid.Lock();
+			m_uiNXDNid = g_LNid.FindNXDNid(GetKey());
+			g_LNid.Unlock();
+		}
+	}
+	else if (nxdnid)
+	{
+		g_LNid.Lock();
+		auto pItem = g_LNid.FindCallsign(nxdnid);
+		if (pItem)
+			m_Callsign = *pItem;
+		g_LNid.Unlock();
+
+		if (m_Callsign.l && 0 == dmrid)
+		{
+			g_LDid.Lock();
+			m_uiDmrid = g_LDid.FindDmrid(GetKey());
+			g_LDid.Unlock();
+		}
 	}
 	if (m_Callsign.l)
 		CSIn();
@@ -78,6 +108,7 @@ CCallsign::CCallsign(const CCallsign &cs)
 	m_Suffix.u = cs.m_Suffix.u;
 	m_Module = cs.m_Module;
 	m_uiDmrid = cs.m_uiDmrid;
+	m_uiNXDNid = cs.m_uiNXDNid;
 	m_coded = cs.m_coded;
 }
 
@@ -94,6 +125,7 @@ CCallsign &CCallsign::operator = (const CCallsign &cs)
 		m_Suffix.u = cs.m_Suffix.u;
 		m_Module = cs.m_Module;
 		m_uiDmrid = cs.m_uiDmrid;
+		m_uiNXDNid = cs.m_uiNXDNid;
 		m_coded = cs.m_coded;
 	}
 	return *this;
@@ -136,7 +168,7 @@ bool CCallsign::IsValid(void) const
 	// is an letter or space
 	valid = valid && (IsLetter(m_Module) || IsSpace(m_Module));
 
-	// dmr id is not tested, as it can be 0 if station is not registered
+	// dmr and nxdn id is not tested, as it can be 0 if station is not registered
 
 	// done
 	return valid;
@@ -172,6 +204,11 @@ void CCallsign::SetCallsign(const std::string &s, bool updateids)
 			m_uiDmrid = g_LDid.FindDmrid(key);
 		}
 		g_LDid.Unlock();
+		g_LNid.Lock();
+		{
+			m_uiNXDNid = g_LNid.FindNXDNid(key);
+		}
+		g_LNid.Unlock();
 	}
 }
 
@@ -201,6 +238,11 @@ void CCallsign::SetCallsign(const uint8_t *buffer, int len, bool updateids)
 			m_uiDmrid = g_LDid.FindDmrid(key);
 		}
 		g_LDid.Unlock();
+		g_LNid.Lock();
+		{
+			m_uiNXDNid = g_LNid.FindNXDNid(key);
+		}
+		g_LNid.Unlock();
 	}
 }
 
@@ -230,7 +272,33 @@ void CCallsign::SetDmrid(const uint8_t *buffer, bool UpdateCallsign)
 	SetDmrid((uint32_t)::strtol(sz, nullptr, 16), UpdateCallsign);
 }
 
-void CCallsign::SetModule(char c)
+void CCallsign::SetNXDNid(uint16_t nxdnid, bool UpdateCallsign)
+{
+	m_uiNXDNid = nxdnid;
+	if ( UpdateCallsign )
+	{
+		g_LNid.Lock();
+		{
+			auto callsign = g_LNid.FindCallsign(nxdnid);
+			if ( callsign != nullptr )
+			{
+				m_Callsign.l = callsign->l;
+			}
+		}
+		g_LNid.Unlock();
+		CSIn();
+	}
+}
+
+void CCallsign::SetNXDNid(const uint8_t *buffer, bool UpdateCallsign)
+{
+	char sz[9];
+	memcpy(sz, buffer, 8);
+	sz[8] = 0;
+	SetNXDNid((uint16_t)::strtol(sz, nullptr, 16), UpdateCallsign);
+}
+
+void CCallsign::SetCSModule(char c)
 {
 	m_Module = c;
 	CSIn();
@@ -312,8 +380,9 @@ void CCallsign::GetCallsignString(char *sz) const
 
 const std::string CCallsign::GetCS() const
 {
-	std::string rval(m_Callsign.c, CALLSIGN_LEN-1);
-	rval.append(1, m_Module);
+	std::string rval(m_Callsign.c, CALLSIGN_LEN);
+	if (' ' != m_Module)
+		rval.append(1, m_Module);
 	return rval;
 }
 
@@ -327,7 +396,7 @@ void CCallsign::GetSuffix(uint8_t *buffer) const
 
 bool CCallsign::HasSameCallsign(const CCallsign &cs) const
 {
-	return cs.m_Callsign.l == m_Callsign.l;
+	return (memcmp(m_Callsign.c, cs.m_Callsign.c, CALLSIGN_LEN) == 0);
 }
 
 bool CCallsign::HasSameCallsignWithWildcard(const CCallsign &cs) const
@@ -351,7 +420,7 @@ bool CCallsign::HasSameCallsignWithWildcard(const CCallsign &cs) const
 
 bool CCallsign::operator ==(const CCallsign &cs) const
 {
-	return (cs.m_Callsign.l == m_Callsign.l) && (m_Module == cs.m_Module);
+	return (cs.m_Callsign.l == m_Callsign.l) && (m_Module == cs.m_Module) && (cs.m_Suffix.u == m_Suffix.u) && (m_uiDmrid == cs.m_uiDmrid) && (m_uiNXDNid == cs.m_uiNXDNid);
 }
 
 CCallsign::operator const char *() const

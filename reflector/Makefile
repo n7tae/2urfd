@@ -18,18 +18,18 @@
 # if you change these locations, make sure the sgs.service file is updated!
 # you will also break hard coded paths in the dashboard file, index.php.
 
-include ../urfd.mk
-
-EXE = $(REFLECTOR)
+EXE = urfd
 
 INICHECK = inicheck
 
 DBUTIL = dbutil
 
+include urfd.mk
+
 ifeq ($(debug), true)
-CFLAGS = -ggdb3 -DDEBUG -W -Werror -I../common -std=c++17 -MMD -MD
+CFLAGS = -ggdb3 -DDEBUG -W -Werror -std=c++17 -MMD -MD
 else
-CFLAGS = -W -Werror -I../common -std=c++17 -MMD -MD
+CFLAGS = -W -Werror -std=c++17 -MMD -MD
 endif
 
 LDFLAGS=-pthread -lcurl
@@ -40,10 +40,10 @@ else
 CFLAGS += -DNO_DHT
 endif
 
-SRCS = $(wildcard *.cpp) $(wildcard ../common/*.cpp)
+SRCS = $(wildcard *.cpp)
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
-DBUTILOBJS = Configure.o CurlGet.o Lookup.o LookupDmr.o LookupYsf.o YSFNode.o Callsign.o
+DBUTILOBJS = Configure.o CurlGet.o Lookup.o LookupDmr.o LookupNxdn.o LookupYsf.o YSFNode.o Callsign.o
 
 all : $(EXE) $(INICHECK) $(DBUTIL)
 
@@ -60,6 +60,20 @@ $(DBUTIL) : Main.cpp $(DBUTILOBJS)
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean :
-	$(RM) *.o *.d ../common/*.o ../common/*.d $(EXE) $(INICHECK) $(DBUTIL)
+	$(RM) *.o *.d $(EXE) $(INICHECK) $(DBUTIL)
 
 -include $(DEPS)
+
+install :
+	cp -f $(EXE).service /etc/systemd/system/
+	cp -f $(EXE) $(BINDIR)
+	systemctl enable $(EXE).service
+	systemctl daemon-reload
+	systemctl start $(EXE)
+
+uninstall :
+	systemctl stop $(EXE).service
+	systemctl disable $(EXE).service
+	$(RM) /etc/systemd/system/$(EXE).service
+	systemctl daemon-reload
+	$(RM) $(BINDIR)/$(EXE)

@@ -47,10 +47,14 @@ public:
 	CDvFramePacket(const uint8_t *ambe, const uint8_t *sync, uint16_t streamid, uint8_t counter1, uint8_t counter2, bool islast);
 	// YSF Frame
 	CDvFramePacket(const uint8_t *ambe, uint16_t streamid, uint8_t counter1, uint8_t counter2, uint8_t counter3, CCallsign cs, bool islast);
+	// XLX Frame
+	CDvFramePacket(uint16_t streamid, uint8_t counter, const uint8_t *ambe, const uint8_t *dvdata, uint8_t counter1, uint8_t counter2, const uint8_t *ambe2, const uint8_t *dmrsync, ECodecType type, bool islast);
 	// M17 Frame
 	CDvFramePacket(const CM17Packet &m17);
 	// P25 Frame
 	CDvFramePacket(const uint8_t *imbe, uint16_t streamid, bool islast);
+	// NXDN Frame
+	CDvFramePacket(const uint8_t *ambe, uint16_t streamid, uint8_t pid, bool islast);
 	// URF Network
 	CDvFramePacket(const CBuffer &buf);
 	static unsigned int GetNetworkSize();

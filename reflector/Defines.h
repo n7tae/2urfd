@@ -39,8 +39,6 @@
 #include <algorithm>
 #include <arpa/inet.h>
 
-#include "TTypes.h"
-
 ////////////////////////////////////////////////////////////////////////////////////////
 // defines
 
@@ -48,8 +46,11 @@
 #define DSTAR_IPV4 true
 #define DMR_IPV4 true
 #define YSF_IPV4 true
+#define XLX_IPV4 true
 #define M17_IPV4 true
 #define P25_IPV4 true
+#define NXDN_IPV4 true
+#define USRP_IPV4 true
 #define URF_IPV4 true
 
 
@@ -59,16 +60,13 @@
 #define XLX_IPV6 false
 #define M17_IPV6 true
 #define P25_IPV6 false
+#define NXDN_IPV6 false
+#define USRP_IPV6 false
 #define URF_IPV6 true
 
 // protocols ---------------------------------------------------
 
-// SIZE always has to be the last element!
-enum class EProtocol : unsigned { dcs, dextra, dplus, dsd, m17, mmdvm, p25, urf, ysf, SIZE };
-
-// DCS
-#define DCS_KEEPALIVE_PERIOD            1                                   // in seconds
-#define DCS_KEEPALIVE_TIMEOUT           (DCS_KEEPALIVE_PERIOD*30)           // in seconds
+enum class EProtocol { any, none, dextra, dplus, dcs, g3, bm, urf, dmrplus, dmrmmdvm, nxdn, p25, usrp, ysf, m17 };
 
 // DExtra
 #define DEXTRA_KEEPALIVE_PERIOD         3                                   // in seconds
@@ -77,10 +75,27 @@ enum class EProtocol : unsigned { dcs, dextra, dplus, dsd, m17, mmdvm, p25, urf,
 // DPlus
 #define DPLUS_KEEPALIVE_PERIOD          1                                   // in seconds
 #define DPLUS_KEEPALIVE_TIMEOUT         (DPLUS_KEEPALIVE_PERIOD*10)         // in seconds
+#define DPLUS_DEFAULT_RPTR1_SUFFIX      'Y'
 
-// DStarDirect
-#define DSD_KEEPALIVE_PERIOD            2                                   // seconds
-#define DSD_KEEPALIVE_TIMEOUT			20                                  // seconds
+// DCS
+#define DCS_KEEPALIVE_PERIOD            1                                   // in seconds
+#define DCS_KEEPALIVE_TIMEOUT           (DCS_KEEPALIVE_PERIOD*30)           // in seconds
+
+// XLX, used for BM
+#define BM_KEEPALIVE_PERIOD             1                                   // in seconds
+#define BM_KEEPALIVE_TIMEOUT            (BM_KEEPALIVE_PERIOD*30)           // in seconds
+#define BM_RECONNECT_PERIOD             5                                   // in seconds
+
+// URF
+#define URF_KEEPALIVE_PERIOD            1                                   // in seconds
+#define URF_KEEPALIVE_TIMEOUT           (URF_KEEPALIVE_PERIOD*30)           // in seconds
+#define URF_RECONNECT_PERIOD            5                                   // in seconds
+
+// DMRPlus (dongle)
+#define DMRPLUS_KEEPALIVE_PERIOD        1                                   // in seconds
+#define DMRPLUS_KEEPALIVE_TIMEOUT       (DMRPLUS_KEEPALIVE_PERIOD*10)       // in seconds
+#define DMRPLUS_REFLECTOR_SLOT          DMR_SLOT2
+#define DMRPLUS_REFLECTOR_COLOUR        1
 
 // DMRMmdvm
 #define DMRMMDVM_KEEPALIVE_PERIOD       10                                  // in seconds
@@ -88,22 +103,33 @@ enum class EProtocol : unsigned { dcs, dextra, dplus, dsd, m17, mmdvm, p25, urf,
 #define DMRMMDVM_REFLECTOR_SLOT         DMR_SLOT2
 #define DMRMMDVM_REFLECTOR_COLOUR       1
 
+// YSF
+#define YSF_KEEPALIVE_PERIOD            3                                   // in seconds
+#define YSF_KEEPALIVE_TIMEOUT           (YSF_KEEPALIVE_PERIOD*10)           // in seconds
+
 // M17
 #define M17_KEEPALIVE_PERIOD			3
 #define M17_KEEPALIVE_TIMEOUT           (M17_KEEPALIVE_PERIOD*10)
 
 // P25
 #define P25_KEEPALIVE_PERIOD            3                                   // in seconds
-#define P25_KEEPALIVE_TIMEOUT           (P25_KEEPALIVE_PERIOD*10)           // in seconds
+#define P25_KEEPALIVE_TIMEOUT           (P25_KEEPALIVE_PERIOD*10)         // in seconds
 
-// URF
-#define URF_KEEPALIVE_PERIOD            1                                   // in seconds
-#define URF_KEEPALIVE_TIMEOUT           (URF_KEEPALIVE_PERIOD*30)           // in seconds
-#define URF_RECONNECT_PERIOD            5                                   // in seconds
+// NXDN
+#define NXDN_KEEPALIVE_PERIOD          3                                   // in seconds
+#define NXDN_KEEPALIVE_TIMEOUT         (NXDN_KEEPALIVE_PERIOD*10)         // in seconds
 
-// YSF
-#define YSF_KEEPALIVE_PERIOD            3                                   // in seconds
-#define YSF_KEEPALIVE_TIMEOUT           (YSF_KEEPALIVE_PERIOD*10)           // in seconds
+// USRP
+#define USRP_KEEPALIVE_PERIOD          1                                   // in seconds
+#define USRP_KEEPALIVE_TIMEOUT         (USRP_KEEPALIVE_PERIOD*10)         // in seconds
+
+// G3 Terminal
+#define G3_PRESENCE_PORT                12346                               // UDP port
+#define G3_CONFIG_PORT                  12345                               // UDP port
+#define G3_DV_PORT                      40000                               // UDP port
+#define G3_KEEPALIVE_PERIOD             10                                  // in seconds
+#define G3_KEEPALIVE_TIMEOUT            3600                                // in seconds, 1 hour
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // macros

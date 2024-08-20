@@ -18,8 +18,6 @@
 
 #include <nlohmann/json.hpp>
 #include <string.h>
-
-#include "Global.h"
 #include "Reflector.h"
 #include "Peer.h"
 
@@ -27,26 +25,24 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructor
 
-// CPeer::CPeer()
-// {
-// 	memset(m_ReflectorModules, 0, sizeof(m_ReflectorModules));
-// 	m_ConnectTime = std::time(nullptr);
-// 	m_LastHeardTime = std::time(nullptr);
-// }
 
-CPeer::CPeer(const CCallsign &callsign, EProtocol protocol, const CIp &ip, const char *modules, const CVersion &version) : m_Callsign(callsign), m_Protocol(protocol), m_Ip(ip)
+CPeer::CPeer()
 {
+	memset(m_ReflectorModules, 0, sizeof(m_ReflectorModules));
+	m_ConnectTime = std::time(nullptr);
+	m_LastHeardTime = std::time(nullptr);
+}
+
+CPeer::CPeer(const CCallsign &callsign, const CIp &ip, const char *modules, const CVersion &version)
+{
+	m_Callsign = callsign;
+	m_Ip = ip;
 	memset(m_ReflectorModules, 0, sizeof(m_ReflectorModules));
 	::strncpy(m_ReflectorModules, modules, sizeof(m_ReflectorModules)-1);
 	m_Version = version;
 	m_LastKeepaliveTime.start();
 	m_ConnectTime = std::time(nullptr);
 	m_LastHeardTime = std::time(nullptr);
-}
-
-const std::string &CPeer::GetProtocolName() const
-{
-	return g_Reflector.GetProtocolName(m_Protocol);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -117,14 +113,14 @@ void CPeer::WriteXml(std::ofstream &xmlFile)
 	xmlFile << "\t<IP>" << m_Ip.GetAddress() << "</IP>" << std::endl;
 	xmlFile << "\t<LinkedModule>" << m_ReflectorModules << "</LinkedModule>" << std::endl;
 	xmlFile << "\t<Protocol>" << GetProtocolName() << "</Protocol>" << std::endl;
-	char mbstr[100];
-	if (std::strftime(mbstr, sizeof(mbstr), "%A %c", std::localtime(&m_ConnectTime)))
+	char s[100];
+	if (std::strftime(s, sizeof(s), "%FT%TZ", std::gmtime(&m_ConnectTime)))
 	{
-		xmlFile << "\t<ConnectTime>" << mbstr << "</ConnectTime>" << std::endl;
+		xmlFile << "\t<ConnectTime>" << s << "</ConnectTime>" << std::endl;
 	}
-	if (std::strftime(mbstr, sizeof(mbstr), "%A %c", std::localtime(&m_LastHeardTime)))
+	if (std::strftime(s, sizeof(s), "%FT%TZ", std::gmtime(&m_LastHeardTime)))
 	{
-		xmlFile << "\t<LastHeardTime>" << mbstr << "</LastHeardTime>" << std::endl;
+		xmlFile << "\t<LastHeardTime>" << s << "</LastHeardTime>" << std::endl;
 	}
 	xmlFile << "</PEER>" << std::endl;
 }

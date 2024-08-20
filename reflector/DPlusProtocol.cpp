@@ -96,7 +96,7 @@ void CDplusProtocol::Task(void)
 				Send(Buffer, Ip);
 
 				// create the client and append
-				g_Reflector.GetClients()->AddClient(std::make_shared<CDplusClient>(Callsign, EProtocol::dplus, Ip));
+				g_Reflector.GetClients()->AddClient(std::make_shared<CDplusClient>(Callsign, Ip));
 				g_Reflector.ReleaseClients();
 			}
 			else
@@ -184,7 +184,7 @@ void CDplusProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header
 		CCallsign rpt2(Header->GetRpt2Callsign());
 
 		// first, check module is valid
-		if ( g_Reflector.IsValidModule(rpt2.GetModule()) )
+		if ( g_Reflector.IsValidModule(rpt2.GetCSModule()) )
 		{
 			// find this client
 			std::shared_ptr<CClient>client = g_Reflector.GetClients()->FindClient(Ip, EProtocol::dplus);
@@ -198,7 +198,7 @@ void CDplusProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header
 				// now we know its module, let's update it
 				if ( !client->HasModule() )
 				{
-					client->SetModule(rpt1.GetModule());
+					client->SetCSModule(rpt1.GetCSModule());
 				}
 				// get client callsign
 				rpt1 = client->GetCallsign();
@@ -464,17 +464,6 @@ void CDplusProtocol::EncodeDisconnectPacket(CBuffer *Buffer)
 	Buffer->Set(tag, sizeof(tag));
 }
 
-bool CDplusProtocol::EncodeDvPacket(const CPacket &packet, CBuffer &buffer) const
-{
-	if ( packet.IsDvFrame() )
-		return EncodeDvFramePacket((CDvFramePacket &)packet, buffer);
-
-	if ( packet.IsDvHeader() )
-		return EncodeDvHeaderPacket((CDvHeaderPacket &)packet, buffer);
-
-	std::cerr << "Can't encode an unknown packet type!" << std::endl;
-	return false;
-}
 
 bool CDplusProtocol::EncodeDvHeaderPacket(const CDvHeaderPacket &Packet, CBuffer &Buffer) const
 {

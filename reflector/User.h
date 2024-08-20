@@ -37,7 +37,7 @@ public:
 	// get
 	const std::string GetCallsign(void) const { return m_My.GetCS(); }
 	const std::string GetViaNode(void)  const { return m_Rpt1.GetCS(); }
-	char GetOnModule(void)              const { return m_Rpt2.GetModule(); }
+	char GetOnModule(void)              const { return m_Rpt2.GetCSModule(); }
 	const std::string GetViaPeer(void)  const { return m_Xlx.GetCS(); }
 	std::time_t GetLastHeardTime(void)  const { return m_LastHeardTime; }
 

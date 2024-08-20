@@ -25,12 +25,16 @@ class CURFPeer : public CPeer
 {
 public:
 	// constructors
-//	CURFPeer();
-	CURFPeer(const CCallsign &, EProtocol, const CIp &, const char *, const CVersion &);
-//	CURFPeer(const CURFPeer &) = delete;
+	CURFPeer();
+	CURFPeer(const CCallsign &, const CIp &, const char *, const CVersion &);
+	CURFPeer(const CURFPeer &) = delete;
 
 	// status
 	bool IsAlive(void) const;
+
+	// identity
+	EProtocol GetProtocol(void) const          { return EProtocol::urf; }
+	const char *GetProtocolName(void) const    { return "URF"; }
 
 	// revision helper
 	static EProtoRev GetProtocolRevision(const CVersion &);

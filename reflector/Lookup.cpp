@@ -49,7 +49,7 @@ void CLookup::LookupInit()
 
 void CLookup::Thread()
 {
-	const unsigned long wait_cycles = m_Refresh * 15u; // the number of while loops in m_Refresh
+	const unsigned long wait_cycles = m_Refresh * 6u; // the number of while loops in m_Refresh
 	unsigned long count = 0;
 	while (keep_running)
 	{
@@ -90,7 +90,7 @@ void CLookup::Thread()
 		}
 
 		// now wait for 10 seconds
-		std::this_thread::sleep_for(std::chrono::seconds(4));
+		std::this_thread::sleep_for(std::chrono::seconds(10));
 	}
 }
 

@@ -67,7 +67,7 @@ public:
 	CCallsign();
 	CCallsign(const UCallsign &cs);    // no id lookup
 	CCallsign(const CCallsign &cs);
-	CCallsign(const std::string &cs, uint32_t dmrid = 0);
+	CCallsign(const std::string &cs, uint32_t dmrid = 0, uint16_t nxdnid = 0);
 
 	// status
 	bool IsValid(void) const;
@@ -79,7 +79,9 @@ public:
 	void SetCallsign(const uint8_t *, int, bool = true);
 	void SetDmrid(uint32_t, bool = true);
 	void SetDmrid(const uint8_t *, bool = true);
-	void SetModule(char);
+	void SetNXDNid(uint16_t, bool = true);
+	void SetNXDNid(const uint8_t *, bool = true);
+	void SetCSModule(char);
 	void SetSuffix(const std::string &s);
 	void SetSuffix(const uint8_t *, int);
 
@@ -93,8 +95,9 @@ public:
 	void GetCallsignString(char *) const;
 	const std::string GetCS() const;
 	uint32_t GetDmrid(void) const { return m_uiDmrid; }
+	uint16_t GetNXDNid(void) const { return m_uiNXDNid; }
 	void GetSuffix(uint8_t *) const;
-	char GetModule(void) const { return m_Module; }
+	char GetCSModule(void) const { return m_Module; }
 
 	// compare
 	bool HasSameCallsign(const CCallsign &) const;
@@ -125,5 +128,6 @@ protected:
 	USuffix   m_Suffix;
 	char      m_Module;
 	uint32_t  m_uiDmrid;
+	uint16_t  m_uiNXDNid;
 	uint64_t  m_coded; // M17 encoded callsign
 };
