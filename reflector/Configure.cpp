@@ -44,6 +44,7 @@
 #define JDEFAULTTXFREQ           "DefaultTxFreq"
 #define JDESCRIPTION             "Description"
 #define JDEXTRA                  "DExtra"
+#define JDHTSAVEPATH             "DHTSavePath"
 #define JDMRIDDB                 "DMR ID DB"
 #define JDPLUS                   "DPlus"
 #define JENABLE                  "Enable"
@@ -439,6 +440,8 @@ bool CConfigure::ReadData(const std::string &path)
 					data[g_Keys.files.black] = value;
 				else if (0 == key.compare(JINTERLINKPATH))
 					data[g_Keys.files.interlink] = value;
+				else if (0 == key.compare(JDHTSAVEPATH))
+					data[g_Keys.files.dht] = value;
 				else
 					badParam(key);
 				break;
@@ -894,7 +897,7 @@ int main(int argc, char *argv[])
 			d.Dump(('n' == argv[1][1]) ? true : false);
 		return rval ? EXIT_FAILURE : EXIT_SUCCESS;
 	}
-	std::cerr << "Usage: " << argv[0] << " -(q|n|v) FILENAME\nWhere:\n\t-q just prints warnings and errors.\n\t-n also prints keys that begin with an uppercase letter.\n\t-v prints all keys, warnings and errors." << std::endl;
+	std::cout << "Usage: " << argv[0] << " -(q|n|v) FILENAME\nWhere:\n\t-q just prints warnings and errors.\n\t-n also prints keys that begin with an uppercase letter.\n\t-v prints all keys, warnings and errors." << std::endl;
 	return EXIT_SUCCESS;
 }
 #endif

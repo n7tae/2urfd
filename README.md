@@ -98,13 +98,11 @@ This will create eight files:
 7. The `tcd.ini` file contains run-time options for *tcd*. Make sure the `Transcoded` line is identical for both `tcd.ini` and `urfd.ini`.
 8. The `tcd.service` file is a systemd file that will start and stop *tcd*. Importantly, it contains the only reference to where the *tcd* ini file is located. Be sure to set a fully qualified path to your `tcd.ini` file on the `ExecStart` line.
 
-You can actually put the blacklist, whitelist, interlink and the two ini files anyplace and even rename them because ini file locations are only referenced in the two service files and the blacklist, whitelist and interlink files are only referenced in the `urfd.ini` file. The service files and the mk files need to remain in your `urfd` directory.
-
 ### Configuring your reflector
 
 Use your favorite text editor to set your run-time configuration in your copy of `urfd.ini` and `tcd.ini`.
 
-There are only a few things that need to be specified. Most important are, the reflector callsign and the IP addresses for the IPv4 and IPv6 listen ports and and identifying the transcoded modules. Dual-stack operation is enabled by specifying both an IPv4 and IPv6 address. IPv4-only single stack can be specified by leaving the IPv6 address undefined. Note that some protocols don't yet support IPv6.
+There are only a few things that need to be specified. Most important are, the reflector callsign, the IP addresses for the IPv4 and IPv6 listen ports, the list of modules, and the list of transcoded modules. Dual-stack operation is enabled by specifying both an IPv4 and IPv6 address. IPv4-only single stack can be specified by leaving the IPv6 address undefined. Note that some protocols don't yet support IPv6.
 
 You can configure any modules, from **A** to **Z**. Up to three modules can be transcoded if you have the necessary hardware.
 
@@ -112,17 +110,17 @@ There are three databases needed by *urfd*:
 1. The *DMR ID* database maps a DMR ID to a callsign and *vis versa*.
 2. The *NXDN ID* database maps a NXDN ID to a callsign and *vis versa*.
 3. The *YSF Tx/Rx* database maps a callsign to a transmit/receive RF frequencies.
-These databases can come from a URL or a file, or both. If you specify "both", then the file will be read after the URL. Using "both" is what you want if you need to supply some custom values for your setup, but still want the latest values from the web.
+These databases can come from a URL or a file, or both. If you specify "both", then the specified file will be read after the URL. Using "both" is what you want if you need to supply some custom values for your setup, but still want the latest values from the web.
 
-The files section specifies specific locations of important runtime configurations. The DHTSavePath is important for allowing *urfd* to quickly and reliably connect to the **Ham-DHT** network. The first time you boot up *urfd* it will make its initial connection to the network through any single, already operating node that you specify got the **\[Names\] Bootstrap** item. As urfd operates over time, it will establish connections to several other operating nodes that are "close" (as defined by some criteria). This is a fundamental characteristic of a DHT network. When you shutdown *urfd*, it will save the current connection state that your reflector has developed using the file path you specified in DHTSavePath. The next time you boot up *urfd*, if this file exists, it will be read and used to quickly connect your reflector to the network.
+The files section specifies specific locations of important runtime configurations. The DHTSavePath is important for allowing *urfd* to quickly and reliably connect to the **Ham-DHT** network. The first time you boot up *urfd* it will make its initial connection to the network through any single, already operating node that you specify got the **\[Names\] Bootstrap** item. As urfd operates over time, it will establish connections to several other operating nodes that are "close" (as defined by some criteria). This is a fundamental characteristic of a DHT network. When you shutdown *urfd*, it will save the current connection state that your reflector has developed using the file path you specified in DHTSavePath. The next time you boot up *urfd*, if this file exists, it will be read and used to quickly connect your reflector to the network at its position that was saved.
 
 ### Helper apps
 
 There are two, very useful helper applications, *inicheck* and *dbutil*. Both apps will show you a usage message if you execute them without any arguments.
 
-The *inicheck* app will use the exact same code that urfd uses to validate your `urfd.ini` file. Do `reflector/inicheck -q urefd.ini` to check your infile for errors. If you see any messages containing `ERROR`, that means that *urfd* won't start. You'll have to fix the errors described in the message(s). If you only see messages containing `WARNING`, *urfd* will start, but it may not perform as expected. You will have to decide if the warning should be fixed. If you don't see any messages, it means that *urfd* and *tcd* will start without any configuration problems. The **one exception** is that bad things will happen if you don't have identical **Transcoded** lines in the two ini files.
+The *inicheck* app will use the exact same code that urfd uses to validate your `urfd.ini` file. Do `reflector/inicheck -q urefd.ini` to check your infile for errors. If you see any messages containing `ERROR`, that means that *urfd* won't start. You'll have to fix the errors described in the message(s). If you only see messages containing `WARNING`, *urfd* will start, but it may not perform as expected. You will have to decide if the warning should be fixed. Also do `./tcmodcheck` to see you your `Transcoded` parameters are identical in both urfd.ini and tcd.ini. Be sure to fix any problem(s) before try to install and run you transcoding reflector.
 
-The *dbutil* app can be used for several tasks relating to the three databases that *urfd* uses. The usage is: `./dbutil DATABASE SOURCE ACTION INIFILE`, where:
+The *dbutil* app can be used for several tasks relating to the three databases that *urfd* uses. The usage is: `reflector/dbutil DATABASE SOURCE ACTION INIFILE`, where:
 - DATABASE is "dmr", "nxdn" or "ysf"
 - SOURCE is "html" or "file"
 - ACTION is "parse" or "errors"
@@ -133,19 +131,19 @@ One at a time, *dbutil* can work with either of the two DATABASEs. It can read e
 reflector/dbutil dmr html parse urfd.ini > /home/user/urfd/dmrid.dat
 ```
 
-This can save some time during startup. You can then offload the task of periodically updating these to files with other Linux tools, like crontab.
+You can then set the appropriate section in your urfd.ini file to read from this file, instead of reading from the url. This can save some time during startup. You can then offload the task of periodically updating these to files with other Linux tools, like crontab.
 
 ### Installing your system
 
-After you have written your configuration files, you can install your system:
+After you have written your configuration files, and optionally created your lookup file, do an `inicheck` and `tcmodcheck` one more time. Then you can install your system:
 
-```bash
+```
 sudo make install
 ```
 
 and uninstall your system:
 
-```bash
+```
 sudo make uninstall
 ```
 

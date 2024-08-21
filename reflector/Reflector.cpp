@@ -61,7 +61,40 @@ bool CReflector::Start(void)
 	// start the dht instance
 	refhash = dht::InfoHash::get(cs);
 	node.run(17171, dht::crypto::generateIdentity(cs), true, 59973);
-	node.bootstrap(g_Configure.GetString(g_Keys.names.bootstrap), "17171");
+	std::ifstream myfile;
+	const auto path(g_Configure.Contains(g_Keys.files.dht) ? g_Configure.GetString(g_Keys.files.dht) : "");
+	if (path.size() > 0)
+		myfile.open(path, std::ios::binary|std::ios::ate);
+	if (myfile.is_open())
+	{
+		msgpack::unpacker pac;
+		auto size = myfile.tellg();
+		myfile.seekg (0, std::ios::beg);
+		pac.reserve_buffer(size);
+		myfile.read (pac.buffer(), size);
+		pac.buffer_consumed(size);
+		// Import nodes
+		msgpack::object_handle oh;
+		while (pac.next(oh)) {
+			auto imported_nodes = oh.get().as<std::vector<dht::NodeExport>>();
+			std::cout << "Importing " << imported_nodes.size() << " ham-dht nodes from " << path << std::endl;
+			node.bootstrap(imported_nodes);
+		}
+		myfile.close();
+	}
+	else
+	{
+		const auto bsnode = g_Configure.GetString(g_Keys.names.bootstrap);
+		if (bsnode.size())
+		{
+			std::cout << "Bootstrapping from " << bsnode << std::endl;
+			node.bootstrap(bsnode, "17171");
+		}
+		else
+		{
+			std::cout << "WARNING: The DHT bootstrap node has not been defined!" << std::endl;
+		}
+	}
 #endif
 
 	// let's go!
@@ -164,6 +197,28 @@ void CReflector::Stop(void)
 	g_LYtr.LookupClose();
 
 #ifndef NO_DHT
+	// save the state of the DHT network
+	const std::string path(g_Configure.Contains(g_Keys.files.dht) ? g_Configure.GetString(g_Keys.files.dht) : "");
+	if (path.size() > 0)
+	{
+		auto exnodes = node.exportNodes();
+		if (exnodes.size())
+		{
+			// Export nodes to binary file
+			std::ofstream myfile(path, std::ios::binary | std::ios::trunc);
+			if (myfile.is_open())
+			{
+				std::cout << "Saving " << exnodes.size() << " nodes to " << path << std::endl;
+				msgpack::pack(myfile, exnodes);
+				myfile.close();
+			}
+			else
+				std::cerr << "Trouble opening " << path << std::endl;
+		}
+		else
+			std::cout << "There are no DHT network nodes to save!" << std::endl;
+	}
+
 	// kill the DHT
 	node.cancelPut(refhash, toUType(EUrfdValueID::Config));
 	node.cancelPut(refhash, toUType(EUrfdValueID::Peers));

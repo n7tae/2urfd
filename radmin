@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2021 by Thomas A. Early N7TAE
+# Copyright (c) 2024 by Thomas A. Early N7TAE
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,11 +35,9 @@ UninstallReflector () {
 }
 
 InstallReflector () {
-	if [ "$tcaddress" != none ]; then
-		pushd transcoder
-		sudo make install || read -p "<Enter> to continue: " ans
-		popd
-	fi
+	pushd transcoder
+	sudo make install || read -p "<Enter> to continue: " ans
+	popd
 	pushd reflector
 	if [ ! -e urfd.whitelist ]; then
 		cp ../config/urfd.whitelist .
@@ -63,28 +61,14 @@ InstallReflector () {
 urfserv='/etc/systemd/system/urfd.service'
 tcdserv='/etc/systemd/system/tcd.service'
 
-# default values, we only need a few
-tcaddress='none'
-
-if [[ $# -eq 1 ]]; then
-	if [ -e $1 ]; then
-		echo $1 found
-		callsign=$(awk '$1 == "Callsign"{print $3}' $1)
-		tcaddress=$(awk '$1 == "Transcoder"{print $3}' $1)
-	else
-		echo "$1 not found"
-		exit 1
-	fi
+if [[ -e urfd.ini ]]; then
+	callsign=$(awk '$1 == "Callsign"{print $3}' urfd.ini)
 else
-	if [[ -e urfd.ini ]]; then
-		callsign=$(awk '$1 == "Callsign"{print $3}' urfd.ini)
-		tcaddress=$(awk '$1 == "Transcoder"{print $3}' urfd.ini)
-	else
-		echo "ERROR: could not find reflector/urfd.ini! You'll have to specify it."
-		echo "Usage: ./radmin PATH-TO-INI-FILE"
-		exit 1
-	fi
+	echo "ERROR: urfd.ini! You'll have to specify it."
+	exit 1
 fi
+
+
 key='x'
 # main loop
 while [[ "$key" != q* ]]
@@ -97,7 +81,9 @@ do
 		ps -aux | grep -e urfd -e tcd | grep -vE 'grep|journalctl'
 	fi
 	echo
-	echo "        Reflector Administration, Version #240303"
+	echo "        Reflector Administration, Version #240820"
+	echo
+	echo "                         $callsign"
 	echo
 	git status | head -1
 	echo
@@ -116,12 +102,8 @@ do
 	else
 		if [[ "$callsign" == URF* ]]; then
 			if [ -e reflector/urfd ]; then
-				if [[ "$tcaddress" == none ]]; then
-					echo "is : Install URF reflector without transcoder"
-				else
-					if [ -e ../tcd/tcd ]; then
-						echo "is : Install URF reflector and transcoder"
-					fi
+				if [ -e ../tcd/tcd ]; then
+					echo "is : Install URF reflector and transcoder"
 				fi
 			fi
 		fi
