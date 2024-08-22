@@ -113,15 +113,8 @@ void CPeer::WriteXml(std::ofstream &xmlFile)
 	xmlFile << "\t<IP>" << m_Ip.GetAddress() << "</IP>" << std::endl;
 	xmlFile << "\t<LinkedModule>" << m_ReflectorModules << "</LinkedModule>" << std::endl;
 	xmlFile << "\t<Protocol>" << GetProtocolName() << "</Protocol>" << std::endl;
-	char s[100];
-	if (std::strftime(s, sizeof(s), "%FT%TZ", std::gmtime(&m_ConnectTime)))
-	{
-		xmlFile << "\t<ConnectTime>" << s << "</ConnectTime>" << std::endl;
-	}
-	if (std::strftime(s, sizeof(s), "%FT%TZ", std::gmtime(&m_LastHeardTime)))
-	{
-		xmlFile << "\t<LastHeardTime>" << s << "</LastHeardTime>" << std::endl;
-	}
+	xmlFile << "\t<ConnectTime>" << m_ConnectTime << "</ConnectTime>" << std::endl;
+	xmlFile << "\t<LastHeardTime>" << m_LastHeardTime << "</LastHeardTime>" << std::endl;
 	xmlFile << "</PEER>" << std::endl;
 }
 

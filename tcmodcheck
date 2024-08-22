@@ -1,0 +1,37 @@
+#!/bin/bash
+#
+# Copyright (c) 2024 by Thomas A. Early N7TAE
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ ! -e urfd.ini ]; then
+	echo "ERROR: urfd.ini file not found"
+	exit 1
+fi
+
+if [ ! -e tcd.ini ]; then
+	echo "ERROR: tcd.ini file not found"
+	exit 1
+fi
+
+urfdtcmods=$(awk '$1 == "Transcoded"{print $3}' urfd.ini)
+tcdtcmods=$(awk '$1 == "Transcoded"{print $3}' tcd.ini)
+
+if [ "$urfdtcmods" = "$tcdtcmods" ]; then
+	echo "SUCCESS: Transcoded modules '$tcdtcmods' specified in both tcd.ini and urfd.ini file!"
+	exit 0
+else
+	echo "ERROR: Transcoded modules mismatch in tcd.ini and urfd.ini file!"
+	exit 1
+fi
