@@ -46,7 +46,6 @@ public:
 	const nlohmann::json &GetData() { return data; }
 
 private:
-	// CFGDATA data;
 	unsigned counter;
 	nlohmann::json data;
 	std::regex IPv4RegEx, IPv6RegEx;
@@ -59,5 +58,5 @@ private:
 	void checkFile(const std::string &section, const std::string &key, const std::string &filepath) const;
 	void setAutolink(const std::string &section, const std::string &key, const std::string &value);
 	bool isDefined(ErrorLevel level, const std::string &section, const std::string &pname, const std::string &key, bool &rval);
-	void checkAutoLink(const std::string &section, const std::string &pname, const std::string &key, bool &rval);
+	void checkAutoLink(const std::string &section, const std::string &pname, const std::string &key, bool &rval) const;
 };

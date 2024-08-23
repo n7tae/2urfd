@@ -721,21 +721,19 @@ bool CConfigure::isDefined(ErrorLevel level, const std::string &section, const s
 	return false;
 }
 
-void CConfigure::checkAutoLink(const std::string &section, const std::string &pname, const std::string &key, bool &rval)
+void CConfigure::checkAutoLink(const std::string &section, const std::string &pname, const std::string &key, bool &rval) const
 {
-	if (data.contains(key))
+	const auto alm = GetAutolinkModule(key);
+	if (' ' != alm)
 	{
 		auto ismods = data.contains(g_Keys.modules.modules);
 		const auto mods(ismods ? data[g_Keys.modules.modules].get<std::string>() : "");
-		const auto c = data[key].get<std::string>().at(0);
-		if (std::string::npos == mods.find(c))
+		if (std::string::npos == mods.find(alm))
 		{
-			std::cerr << "ERROR: [" << section << ']' << pname << " module '" << c << "' not a configured module" << std::endl;
+			std::cerr << "ERROR: [" << section << ']' << pname << " module '" << alm << "' not a configured module" << std::endl;
 			rval = true;
 		}
 	}
-	else
-		data[key] = nullptr;
 }
 
 std::string CConfigure::getDataRefreshType(ERefreshType type) const
@@ -778,7 +776,7 @@ void CConfigure::badParam(const std::string &key) const
 bool CConfigure::checkModules(std::string &m) const
 {
 	bool rval = false; // return true on error
-	for(unsigned i=0; i<m.size(); i++)
+	for (unsigned i=0; i<m.size(); i++)
 		if (islower(m[i]))
 			m[i] = toupper(m[i]);
 
@@ -920,7 +918,7 @@ bool CConfigure::GetBoolean(const std::string &key) const
 
 char CConfigure::GetAutolinkModule(const std::string &key) const
 {
-	char c = 0;
+	char c = ' ';
 	if (data.contains(key))
 	{
 		if (data[key].is_string())
