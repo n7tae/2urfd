@@ -63,17 +63,3 @@ clean :
 	$(RM) *.o *.d $(EXE) $(INICHECK) $(DBUTIL)
 
 -include $(DEPS)
-
-install :
-	cp -f $(EXE).service /etc/systemd/system/
-	cp -f $(EXE) $(BINDIR)
-	systemctl enable $(EXE).service
-	systemctl daemon-reload
-	systemctl start $(EXE)
-
-uninstall :
-	systemctl stop $(EXE).service
-	systemctl disable $(EXE).service
-	$(RM) /etc/systemd/system/$(EXE).service
-	systemctl daemon-reload
-	$(RM) $(BINDIR)/$(EXE)

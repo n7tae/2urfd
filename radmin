@@ -21,40 +21,6 @@ ControlC () {
 	echo "caught SIGINT"
 }
 
-UninstallReflector () {
-	if [ -e $urfserv ]; then
-		pushd reflector
-		sudo make uninstall
-		popd
-	fi
-	if [ -e $tcdserv ]; then
-		pushd transcoder
-		sudo make uninstall
-		popd
-	fi
-}
-
-InstallReflector () {
-	pushd transcoder
-	sudo make install || read -p "<Enter> to continue: " ans
-	popd
-	pushd reflector
-	if [ ! -e urfd.whitelist ]; then
-		cp ../config/urfd.whitelist .
-	fi
-	if [ ! -e urfd.blacklist ]; then
-		cp ../config/urfd.blacklist .
-	fi
-	if [ ! -e urfd.interlink ]; then
-		cp ../config/urfd.interlink .
-	fi
-	if [ ! -e urfd.terminal ]; then
-		cp ../config/urfd.terminal .
-	fi
-	sudo make install || read -p "<Enter> to continue: " ans
-	popd
-}
-
 # Execution starts here!
 
 # service file locations
@@ -81,50 +47,60 @@ do
 		ps -aux | grep -e urfd -e tcd | grep -vE 'grep|journalctl'
 	fi
 	echo
-	echo "        Reflector Administration, Version #240820"
+	echo "        Reflector Administration, Version #240823"
 	echo
 	echo "                         $callsign"
 	echo
 	git status | head -1
 	echo
-	if [ -e $urfserv ]; then
+	if [ -e $urfserv -o -e $tcdserv ]; then
+		echo "us : Uninstall $callsign"
 		if [ -e $urfserv ]; then
-			echo "us : Uninstall the URF reflector"
 			echo "rl : Reflector log"
-			if [ -e $tcdserv ]; then
-				echo "tl : Transcoder log"
-			fi
 		fi
-		echo "rr : Reflector restart"
+		if [ -e $tcdserv ]; then
+			echo "tl : Transcoder log"
+		fi
+		if [ -e $urfserv ]; then
+			echo "rr : Reflector restart"
+		fi
 		if [ -e $tcdserv ]; then
 			echo "tr : Transcoder restart"
 		fi
 	else
-		if [[ "$callsign" == URF* ]]; then
-			if [ -e reflector/urfd ]; then
-				if [ -e ../tcd/tcd ]; then
-					echo "is : Install URF reflector and transcoder"
-				fi
-			fi
+		if [ -e reflector/urfd -a -e ../tcd/tcd ]; then
+			echo "is : Install $callsign"
 		fi
 	fi
 	echo
 	echo    "q  : Quit"
 	echo
-	read -p "Please input <key> <value> - omit value to toggle a true/false : " key value garbage
+	read -p "Please input command : " key garbage
 
 	if   [[ "$key" == us* ]]; then
-		if   [ -e $urfserv ]; then
-			UninstallReflector
+		if [ -e $urfserv -o -e $tcdserv ]; then
+			sudo make uninstall
 		fi
 	elif [[ "$key" == is* ]]; then
-		if [ -e reflector/urfd ] && [ ! -e $urfserv ]; then
-			InstallReflector
+		if [ -e reflector/urfd -a -e transcoder/tcd -a ! -e $urfserv -a ! -e $tcdserv ]; then
+			sudo make install
 		fi
-	elif [[ "$key" == rr* ]] && [ -e $urfserv ]; then sudo systemctl restart urfd
-	elif [[ "$key" == tr* ]] && [ -e $tcdserv ]; then sudo systemctl restart tcd
-	elif [[ "$key" == tl* ]] && [ -e $tcdserv ]; then sudo journalctl -u tcd -f
-	elif [[ "$key" == rl* ]] && [ -e $urfserv ]; then sudo journalctl -u urfd -f
+	elif [[ "$key" == rr* ]]; then
+		if [ -e $urfserv ]; then
+			sudo systemctl restart urfd
+		fi
+	elif [[ "$key" == tr* ]]; then
+		if [ -e $tcdserv ]; then
+			sudo systemctl restart tcd
+		fi
+	elif [[ "$key" == tl* ]]; then
+		if [ -e $tcdserv ]; then
+			sudo journalctl -u tcd -f
+		fi
+	elif [[ "$key" == rl* ]]; then
+		if [ -e $urfserv ]; then
+			sudo journalctl -u urfd -f
+		fi
 	fi
 done
 exit 0
