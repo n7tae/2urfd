@@ -29,6 +29,8 @@
 #define DSTARGAININ    "DStarGainIn"
 #define DSTARGAINOUT   "DStarGainOut"
 #define TRANSCODED     "Transcoded"
+#define MODULES        "Modules"
+#define BADGAINVAL 100
 
 static inline void split(const std::string &s, char delim, std::vector<std::string> &v)
 {
@@ -58,10 +60,13 @@ static inline void trim(std::string &s) {
     rtrim(s);
 }
 
+// set the gains to something outside the range so we can be sure it's read from the ini
+CConfigure::CConfigure() : dstar_in(BADGAINVAL), dstar_out(BADGAINVAL), dmr_in(BADGAINVAL), dmr_out(BADGAINVAL) {}
+
 bool CConfigure::ReadData(const std::string &path)
 // returns true on failure
 {
-	std::string modstmp;
+	std::string modstmp, cmods;
 
 	std::ifstream cfgfile(path.c_str(), std::ifstream::in);
 	if (! cfgfile.is_open()) {
@@ -112,11 +117,11 @@ bool CConfigure::ReadData(const std::string &path)
 			dmr_in = getSigned(key, value);
 		else if (0 == key.compare(DMRGAINOUT))
 			dmr_out = getSigned(key, value);
-		else
-			badParam(key);
 	}
 	cfgfile.close();
 
+	// check values
+	bool rv = false;
 	for (auto c : modstmp)
 	{
 		if (isalpha(c))
@@ -129,9 +134,32 @@ bool CConfigure::ReadData(const std::string &path)
 	}
 	if (tcmods.empty())
 	{
-		std::cerr << "ERROR: no identifable module letters in '" << modstmp << "'. Halt." << std::endl;
-		return true;
+		std::cerr << "ERROR: no identifiable module letters in '" << modstmp << "'. Halt." << std::endl;
+		rv = true;
 	}
+
+	if (BADGAINVAL == dstar_in)
+	{
+		std::cerr << "ERROR: DStarGainIn not set" << std::endl;
+		rv = true;
+	}
+	if (BADGAINVAL == dstar_out)
+	{
+		std::cerr << "ERROR: DStarGainOut not set" << std::endl;
+		rv = true;
+	}
+	if (BADGAINVAL == dmr_in)
+	{
+		std::cerr << "ERROR: DmrGainIn not set" << std::endl;
+		rv = true;
+	}
+	if (BADGAINVAL == dmr_out)
+	{
+		std::cerr << "ERROR: DmrGainOut not set" << std::endl;
+		rv = true;
+	}
+	if (rv)
+		return true;
 
 	std::cout << TRANSCODED << " = " << tcmods << std::endl;
 	std::cout << DSTARGAININ << " = " << dstar_in << std::endl;
@@ -156,11 +184,6 @@ int CConfigure::getSigned(const std::string &key, const std::string &value) cons
 		i = 24;
 	}
 	return i;
-}
-
-void CConfigure::badParam(const std::string &key) const
-{
-	std::cout << "WARNING: Unexpected parameter: '" << key << "'" << std::endl;
 }
 
 int CConfigure::GetGain(EGainType gt) const

@@ -25,7 +25,7 @@
 
 enum class ErrorLevel { fatal, mild };
 enum class ERefreshType { file, http, both };
-enum class ESection { none, names, ip, modules, urf, dplus, dextra, dcs, mmdvm, nxdn, bm, ysf, p25, m17, dmrid, nxdnid, ysffreq, files };
+enum class ESection { none, names, ip, modules, tc, urf, dplus, dextra, dcs, mmdvm, nxdn, bm, ysf, p25, m17, dmrid, nxdnid, ysffreq, files };
 
 #define IS_TRUE(a) ((a)=='t' || (a)=='T' || (a)=='1')
 
@@ -38,6 +38,7 @@ public:
 	void Dump(bool justpublic) const;
 	std::string GetString(const std::string &key) const;
 	unsigned GetUnsigned(const std::string &key) const;
+	int GetInt(const std::string &key) const;
 	bool GetBoolean(const std::string &key) const;
 	ERefreshType GetRefreshType(const std::string &key) const;
 	bool IsString(const std::string &key) const;
@@ -52,6 +53,7 @@ private:
 
 	std::string getDataRefreshType(ERefreshType t) const;
 	unsigned getUnsigned(const std::string &value, const std::string &label, unsigned min, unsigned max, unsigned defaultvalue) const;
+	int getInt(const std::string &value, const std::string &label, int min, int max, int defaultvalue) const;
 	void badParam(const std::string &param) const;
 	bool checkModules(std::string &m) const;
 	void checkFile(const std::string &section, const std::string &key, const std::string &filepath) const;

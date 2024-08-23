@@ -29,6 +29,7 @@ enum class EGainType { dmrin, dmrout, dstarin, dstarout };
 class CConfigure
 {
 public:
+	CConfigure();
 	bool ReadData(const std::string &path);
 	int GetGain(EGainType gt) const;
 	std::string GetTCMods(void) const { return tcmods; }
@@ -39,5 +40,4 @@ private:
 	int dstar_in, dstar_out, dmr_in, dmr_out;
 
 	int getSigned(const std::string &key, const std::string &value) const;
-	void badParam(const std::string &key) const;
 };

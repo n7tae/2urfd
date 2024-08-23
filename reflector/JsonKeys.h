@@ -41,9 +41,12 @@ struct SJsonKeys {
 	struct IP { const std::string ipv4bind, ipv4address, ipv6bind, ipv6address; }
 	ip { "ipv4bind", "IPv4Address", "ipv6bind", "IPv6Address" };
 
-	struct MODULES { const std::string modules, tcmodules, descriptor[26]; }
-	modules { "Modules", "TranscodedModules",
+	struct MODULES { const std::string modules, descriptor[26]; }
+	modules { "Modules",
 		"DescriptionA", "DescriptionB", "DescriptionC", "DescriptionD", "DescriptionE", "DescriptionF", "DescriptionG", "DescriptionH", "DescriptionI", "DescriptionJ", "DescriptionK", "DescriptionL", "DescriptionM", "DescriptionN", "DescriptionO", "DescriptionP", "DescriptionQ", "DescriptionR", "DescriptionS", "DescriptionT", "DescriptionU", "DescriptionV", "DescriptionW", "DescriptionX", "DescriptionY", "DescriptionZ" };
+
+	struct TRANSCODER { const std::string tcmodules, dstargainin, dstargainout, dmrgainin, dmrgainout; }
+	tc { "TranscodedModules", "dstarGainIn", "dstarGainOut", "dmrGainIn", "dmrGainOut" };
 
 	struct P25NXDN { const std::string port, autolinkmod, reflectorid; }
 	p25 { "P25Port",  "P25AutolinkMod",   "P25ReflectorID" },

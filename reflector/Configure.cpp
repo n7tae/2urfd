@@ -45,8 +45,12 @@
 #define JDESCRIPTION             "Description"
 #define JDEXTRA                  "DExtra"
 #define JDHTSAVEPATH             "DHTSavePath"
+#define JDMRYSFGAININ            "DmrYsfGainIn"
+#define JDMRYSFGAINOUT           "DmrYsfGainOut"
 #define JDMRIDDB                 "DMR ID DB"
 #define JDPLUS                   "DPlus"
+#define JDSTARGAININ             "DStarGainIn"
+#define JDSTARGAINOUT            "DStarGainOut"
 #define JENABLE                  "Enable"
 #define JFILES                   "Files"
 #define JFILEPATH                "FilePath"
@@ -179,6 +183,8 @@ bool CConfigure::ReadData(const std::string &path)
 				section = ESection::ip;
 			else if (0 == hname.compare(JMODULES))
 				section = ESection::modules;
+			else if (0 == hname.compare(JTRANSCODER))
+				section = ESection::tc;
 			else if (0 == hname.compare(JDPLUS))
 				section = ESection::dplus;
 			else if (0 == hname.compare(JDEXTRA))
@@ -287,16 +293,6 @@ bool CConfigure::ReadData(const std::string &path)
 					} else
 						data[g_Keys.modules.modules] = m;
 				}
-				else if (0 == key.compare(JTRANSCODED))
-				{
-					std::string m(value);
-					if (checkModules(m))
-					{
-						std::cerr << "ERROR: line #" << counter << ": no letters found in Transcoded: '" << m << "'" << std::endl;
-						rval = true;
-					} else
-						data[g_Keys.modules.tcmodules] = m;
-				}
 				else if (0 == key.compare(0, 11, "Description"))
 				{
 					if (12 == key.size() && isupper(key[11]))
@@ -304,6 +300,28 @@ bool CConfigure::ReadData(const std::string &path)
 					else
 						badParam(key);
 				}
+				else
+					badParam(key);
+				break;
+			case ESection::tc:
+				if (0 == key.compare(JTRANSCODED))
+				{
+					std::string m(value);
+					if (checkModules(m))
+					{
+						std::cerr << "ERROR: line #" << counter << ": no letters found in Transcoded: '" << m << "'" << std::endl;
+						rval = true;
+					} else
+						data[g_Keys.tc.tcmodules] = m;
+				}
+				else if (0 == key.compare(JDMRYSFGAININ))
+					data[g_Keys.tc.dmrgainin] = getInt(value, "Transcoder DMR/YSF Gain In", -24, 24, -3);
+				else if (0 == key.compare(JDMRYSFGAINOUT))
+					data[g_Keys.tc.dmrgainout] = getInt(value, "Transcoder DMR/YSF Gain Out", -24, 24, 0);
+				else if (0 == key.compare(JDSTARGAININ))
+					data[g_Keys.tc.dstargainin] = getInt(value, "Transcoder DStar Gain In", -24, 24, 16);
+				else if (0 == key.compare(JDSTARGAINOUT))
+					data[g_Keys.tc.dstargainout] = getInt(value, "Transcoder DStar Gain Out", -24, 24, -16);
 				else
 					badParam(key);
 				break;
@@ -559,27 +577,6 @@ bool CConfigure::ReadData(const std::string &path)
 	if (isDefined(ErrorLevel::fatal, JMODULES, JMODULES, g_Keys.modules.modules, rval))
 	{
 		const auto mods(data[g_Keys.modules.modules].get<std::string>());
-		if (data.contains(g_Keys.modules.tcmodules))
-		{
-			const auto tcmods(data[g_Keys.modules.tcmodules].get<std::string>());
-
-			// how many transcoded modules
-			auto size = tcmods.size();
-			if (3 != size && 1 != size)
-				std::cout << "WARNING: [" << JMODULES << ']' << JTRANSCODED << " doesn't define one (or three) modules" << std::endl;
-
-			// make sure each transcoded module is configured
-			for (auto c : tcmods)
-			{
-				if (std::string::npos == mods.find(c))
-				{
-					std::cerr << "ERROR: transcoded module '" << c << "' not found in defined modules" << std::endl;
-					rval = true;
-				}
-			}
-		}
-		else
-			data[g_Keys.modules.tcmodules] = nullptr;
 
 		// finally, check the module descriptions
 		for (unsigned i=0; i<26; i++)
@@ -604,6 +601,32 @@ bool CConfigure::ReadData(const std::string &path)
 			}
 		}
 	}
+
+	// Transcoder section
+	if (isDefined(ErrorLevel::fatal, JTRANSCODER, JTRANSCODED, g_Keys.tc.tcmodules, rval))
+	{
+		const auto tcmods(data[g_Keys.tc.tcmodules].get<std::string>());
+
+		// how many transcoded modules
+		auto size = tcmods.size();
+		if (3 != size && 1 != size)
+			std::cout << "WARNING: [" << JMODULES << ']' << JTRANSCODED << " doesn't define one (or three) modules" << std::endl;
+
+		// make sure each transcoded module is configured
+		const std::string mods(Contains(g_Keys.modules.modules) ? data[g_Keys.modules.modules].get<std::string>() : "");
+		for (auto c : tcmods)
+		{
+			if (std::string::npos == mods.find(c))
+			{
+				std::cerr << "ERROR: transcoded module '" << c << "' not found in defined modules" << std::endl;
+				rval = true;
+			}
+		}
+	}
+	isDefined(ErrorLevel::fatal, JTRANSCODER, JDMRYSFGAININ,  g_Keys.tc.dmrgainin,    rval);
+	isDefined(ErrorLevel::fatal, JTRANSCODER, JDMRYSFGAINOUT, g_Keys.tc.dmrgainout,   rval);
+	isDefined(ErrorLevel::fatal, JTRANSCODER, JDSTARGAININ,   g_Keys.tc.dstargainin,  rval);
+	isDefined(ErrorLevel::fatal, JTRANSCODER, JDSTARGAINOUT,  g_Keys.tc.dstargainout, rval);
 
 	// "simple" protocols with only a Port
 	isDefined(ErrorLevel::fatal, JDCS, JPORT, g_Keys.dcs.port, rval);
@@ -725,6 +748,17 @@ std::string CConfigure::getDataRefreshType(ERefreshType type) const
 		return std::string("http");
 }
 
+int CConfigure::getInt(const std::string &valuestr, const std::string &label, int min, int max, int def) const
+{
+	auto i = int(std::stol(valuestr.c_str()));
+	if ( i < min || i > max )
+	{
+		std::cout << "WARNING: line #" << counter << ": " << label << " is out of range. Reset to " << def << std::endl;
+		i = def;
+	}
+	return i;
+}
+
 unsigned CConfigure::getUnsigned(const std::string &valuestr, const std::string &label, unsigned min, unsigned max, unsigned def) const
 {
 	auto i = unsigned(std::stoul(valuestr.c_str()));
@@ -733,7 +767,7 @@ unsigned CConfigure::getUnsigned(const std::string &valuestr, const std::string 
 		std::cout << "WARNING: line #" << counter << ": " << label << " is out of range. Reset to " << def << std::endl;
 		i = def;
 	}
-	return (unsigned)i;
+	return i;
 }
 
 void CConfigure::badParam(const std::string &key) const
@@ -855,6 +889,25 @@ unsigned CConfigure::GetUnsigned(const std::string &key) const
 		std::cerr << "ERROR: GetUnsigned(): item at '" << key << "' is not defined" << std::endl;
 	}
 	return u;
+}
+
+int CConfigure::GetInt(const std::string &key) const
+{
+	int i = 0;
+	if (data.contains(key))
+	{
+		if (data[key].is_number_integer())
+		{
+			i = data[key].get<int>();
+		}
+		else
+			std::cerr << "ERROR: GetInt(): '" << key << "' is not an integer value" << std::endl;
+	}
+	else
+	{
+		std::cerr << "ERROR: GetInt(): item at '" << key << "' is not defined" << std::endl;
+	}
+	return i;
 }
 
 bool CConfigure::GetBoolean(const std::string &key) const

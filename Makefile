@@ -31,29 +31,29 @@ clean :
 .PHONY : install
 install :
 	# Transcoder Install...
-	cp -f transcoder/$(TRANSCODER) $(BINDIR)
-	cp -f $(TRANSCODER).service /etc/systemd/system/
-	systemctl enable $(TRANSCODER)
+	cp -f transcoder/tcd $(BINDIR)
+	cp -f tcd.service /etc/systemd/system/
+	systemctl enable tcd
 	systemctl daemon-reload
-	systemctl start $(TRANSCODER)
+	systemctl start tcd
 	# Reflector Install...
-	cp -f reflector/$(REFLECTOR) $(BINDIR)
-	cp -f $(REFLECTOR).service /etc/systemd/system/
-	systemctl enable $(REFLECTOR)
+	cp -f reflector/urfd $(BINDIR)
+	cp -f urfd.service /etc/systemd/system/
+	systemctl enable urfd
 	systemctl daemon-reload
-	systemctl start $(REFLECTOR)
+	systemctl start urfd
 
 .PHONY : uninstall
 uninstall :
 	# Uninstall Reflector...
-	systemctl stop $(REFLECTOR)
-	systemctl disable $(REFLECTOR)
-	$(RM) /etc/systemd/system/$(REFLECTOR).service
+	systemctl stop urfd
+	systemctl disable urfd
+	$(RM) /etc/systemd/system/urfd.service
 	systemctl daemon-reload
-	$(RM) $(BINDIR)/$(REFLECTOR)
+	$(RM) $(BINDIR)/urfd
 	# Uninstall Transcoder...
-	systemctl stop $(TRANSCODER)
-	systemctl disable $(TRANSCODER)
-	$(RM) /etc/systemd/system/$(TRANSCODER).service
-	$(RM) $(BINDIR)/$(TRANSCODER)
+	systemctl stop tcd
+	systemctl disable tcd
+	$(RM) /etc/systemd/system/tcd.service
+	$(RM) $(BINDIR)/tcd
 	systemctl daemon-reload
