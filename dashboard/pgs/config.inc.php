@@ -50,8 +50,8 @@ $PageOptions['MetaRobots']                           = 'index,follow';          
 
 $PageOptions['UserPage']['ShowFilter']               = true;                                                         // Show Filter on Users page
 
-$Service['PIDFile']                                  = '/var/run/xlxd.pid';
-$Service['XMLFile']                                  = '/var/log/xlxd.xml';
+$Service['PIDFile']                                  = '/var/run/urfd.pid';
+$Service['XMLFile']                                  = '/var/log/urfd.xml';
 
 $CallingHome['Active']                               = false;					               // xlx phone home, true or false
 $CallingHome['MyDashBoardURL']                       = 'http://your_dashboard';			       // dashboard url
