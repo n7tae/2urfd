@@ -69,6 +69,10 @@ sudo make install
 
 If you end up building the OpenDHT library, please note that there is no easy way to uninstall OpenDHT once it's been installed.
 
+### FTDI driver for the DVSI devices
+
+The DVSI devices need an FTDI driver which is available [here](https://ftdichip.com/drivers/d2xx-drivers). It's important to know that this driver will only work if the normal Linux kernel ftdi_sio and usbserial drivers are removed. This is automatically done by the system service file used for starting *tcd*.
+
 ### Download and build the repository and enter the build directory.
 
 ```

@@ -759,7 +759,18 @@ int CConfigure::getInt(const std::string &valuestr, const std::string &label, in
 
 unsigned CConfigure::getUnsigned(const std::string &valuestr, const std::string &label, unsigned min, unsigned max, unsigned def) const
 {
-	auto i = unsigned(std::stoul(valuestr.c_str()));
+	unsigned i;
+
+	try
+	{
+		i = std::stoul(valuestr.c_str());
+	}
+	catch(const std::exception &e)
+	{
+		std::cout << "WARNING: line #" << counter << ": " << e.what() << std::endl << "Resetting " << label << " to " << def << std::endl;
+		i = def;
+	}
+
 	if ( i < min || i > max )
 	{
 		std::cout << "WARNING: line #" << counter << ": " << label << " is out of range. Reset to " << def << std::endl;
