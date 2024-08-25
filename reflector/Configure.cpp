@@ -765,9 +765,9 @@ unsigned CConfigure::getUnsigned(const std::string &valuestr, const std::string 
 	{
 		i = std::stoul(valuestr.c_str());
 	}
-	catch(const std::exception &e)
+	catch(const std::exception &)
 	{
-		std::cout << "WARNING: line #" << counter << ": " << e.what() << std::endl << "Resetting " << label << " to " << def << std::endl;
+		std::cout << "WARNING: line #" << counter << " value is bad, resetting " << label << " to " << def << std::endl;
 		i = def;
 	}
 
