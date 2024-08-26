@@ -8,7 +8,7 @@ This is based on the full-blown, do-anything *urfd* reflector hosted by [nostar]
 
 ## Introduction
 
-This trimmed-down *urfd* supports DStar protocols (DPlus, DCS, DExtra) DMR protocols (MMDVMHost, NXDN, BrandMeister), M17, YSF, and P25 (Phase 1, using IMBE). Included in this repo is everything you need to build the hybrid transcoder, *tcd*. Please note this reflector only supports the tcd transcoder when run locally. As a locally transcoded reflector, urfd and tcd uses UNIX DGRAM sockets for inter-process communications. These kernel-base sockets are significantly faster than conventional UDP/IP sockets. It should be noted that tcd supports DVSI-3003 and DVSI-3000 devices, which it uses for AMBE vocoding. A pair of them of either kind is required.
+This trimmed-down *urfd* supports DStar protocols (DPlus, DCS, DExtra), DMR protocols (MMDVMHost, NXDN, BrandMeister), M17, YSF, and P25 (Phase 1, using IMBE). Included in this repo is everything you need to build the hybrid transcoder, *tcd*. Please note this reflector only supports the tcd transcoder when run locally. As a locally transcoded reflector, urfd and tcd uses UNIX DGRAM sockets for inter-process communications. These kernel-base sockets are significantly faster than conventional UDP/IP sockets. It should be noted that tcd supports DVSI-3003 and DVSI-3000 devices, which it uses for AMBE vocoding. A pair of them of either kind is required.
 
 This build support *dual-stack* operation, so the server on which it's running, must have both an IPv4 and IPv6 routeable address if you are going to configure a dual-stack reflector.
 
