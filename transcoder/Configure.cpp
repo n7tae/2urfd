@@ -80,8 +80,8 @@ bool CConfigure::ReadData(const std::string &path)
 		trim(line);
 		if (3 > line.size())
 			continue;	// can't be anything
-		if ('#' == line.at(0))
-			continue;	// skip comments
+		if ('#' == line.at(0) || '[' == line.at(0))
+			continue;	// skip comments and section headers
 
 		std::vector<std::string> tokens;
 		split(line, '=', tokens);
