@@ -13,8 +13,8 @@ ShowLast3ByteOfIP
 
 date_default_timezone_set(trim(file_get_contents("/etc/timezone")));
 
-// You can force the TZ, and reduce overhead, by spelling it out: date_default_timezone_set("America/Phoenix")));
-// For a list of PHP-approved timezones: https://www.php.net/manual/en/timezones.php
+// You can force the TZ, and reduce overhead, by spelling it out. For example: date_default_timezone_set("America/Phoenix")));
+// For a list of PHP-approved timezones, see https://www.php.net/manual/en/timezones.php
 
 $Service     = array();
 $CallingHome = array();
