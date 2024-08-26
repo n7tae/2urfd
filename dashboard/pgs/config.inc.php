@@ -7,8 +7,14 @@ ShowFullIP
 ShowLast1ByteOfIP
 ShowLast2ByteOfIP
 ShowLast3ByteOfIP
-
 */
+
+// Specify timezone for the dashboard:
+
+date_default_timezone_set(trim(file_get_contents("/etc/timezone")));
+
+// You can force the TZ, and reduce overhead, by spelling it out: date_default_timezone_set("America/Phoenix")));
+// For a list of PHP-approved timezones: https://www.php.net/manual/en/timezones.php
 
 $Service     = array();
 $CallingHome = array();
@@ -62,15 +68,6 @@ $CallingHome['Comment']                              = "your_comment"; 				     
 $CallingHome['HashFile']                             = "/xlxd-ch/callinghome.php";             // Make sure the apache user has read and write permissions in this folder.
 $CallingHome['LastCallHomefile']                     = "/xlxd-ch/lastcallhome.php";            // lastcallhome.php can remain in the tmp folder
 $CallingHome['OverrideIPAddress']                    = "";                                     // Insert your IP address here. Leave blank for autodetection. No need to enter a fake address.
-$CallingHome['InterlinkFile']                        = "/usr/local/etc/xlxd.interlink";        // Path to interlink file
-
-/*
-  include an extra config file for people who dont like to mess with shipped config.ing.php
-  this makes updating dashboard from git a little bit easier
-*/
-
-if (file_exists("../config.inc.php")) {
-  include ("../config.inc.php");
-}
+$CallingHome['InterlinkFile']                        = "/usr/local/etc/urfd.interlink";        // Path to interlink file
 
 ?>
