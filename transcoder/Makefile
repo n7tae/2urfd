@@ -28,6 +28,6 @@ $(EXE) : $(OBJS)
 
 .PHONY : clean
 clean :
-	$(RM) $(EXE) *.d *.o ./common/*.d ../common/*.o imbe/*.o imbe/*.d codec2/*.o codec2/*.d
+	$(RM) $(EXE) *.d *.o ../common/*.d ../common/*.o imbe/*.o imbe/*.d codec2/*.o codec2/*.d
 
 -include $(DEPS)
