@@ -47,7 +47,7 @@ do
 		ps -aux | grep -e urfd -e tcd | grep -vE 'grep|journalctl'
 	fi
 	echo
-	echo "        Reflector Administration, Version #240823"
+	echo "        Reflector Administration, Version #240922"
 	echo
 	echo "                         $callsign"
 	echo
@@ -68,7 +68,7 @@ do
 			echo "tr : Transcoder restart"
 		fi
 	else
-		if [ -e reflector/urfd -a -e ../tcd/tcd ]; then
+		if [ -e reflector/urfd -a -e transcoder/tcd ]; then
 			echo "is : Install $callsign"
 		fi
 	fi
