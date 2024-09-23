@@ -24,7 +24,6 @@
 
 CPacketStream::CPacketStream(char module) : m_PSModule(module)
 {
-	m_bOpen = false;
 	m_uiStreamId = 0;
 	m_uiPacketCntr = 0;
 	m_OwnerClient = nullptr;
@@ -49,10 +48,9 @@ bool CPacketStream::InitCodecStream()
 bool CPacketStream::OpenPacketStream(const CDvHeaderPacket &DvHeader, std::shared_ptr<CClient>client)
 {
 	// not already open?
-	if ( !m_bOpen )
+	if ( 0 == m_uiStreamId )
 	{
 		// update status
-		m_bOpen = true;
 		m_uiStreamId = DvHeader.GetStreamId();
 		m_uiPacketCntr = 0;
 		m_DvHeader = DvHeader;
@@ -68,7 +66,6 @@ bool CPacketStream::OpenPacketStream(const CDvHeaderPacket &DvHeader, std::share
 void CPacketStream::ClosePacketStream(void)
 {
 	// update status
-	m_bOpen = false;
 	m_uiStreamId = 0;
 	m_OwnerClient.reset();
 	if (m_CodecStream)
@@ -94,7 +91,8 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 		// yes, push packet to trancoder queue
 		// trancoder will push it after transcoding
 		// is completed
-		m_CodecStream->Push(std::move(Packet));
+		//auto pPacket = static_cast<CDvFramePacket *>(Packet.release());
+		m_CodecStream->Push(std::move(std::unique_ptr<CDvFramePacket>(static_cast<CDvFramePacket *>(Packet.release()))));
 	}
 	else
 	{

@@ -142,11 +142,24 @@ void CCodecStream::Task(void)
 		else if (m_IsOpen)
 		{
 			// pop the original packet
-			auto Packet = m_LocalQueue.Pop();
-			auto Frame = static_cast<CDvFramePacket *>(Packet.get());
+			auto Frame = m_LocalQueue.Pop();
+
+			// Make sure this Frame has the correct StreamID
+			while (m_uiStreamId != Frame->GetCodecPacket()->streamid)
+			{
+				std::cerr << std::hex  << std::showbase << "StreamID mismatch: this voice frame=" << ntohs(Frame->GetCodecPacket()->streamid) << ", expecting " << ntohs(m_uiStreamId) << std::dec << std::noshowbase << std::endl;
+				Frame = m_LocalQueue.PopWait();
+			}
+
+			// make sure the sequence is okay
+			while (pack.sequence > Frame->GetCodecPacket()->sequence)
+			{
+				std::cerr << "Sequence mismatch: this voice frame=" << Frame->GetCodecPacket()->sequence << " < transcoded packet=" << pack.sequence << std::endl;
+				Frame = m_LocalQueue.PopWait();
+			}
 
 			// make sure this is the correct packet
-			if ((pack.streamid == Frame->GetCodecPacket()->streamid) && (pack.sequence == Frame->GetCodecPacket()->sequence))
+			if (pack.sequence == Frame->GetCodecPacket()->sequence)
 			{
 				// update content with transcoded data
 				Frame->SetCodecData(&pack);
@@ -158,16 +171,11 @@ void CCodecStream::Task(void)
 				}
 
 				// and push it back to client
-				m_PacketStream->ReturnPacket(std::move(Packet));
+				m_PacketStream->ReturnPacket(std::move(Frame));
 			}
 			else
 			{
-				// Not the correct packet! It will be ignored
-				// Report it
-				if (pack.streamid != Frame->GetCodecPacket()->streamid)
-					std::cerr << std::hex  << std::showbase << "StreamID mismatch: this voice frame=" << ntohs(Frame->GetCodecPacket()->streamid) << " returned transcoder packet=" << ntohs(pack.streamid) << std::dec << std::noshowbase << std::endl;
-				if (pack.sequence != Frame->GetCodecPacket()->sequence)
-					std::cerr << "Sequence mismatch: this voice frame=" << Frame->GetCodecPacket()->sequence << " returned transcoder packet=" << pack.sequence << std::endl;
+				std::cerr << "Sequence mismatch: this voice frame=" << Frame->GetCodecPacket()->sequence << " > transcoded packet=" << pack.sequence << std::endl;
 			}
 		}
 		else
@@ -178,12 +186,9 @@ void CCodecStream::Task(void)
 	}
 
 	// anything in our queue
-	auto Packet = m_Queue.Pop();
-	while (Packet)
+	auto Frame = m_Queue.Pop();
+	while (Frame)
 	{
-		// we need a CDvFramePacket pointer to access Frame stuff
-		auto Frame = (CDvFramePacket *)Packet.get();
-
 		if (m_IsOpen)
 		{
 			// update important stuff in Frame->m_TCPack for the transcoder
@@ -194,10 +199,10 @@ void CCodecStream::Task(void)
 			m_TCWriter.Send(Frame->GetCodecPacket());
 
 			// push to our local queue where it can wait for the transcoder
-			m_LocalQueue.Push(std::move(Packet));
+			m_LocalQueue.Push(std::move(Frame));
 		}
 
 		// get the next packet, if there is one
-		Packet = m_Queue.Pop();
+		Frame = m_Queue.Pop();
 	}
 }

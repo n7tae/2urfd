@@ -25,7 +25,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-//#define STREAM_TIMEOUT      (0.600)
 #define STREAM_TIMEOUT      (1.600)
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +49,7 @@ public:
 	std::shared_ptr<CClient> GetOwnerClient(void)   { return m_OwnerClient; }
 	const CIp       *GetOwnerIp(void);
 	bool             IsExpired(void) const          { return (m_LastPacketTime.time() > STREAM_TIMEOUT); }
-	bool             IsOpen(void) const             { return m_bOpen; }
+	bool             IsOpen(void) const             { return m_uiStreamId != 0; }
 	uint16_t         GetStreamId(void) const        { return m_uiStreamId; }
 	const CCallsign &GetUserCallsign(void) const    { return m_DvHeader.GetMyCallsign(); }
 	char             GetRpt2Module(void) const      { return m_DvHeader.GetRpt2Module(); }
@@ -64,7 +63,6 @@ protected:
 	// data
 	CSafePacketQueue<std::unique_ptr<CPacket>> m_Queue;
 	const char          m_PSModule;
-	bool                m_bOpen;
 	uint16_t            m_uiStreamId;
 	uint32_t            m_uiPacketCntr;
 	CTimer              m_LastPacketTime;
