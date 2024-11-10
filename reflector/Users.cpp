@@ -41,7 +41,7 @@ void CUsers::AddUser(const CUser &user)
 	}
 
 	// notify
-	g_Reflector.OnUsersChanged();
+//	g_Reflector.OnUsersChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
