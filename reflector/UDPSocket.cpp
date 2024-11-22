@@ -69,11 +69,21 @@ bool CUdpSocket::Open(const CIp &Ip)
 		return false;
 	}
 
-	if ( bind(m_fd, m_addr.GetCPointer(), m_addr.GetSize()) )
+	unsigned bindcount = 0;
+	while ( bind(m_fd, m_addr.GetCPointer(), m_addr.GetSize()) )
 	{
 		std::cerr << "bind failed on " << m_addr << ", " << strerror(errno) << std::endl;
-		Close();
-		return false;
+		if (bindcount++ < 10)
+		{
+			std::cerr << "Try again in a 15 seconds..." << std::endl;
+			std::this_thread::sleep_for(std::chrono::seconds(15));
+		}
+		else
+		{
+			std::cerr << "After 10 tries, still can't bind. Closing!" << std::endl;
+			Close();
+			return false;
+		}
 	}
 
 	if (0 == m_addr.GetPort())  	// get the assigned port for an ephemeral port request
