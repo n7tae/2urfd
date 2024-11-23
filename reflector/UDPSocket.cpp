@@ -75,7 +75,7 @@ bool CUdpSocket::Open(const CIp &Ip)
 		std::cerr << "bind failed on " << m_addr << ", " << strerror(errno) << std::endl;
 		if (bindcount++ < 10)
 		{
-			std::cerr << "Try again in a 15 seconds..." << std::endl;
+			std::cerr << "Try again in 15 seconds..." << std::endl;
 			std::this_thread::sleep_for(std::chrono::seconds(15));
 		}
 		else
