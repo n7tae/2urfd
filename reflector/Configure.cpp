@@ -146,16 +146,30 @@ bool CConfigure::ReadData(const std::string &path)
 	{
 		CCurlGet curl;
 		std::stringstream ss;
-		if (CURLE_OK == curl.GetURL("https://ipv4.icanhazip.com", ss))
+		for (int i=0; i<10 and ipv4.empty(); i++)
 		{
-			ipv4.assign(ss.str());
-			trim(ipv4);
+			if (CURLE_OK == curl.GetURL("https://ipv4.icanhazip.com", ss))
+			{
+				ipv4.assign(ss.str());
+				trim(ipv4);
+			}
+			else
+			{
+				std::this_thread::sleep_for(std::chrono::seconds(10));
+			}
 		}
-		ss.str(std::string());
-		if (CURLE_OK == curl.GetURL("https://ipv6.icanhazip.com", ss))
+		for (int i=0; i<10 and ipv6.empty(); i++)
 		{
-			ipv6.assign(ss.str());
-			trim(ipv6);
+			ss.str(std::string());
+			if (CURLE_OK == curl.GetURL("https://ipv6.icanhazip.com", ss))
+			{
+				ipv6.assign(ss.str());
+				trim(ipv6);
+			}
+			else
+			{
+				std::this_thread::sleep_for(std::chrono::seconds(10));
+			}
 		}
 	}
 
