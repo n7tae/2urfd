@@ -138,13 +138,11 @@ void CProtocol::OnDvFramePacketIn(std::unique_ptr<CDvFramePacket> &Frame, const 
 		// and push
 		stream->Push(std::move(Frame));
 	}
-#ifdef DEBUG
 	else
 	{
-		std::cout << "Orphaned Frame with ID " << Frame->GetStreamId() << " on " << *Ip << std::endl;
+		std::cout << "Orphaned Frame with ID " << std::hex << std::showbase << Frame->GetStreamId() << std::noshowbase << std::dec << " on " << *Ip << std::endl;
 		Frame.reset();
 	}
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
