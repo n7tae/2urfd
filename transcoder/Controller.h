@@ -57,7 +57,7 @@ protected:
 	CPacketQueue imbe_queue;
 	std::mutex send_mux;
 	int32_t ambe_in_num, ambe_out_num;
-	imbe_vocoder_impl p25vocoder;
+	std::unordered_map<char, std::unique_ptr<imbe_vocoder_impl>> p25vocoder;
 
 	int32_t calcNumerator(int32_t db) const;
 	bool DiscoverFtdiDevices(std::list<std::pair<std::string, std::string>> &found);

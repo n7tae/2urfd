@@ -70,12 +70,20 @@ void CController::Stop()
 		reflectorFuture.get();
 	if (c2Future.valid())
 		c2Future.get();
+	if (imbeFuture.valid())
+		imbeFuture.get();
 
 	reader.Close();
 	dstar_device->CloseDevice();
 	dmrsf_device->CloseDevice();
 	dstar_device.reset();
 	dmrsf_device.reset();
+	for (const auto m : g_Conf.GetTCMods())
+	{
+		c2_16[m].reset();
+		c2_32[m].reset();
+		p25vocoder[m].reset();
+	}
 }
 
 bool CController::DiscoverFtdiDevices(std::list<std::pair<std::string, std::string>> &found)
@@ -129,6 +137,7 @@ bool CController::InitVocoders()
 	{
 		c2_16[c] = std::make_unique<CCodec2>(false);
 		c2_32[c] = std::make_unique<CCodec2>(true);
+		p25vocoder[c] = std::make_unique<imbe_vocoder_impl>();
 	}
 
 	// the 3000 or 3003 devices
@@ -299,6 +308,7 @@ void CController::Codec2toAudio(std::shared_ptr<CTranscoderPacket> packet)
 {
 	uint8_t ambe2[9];
 	uint8_t imbe[11];
+	const auto m = packet->GetModule();
 
 	if (packet->IsSecond())
 	{
@@ -306,20 +316,19 @@ void CController::Codec2toAudio(std::shared_ptr<CTranscoderPacket> packet)
 		{
 			// we've already calculated the audio in the previous packet
 			// copy the audio from local audio store
-			packet->SetAudioSamples(audio_store[packet->GetModule()], false);
+			packet->SetAudioSamples(audio_store[m], false);
 		}
 		else /* codec_in is ECodecType::c2_3200 */
 		{
 			int16_t tmp[160];
 			// decode the second 8 data bytes
 			// and put it in the packet
-			c2_32[packet->GetModule()]->codec2_decode(tmp, packet->GetM17Data()+8);
+			c2_32[m]->codec2_decode(tmp, packet->GetM17Data()+8);
 			packet->SetAudioSamples(tmp, false);
 		}
 	}
 	else /* it's a "first packet" */
 	{
-		const auto m = packet->GetModule();
 		if (packet->GetCodecIn() == ECodecType::c2_1600)
 		{
 			// c2_1600 encodes 40 ms of audio, 320 points, so...
@@ -340,11 +349,10 @@ void CController::Codec2toAudio(std::shared_ptr<CTranscoderPacket> packet)
 			packet->SetAudioSamples(tmp, false);
 		}
 	}
-	// the only thing left is to encode the other codecs, so push the packet onto both AMBE queues
+	// the only thing left is to encode the other codecs, so push the packet onto all the other queues
 	dstar_device->AddPacket(packet);
 	dmrsf_device->AddPacket(packet);
-	p25vocoder.encode_4400((int16_t*)packet->GetAudioSamples(), imbe);
-	packet->SetP25Data(imbe);
+	imbe_queue.push(packet);
 }
 
 void CController::ProcessC2Thread()
@@ -353,22 +361,14 @@ void CController::ProcessC2Thread()
 	{
 		auto packet = codec2_queue.pop();
 
-		switch (packet->GetCodecIn())
-		{
-			case ECodecType::c2_1600:
-			case ECodecType::c2_3200:
+		const auto codecIn = packet->GetCodecIn();
+		if (codecIn == ECodecType::c2_1600 or codecIn == ECodecType::c2_3200)
 				// this is an original M17 packet, so decode it to audio
 				// Codec2toAudio will send it on for AMBE processing
 				Codec2toAudio(packet);
-				break;
-
-			case ECodecType::dstar:
-			case ECodecType::dmr:
-			case ECodecType::p25:
+		else
 				// codec_in was AMBE, so we need to calculate the the M17 data
 				AudiotoCodec2(packet);
-				break;
-		}
 	}
 	std::cout << "Codec2 process thread shut down" << std::endl;
 }
@@ -377,7 +377,7 @@ void CController::AudiotoIMBE(std::shared_ptr<CTranscoderPacket> packet)
 {
 	uint8_t imbe[11];
 
-	p25vocoder.encode_4400((int16_t *)packet->GetAudioSamples(), imbe);
+	p25vocoder[packet->GetModule()]->encode_4400((int16_t *)packet->GetAudioSamples(), imbe);
 	packet->SetP25Data(imbe);
 	// we might be all done...
 	send_mux.lock();
@@ -388,11 +388,11 @@ void CController::AudiotoIMBE(std::shared_ptr<CTranscoderPacket> packet)
 void CController::IMBEtoAudio(std::shared_ptr<CTranscoderPacket> packet)
 {
 	int16_t tmp[160] = { 0 };
-	p25vocoder.decode_4400(tmp, (uint8_t*)packet->GetP25Data());
+	p25vocoder[packet->GetModule()]->decode_4400(tmp, (uint8_t*)packet->GetP25Data());
 	packet->SetAudioSamples(tmp, false);
 	dstar_device->AddPacket(packet);
-	codec2_queue.push(packet);
 	dmrsf_device->AddPacket(packet);
+	codec2_queue.push(packet);
 }
 
 void CController::ProcessIMBEThread()
@@ -401,18 +401,10 @@ void CController::ProcessIMBEThread()
 	{
 		auto packet = imbe_queue.pop();
 
-		switch (packet->GetCodecIn())
-		{
-			case ECodecType::c2_1600:
-			case ECodecType::c2_3200:
-			case ECodecType::dstar:
-			case ECodecType::dmr:
-				AudiotoIMBE(packet);
-				break;
-			case ECodecType::p25:
-				IMBEtoAudio(packet);
-				break;
-		}
+		if (ECodecType::p25 == packet->GetCodecIn())
+			IMBEtoAudio(packet);
+		else
+			AudiotoIMBE(packet);
 	}
 	std::cout << "IMBE process thread shut down" << std::endl;
 }

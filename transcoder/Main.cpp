@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	if (g_Cont.Start())
 		return EXIT_FAILURE;
 
-	std::cout << "Hybrid Transcoder version 0.1.0 successfully started" << std::endl;
+	std::cout << "Hybrid Transcoder version 0.2.0 successfully started" << std::endl;
 
 	pause();
 
