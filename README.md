@@ -77,7 +77,7 @@ The DVSI devices need an FTDI driver which is available [here](https://ftdichip.
 
 ```
 git clone https://github.com/n7tae/2urfd.git
-cd urfd
+cd 2urfd
 ```
 
 Except for the OpenDHT library, this repository contains everything needed to build both *urfd* and *tcd*!

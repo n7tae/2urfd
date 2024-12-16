@@ -141,38 +141,6 @@ bool CConfigure::ReadData(const std::string &path)
 		return true;
 	}
 
-	std::string ipv4, ipv6;
-
-	{
-		CCurlGet curl;
-		std::stringstream ss;
-		for (int i=0; i<10 and ipv4.empty(); i++)
-		{
-			if (CURLE_OK == curl.GetURL("https://ipv4.icanhazip.com", ss))
-			{
-				ipv4.assign(ss.str());
-				trim(ipv4);
-			}
-			else
-			{
-				std::this_thread::sleep_for(std::chrono::seconds(10));
-			}
-		}
-		for (int i=0; i<10 and ipv6.empty(); i++)
-		{
-			ss.str(std::string());
-			if (CURLE_OK == curl.GetURL("https://ipv6.icanhazip.com", ss))
-			{
-				ipv6.assign(ss.str());
-				trim(ipv6);
-			}
-			else
-			{
-				std::this_thread::sleep_for(std::chrono::seconds(10));
-			}
-		}
-	}
-
 	std::string line;
 	while (std::getline(cfgfile, line))
 	{
@@ -509,6 +477,18 @@ bool CConfigure::ReadData(const std::string &path)
 	// ipv4 bind and external
 	if (isDefined(ErrorLevel::fatal, JIPADDRESSES, JIPV4BINDING, g_Keys.ip.ipv4bind, rval))
 	{
+		std::string ipv4;
+		CCurlGet curl;
+		std::stringstream ss;
+		for (int i=0; i<10 and ipv4.empty(); i++)
+		{
+			if (CURLE_OK == curl.GetURL("https://ipv4.icanhazip.com", ss))
+			{
+				ipv4.assign(ss.str());
+				trim(ipv4);
+			}
+		}
+
 		if (std::regex_match(data[g_Keys.ip.ipv4bind].get<std::string>(), IPv4RegEx))
 		{
 			if (data.contains(g_Keys.ip.ipv4address))
@@ -547,6 +527,19 @@ bool CConfigure::ReadData(const std::string &path)
 	// ipv6 bind and external
 	if (data.contains(g_Keys.ip.ipv6bind))
 	{
+		std::string ipv6;
+		CCurlGet curl;
+		std::stringstream ss;
+		for (int i=0; i<10 and ipv6.empty(); i++)
+		{
+			ss.str(std::string());
+			if (CURLE_OK == curl.GetURL("https://ipv6.icanhazip.com", ss))
+			{
+				ipv6.assign(ss.str());
+				trim(ipv6);
+			}
+		}
+
 		if (std::regex_match(data[g_Keys.ip.ipv6bind].get<std::string>(), IPv6RegEx))
 		{
 			if (data.contains(g_Keys.ip.ipv6address))
