@@ -186,7 +186,7 @@ void CWiresxCmdHandler::Task(void)
 			}
 			else
 			{
-				std::cout << "Wires-X CONN_REQ command with illegal argument from " << Cmd.GetCallsign() << " at " << Cmd.GetIp() << std::endl;
+				std::cout << "Wires-X CONN_REQ command with illegal argument, " << Cmd.GetArg() << ", from " << Cmd.GetCallsign() << " at " << Cmd.GetIp() << std::endl;
 			}
 			break;
 		case WIRESX_CMD_DISC_REQ:
