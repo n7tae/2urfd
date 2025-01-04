@@ -484,7 +484,17 @@ bool CYsfProtocol::IsValidDvHeaderPacket(const CIp &Ip, const CYSFFICH &Fich, co
 			// to later fill it with proper value
 			rpt2.SetCSModule(' ');
 
-			// and packet
+			// try to set module from SQ
+			auto dgid = Fich.getSQ();
+            if ( (dgid >= 10u) && (dgid < 36) )
+            {
+				char m = 'A' + dgid - 10;
+				if (g_Reflector.IsValidModule(m))
+				{
+                	rpt2.SetCSModule(m);
+				}
+            }
+
 			header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, uiStreamId, Fich.getFN()));
 		}
 		// and 2 DV Frames
