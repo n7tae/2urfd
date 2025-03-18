@@ -31,12 +31,12 @@
 #include "DV3003.h"
 #include "UnixDgramSocket.h"
 
-class CController
+class CTranscoder
 {
 public:
 	std::mutex dstar_mux, dmrst_mux;
 
-	CController();
+	CTranscoder();
 	bool Start();
 	void Stop();
 	void RouteDstPacket(std::shared_ptr<CTranscoderPacket> packet);

@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# locations for the executibles and other files are set here
+# locations for the executables and other files are set here
 # NOTE: IF YOU CHANGE THESE, YOU WILL NEED TO UPDATE THE service.* FILES AND
 # if you change these locations, make sure the sgs.service file is updated!
 # you will also break hard coded paths in the dashboard file, index.php.
@@ -22,20 +22,14 @@ include urfd.mk
 
 .PHONY : all
 all :
-	cd reflector && make all -j$(JOBS) && cd ../transcoder && make all -j$(JOBS)
+	cd reflector && make all -j$(JOBS)
 
 .PHONY : clean
 clean :
-	cd transcoder && make clean && cd ../reflector && make clean
+	cd reflector && make clean
 
 .PHONY : install
 install :
-	# Transcoder Install...
-	cp -f transcoder/tcd $(BINDIR)
-	cp -f tcd.service /etc/systemd/system/
-	systemctl enable tcd
-	systemctl daemon-reload
-	systemctl start tcd
 	# Reflector Install...
 	cp -f reflector/urfd $(BINDIR)
 	cp -f urfd.service /etc/systemd/system/

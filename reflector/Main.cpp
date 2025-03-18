@@ -26,9 +26,10 @@
 
 SJsonKeys   g_Keys;
 CReflector  g_Reflector;
+CTranscoder g_Transcoder;
 CGateKeeper g_GateKeeper;
 CConfigure  g_Configure;
-CVersion    g_Version(2,8,6); // The major byte should only change if the interlink packet changes!
+CVersion    g_Version(2,8,7); // The major byte should only change if the interlink packet changes!
 CLookupDmr  g_LDid;
 CLookupNxdn g_LNid;
 CLookupYsf  g_LYtr;
@@ -53,12 +54,19 @@ int main(int argc, char *argv[])
 	remove(pidpath.c_str());
 
 	// splash
+	std::cout << "starting Transcoder" << std::endl;
+	if (g_Transcoder.Start())
+	{
+		exit(EXIT_FAILURE);
+	}
+
 	std::cout << "Starting " << callsign << " " << g_Version << std::endl;
 
 	// and let it run
 	if (g_Reflector.Start())
 	{
 		std::cout << "Error starting reflector" << std::endl;
+		g_Transcoder.Stop();
 		return EXIT_FAILURE;
 	}
 
@@ -72,6 +80,8 @@ int main(int argc, char *argv[])
 	pause(); // wait for any signal
 
 	g_Reflector.Stop();
+	std::cout << "Reflector stopped" << std::endl;
+	g_Transcoder.Stop();
 	std::cout << "Reflector stopped" << std::endl;
 
 	// done

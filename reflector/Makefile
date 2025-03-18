@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# locations for the executibles and other files are set here
+# locations for the executables and other files are set here
 # NOTE: IF YOU CHANGE THESE, YOU WILL NEED TO UPDATE THE service.* FILES AND
 # if you change these locations, make sure the sgs.service file is updated!
 # you will also break hard coded paths in the dashboard file, index.php.
@@ -27,12 +27,12 @@ DBUTIL = dbutil
 include ../urfd.mk
 
 ifeq ($(debug), true)
-CFLAGS = -ggdb3 -DDEBUG -W -Werror -I../common -std=c++17 -MMD -MD
+CFLAGS = -ggdb3 -DDEBUG -W -Werror -Icodec2 -Iimbe -std=c++17 -MMD -MD
 else
-CFLAGS = -W -Werror -std=c++17 -I../common -MMD -MD
+CFLAGS =                -W -Werror -Icodec2 -Iimbe -std=c++17 -MMD -MD
 endif
 
-LDFLAGS=-pthread -lcurl
+LDFLAGS=-pthread -lcurl -lftd2xx
 
 ifeq ($(DHT), true)
 LDFLAGS += -lopendht
@@ -40,7 +40,7 @@ else
 CFLAGS += -DNO_DHT
 endif
 
-SRCS = $(wildcard *.cpp) $(wildcard ../common/*.cpp)
+SRCS = $(wildcard *.cpp) $(wildcard codec2/*.cpp) $(wildcard imbe/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 DBUTILOBJS = Configure.o CurlGet.o Lookup.o LookupDmr.o LookupNxdn.o LookupYsf.o YSFNode.o Callsign.o
@@ -60,6 +60,6 @@ $(DBUTIL) : Main.cpp $(DBUTILOBJS)
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean :
-	$(RM) ../common/*.o ../common/*.o *.o *.d $(EXE) $(INICHECK) $(DBUTIL)
+	$(RM) codec2/*.o codec2/*.d imbe/*.o imbe/*.d *.o *.d $(EXE) $(INICHECK) $(DBUTIL)
 
 -include $(DEPS)

@@ -24,21 +24,20 @@
 #include <thread>
 
 #include "TranscoderPacket.h"
-#include "Controller.h"
 #include "Configure.h"
 
-extern CConfigure g_Conf;
+#include "Global.h"
 
-int32_t CController::calcNumerator(int32_t db) const
+int32_t CTranscoder::calcNumerator(int32_t db) const
 {
 	float num = 256.0f * powf(10.0f, (float(db)/20.0f));
 
 	return int32_t(roundf(num));
 }
 
-CController::CController() : keep_running(true) {}
+CTranscoder::CTranscoder() : keep_running(true) {}
 
-bool CController::Start()
+bool CTranscoder::Start()
 {
 	if (InitVocoders() || reader.Open(REF2TC))
 	{
@@ -49,9 +48,9 @@ bool CController::Start()
 
 	try
 	{
-		reflectorFuture = std::async(std::launch::async, &CController::ReadReflectorThread, this);
-		c2Future        = std::async(std::launch::async, &CController::ProcessC2Thread,     this);
-		imbeFuture      = std::async(std::launch::async, &CController::ProcessIMBEThread,   this);
+		reflectorFuture = std::async(std::launch::async, &CTranscoder::ReadReflectorThread, this);
+		c2Future        = std::async(std::launch::async, &CTranscoder::ProcessC2Thread,     this);
+		imbeFuture      = std::async(std::launch::async, &CTranscoder::ProcessIMBEThread,   this);
 	}
 	catch (std::exception &e)
 	{
@@ -62,7 +61,7 @@ bool CController::Start()
 	return false;
 }
 
-void CController::Stop()
+void CTranscoder::Stop()
 {
 	keep_running = false;
 
@@ -78,7 +77,7 @@ void CController::Stop()
 	dmrsf_device->CloseDevice();
 	dstar_device.reset();
 	dmrsf_device.reset();
-	for (const auto m : g_Conf.GetTCMods())
+	for (const auto m : g_Configure.GetString(g_Keys.tc.tcmodules))
 	{
 		c2_16[m].reset();
 		c2_32[m].reset();
@@ -86,7 +85,7 @@ void CController::Stop()
 	}
 }
 
-bool CController::DiscoverFtdiDevices(std::list<std::pair<std::string, std::string>> &found)
+bool CTranscoder::DiscoverFtdiDevices(std::list<std::pair<std::string, std::string>> &found)
 {
 	int iNbDevices = 0;
 	auto status = FT_CreateDeviceInfoList((LPDWORD)&iNbDevices);
@@ -129,10 +128,10 @@ bool CController::DiscoverFtdiDevices(std::list<std::pair<std::string, std::stri
 	return false;
 }
 
-bool CController::InitVocoders()
+bool CTranscoder::InitVocoders()
 {
 	// M17 "devices", one for each module
-	const std::string modules(g_Conf.GetTCMods());
+	const std::string modules(g_Configure.GetString(g_Keys.tc.tcmodules));
 	for ( auto c : modules)
 	{
 		c2_16[c] = std::make_unique<CCodec2>(false);
@@ -201,7 +200,7 @@ bool CController::InitVocoders()
 
 		if (dstar_device)
 		{
-			if (dstar_device->OpenDevice(deviceset.front().first, deviceset.front().second, dvtype, int8_t(g_Conf.GetGain(EGainType::dstarin)), int8_t(g_Conf.GetGain(EGainType::dstarout))))
+			if (dstar_device->OpenDevice(deviceset.front().first, deviceset.front().second, dvtype, int8_t(g_Configure.GetInt(g_Keys.tc.dstargainin)), int8_t(g_Configure.GetInt(g_Keys.tc.dstargainout))))
 				return true;
 			deviceset.pop_front();
 		}
@@ -212,7 +211,7 @@ bool CController::InitVocoders()
 		}
 		if (dmrsf_device)
 		{
-			if (dmrsf_device->OpenDevice(deviceset.front().first, deviceset.front().second, dvtype, int8_t(g_Conf.GetGain(EGainType::dmrin)), int8_t(g_Conf.GetGain(EGainType::dmrout))))
+			if (dmrsf_device->OpenDevice(deviceset.front().first, deviceset.front().second, dvtype, int8_t(g_Configure.GetInt(g_Keys.tc.dmrgainin)), int8_t(g_Configure.GetInt(g_Keys.tc.dmrgainout))))
 				return true;
 			deviceset.pop_front();
 		}
@@ -234,7 +233,7 @@ bool CController::InitVocoders()
 
 // Encapsulate the incoming STCPacket into a CTranscoderPacket and push it into the appropriate queue
 // based on packet's codec_in.
-void CController::ReadReflectorThread()
+void CTranscoder::ReadReflectorThread()
 {
 	while (keep_running)
 	{
@@ -273,7 +272,7 @@ void CController::ReadReflectorThread()
 // This is only called when codec_in was dstar or dmr. Obviously, the incoming
 // ambe packet was already decoded to audio.
 // This might complete the packet. If so, send it back to the reflector
-void CController::AudiotoCodec2(std::shared_ptr<CTranscoderPacket> packet)
+void CTranscoder::AudiotoCodec2(std::shared_ptr<CTranscoderPacket> packet)
 {
 	// the second half is silent in case this is frame is last.
 	uint8_t m17data[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0x00, 0x01, 0x43, 0x09, 0xe4, 0x9c, 0x08, 0x21 };
@@ -304,7 +303,7 @@ void CController::AudiotoCodec2(std::shared_ptr<CTranscoderPacket> packet)
 
 // The original incoming coded was M17, so we will calculate the audio and then
 // push the packet onto both the dstar and the dmr queue.
-void CController::Codec2toAudio(std::shared_ptr<CTranscoderPacket> packet)
+void CTranscoder::Codec2toAudio(std::shared_ptr<CTranscoderPacket> packet)
 {
 	uint8_t ambe2[9];
 	uint8_t imbe[11];
@@ -355,7 +354,7 @@ void CController::Codec2toAudio(std::shared_ptr<CTranscoderPacket> packet)
 	imbe_queue.push(packet);
 }
 
-void CController::ProcessC2Thread()
+void CTranscoder::ProcessC2Thread()
 {
 	while (keep_running)
 	{
@@ -373,7 +372,7 @@ void CController::ProcessC2Thread()
 	std::cout << "Codec2 process thread shut down" << std::endl;
 }
 
-void CController::AudiotoIMBE(std::shared_ptr<CTranscoderPacket> packet)
+void CTranscoder::AudiotoIMBE(std::shared_ptr<CTranscoderPacket> packet)
 {
 	uint8_t imbe[11];
 
@@ -385,7 +384,7 @@ void CController::AudiotoIMBE(std::shared_ptr<CTranscoderPacket> packet)
 	send_mux.unlock();
 }
 
-void CController::IMBEtoAudio(std::shared_ptr<CTranscoderPacket> packet)
+void CTranscoder::IMBEtoAudio(std::shared_ptr<CTranscoderPacket> packet)
 {
 	int16_t tmp[160] = { 0 };
 	p25vocoder[packet->GetModule()]->decode_4400(tmp, (uint8_t*)packet->GetP25Data());
@@ -395,7 +394,7 @@ void CController::IMBEtoAudio(std::shared_ptr<CTranscoderPacket> packet)
 	codec2_queue.push(packet);
 }
 
-void CController::ProcessIMBEThread()
+void CTranscoder::ProcessIMBEThread()
 {
 	while (keep_running)
 	{
@@ -409,7 +408,7 @@ void CController::ProcessIMBEThread()
 	std::cout << "IMBE process thread shut down" << std::endl;
 }
 
-void CController::SendToReflector(std::shared_ptr<CTranscoderPacket> packet)
+void CTranscoder::SendToReflector(std::shared_ptr<CTranscoderPacket> packet)
 {
 	// open a socket to the reflector channel
 	CUnixDgramWriter socket;
@@ -422,7 +421,7 @@ void CController::SendToReflector(std::shared_ptr<CTranscoderPacket> packet)
 	packet->Sent();
 }
 
-void CController::RouteDstPacket(std::shared_ptr<CTranscoderPacket> packet)
+void CTranscoder::RouteDstPacket(std::shared_ptr<CTranscoderPacket> packet)
 {
 	if (ECodecType::dstar == packet->GetCodecIn())
 	{
@@ -439,7 +438,7 @@ void CController::RouteDstPacket(std::shared_ptr<CTranscoderPacket> packet)
 	}
 }
 
-void CController::RouteDmrPacket(std::shared_ptr<CTranscoderPacket> packet)
+void CTranscoder::RouteDmrPacket(std::shared_ptr<CTranscoderPacket> packet)
 {
 	if (ECodecType::dmr == packet->GetCodecIn())
 	{
@@ -455,7 +454,7 @@ void CController::RouteDmrPacket(std::shared_ptr<CTranscoderPacket> packet)
 	}
 }
 
-void CController::Dump(const std::shared_ptr<CTranscoderPacket> p, const std::string &title) const
+void CTranscoder::Dump(const std::shared_ptr<CTranscoderPacket> p, const std::string &title) const
 {
 	std::stringstream line;
 	line << title << " Mod='" << p->GetModule() << "' SID=" << std::showbase << std::hex << ntohs(p->GetStreamId()) << std::noshowbase << " ET:" << std::setprecision(3) << p->GetTimeMS();

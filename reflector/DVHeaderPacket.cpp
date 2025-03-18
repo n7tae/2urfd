@@ -128,7 +128,7 @@ CDvHeaderPacket::CDvHeaderPacket(const CCallsign &my, const CCallsign &ur, const
 	m_csMY = my;
 }
 
-// P25 / USRP constructor
+// P25
 
 CDvHeaderPacket::CDvHeaderPacket(const CCallsign &my, const CCallsign &ur, const CCallsign &rpt1, const CCallsign &rpt2, uint16_t sid, bool usrp)
 	: CPacket(sid, usrp, false)

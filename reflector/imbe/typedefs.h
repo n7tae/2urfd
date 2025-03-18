@@ -168,13 +168,6 @@ typedef struct {
 } CPX;
 
 /*
- ********* define boolean type
- */
-typedef int Bool;
-#define false 0
-#define true 1
-
-/*
  ********* Check current platform
  */
 #if defined(__MSDOS__)

@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "Reflector.h"
+#include "Transcoder.h"
 #include "GateKeeper.h"
 #include "Configure.h"
 #include "Version.h"
@@ -24,6 +25,7 @@
 #include "JsonKeys.h"
 
 extern CReflector  g_Reflector;
+extern CTranscoder g_Transcoder;
 extern CGateKeeper g_GateKeeper;
 extern CConfigure  g_Configure;
 extern CVersion    g_Version;

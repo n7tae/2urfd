@@ -32,42 +32,40 @@
 #include <cerrno>
 #include <thread>
 
-#include "DV3003.h"
+#include "DV3000.h"
 #include "Configure.h"
-#include "Controller.h"
+#include "Transcoder.h"
 
-extern CController g_Cont;
+extern CTranscoder g_Transcoder;
 
-CDV3003::CDV3003(Encoding t) : CDVDevice(t) {}
+CDV3000::CDV3000(Encoding t) : CDVDevice(t) {}
 
-CDV3003::~CDV3003()
+CDV3000::~CDV3000()
 {
-	for (int i=0; i<3; i++)
-		waiting_packet[i].Shutdown();
+	waiting_packet.Shutdown();
 }
 
-void CDV3003::PushWaitingPacket(unsigned int channel, std::shared_ptr<CTranscoderPacket> packet)
+void CDV3000::PushWaitingPacket(unsigned int /* channel */, std::shared_ptr<CTranscoderPacket> packet)
 {
-	waiting_packet[channel].push(packet);
+	waiting_packet.push(packet);
 }
 
-std::shared_ptr<CTranscoderPacket> CDV3003::PopWaitingPacket(unsigned int channel)
+std::shared_ptr<CTranscoderPacket> CDV3000::PopWaitingPacket(unsigned int /* channel */)
 {
-	return waiting_packet[channel].pop();
+	return waiting_packet.pop();
 }
 
-bool CDV3003::SendAudio(const uint8_t channel, const int16_t *audio) const
+bool CDV3000::SendAudio(const uint8_t /*channel*/, const int16_t *audio) const
 {
 	// Create Audio packet based on input int8_ts
 	SDV_Packet p;
 	p.start_byte = PKT_HEADER;
-	p.header.payload_length = htons(1 + sizeof(p.payload.audio));
+	p.header.payload_length = htons(1 + sizeof(p.payload.audio3k));
 	p.header.packet_type = PKT_SPEECH;
-	p.field_id = channel + PKT_CHANNEL0;
-	p.payload.audio.speechd = PKT_SPEECHD;
-	p.payload.audio.num_samples = 160U;
+	p.field_id = PKT_SPEECHD;
+	p.payload.audio3k.num_samples = 160U;
 	for (int i=0; i<160; i++)
-		p.payload.audio.samples[i] = htons(audio[i]);
+		p.payload.audio3k.samples[i] = htons(audio[i]);
 
 	// send audio packet to DV3000
 	const DWORD size = packet_size(p);
@@ -87,17 +85,16 @@ bool CDV3003::SendAudio(const uint8_t channel, const int16_t *audio) const
 	return false;
 }
 
-bool CDV3003::SendData(const uint8_t channel, const uint8_t *data) const
+bool CDV3000::SendData(const uint8_t /* channel */, const uint8_t *data) const
 {
 	// Create data packet
 	SDV_Packet p;
 	p.start_byte = PKT_HEADER;
-	p.header.payload_length = htons(1 + sizeof(p.payload.ambe));
+	p.header.payload_length = htons(1 + sizeof(p.payload.ambe3k));
 	p.header.packet_type = PKT_CHANNEL;
-	p.field_id = channel + PKT_CHANNEL0;
-	p.payload.ambe.chand = PKT_CHAND;
-	p.payload.ambe.num_bits = 72U;
-	memcpy(p.payload.ambe.data, data, 9);
+	p.field_id = PKT_CHAND;
+	p.payload.ambe3k.num_bits = 72U;
+	memcpy(p.payload.ambe3k.data, data, 9);
 
 	// send data packet to DV3000
 	const DWORD size = packet_size(p);
@@ -117,29 +114,28 @@ bool CDV3003::SendData(const uint8_t channel, const uint8_t *data) const
 	return false;
 }
 
-void CDV3003::ProcessPacket(const SDV_Packet &p)
+void CDV3000::ProcessPacket(const SDV_Packet &p)
 {
-	unsigned int channel = p.field_id - PKT_CHANNEL0;
-	auto packet = PopWaitingPacket(channel);
+	auto packet = PopWaitingPacket(PKT_CHANNEL0);
 	if (packet)
 	{
 		if (PKT_CHANNEL == p.header.packet_type)
 		{
-			if (12!=ntohs(p.header.payload_length) || PKT_CHAND!=p.payload.ambe.chand || 72!=p.payload.ambe.num_bits)
+			if (11!=ntohs(p.header.payload_length) || PKT_CHAND!=p.field_id || 72!=p.payload.ambe3k.num_bits)
 				dump("Improper ambe packet:", &p, packet_size(p));
 			buffer_depth--;
 			if (Encoding::dstar == type)
-				packet->SetDStarData(p.payload.ambe.data);
+				packet->SetDStarData(p.payload.ambe3k.data);
 			else
-				packet->SetDMRData(p.payload.ambe.data);
+				packet->SetDMRData(p.payload.ambe3k.data);
 
 		}
 		else if (PKT_SPEECH == p.header.packet_type)
 		{
-			if (323!=ntohs(p.header.payload_length) || PKT_SPEECHD!=p.payload.audio.speechd || 160!=p.payload.audio.num_samples)
+			if (322!=ntohs(p.header.payload_length) || PKT_SPEECHD!=p.field_id || 160!=p.payload.audio3k.num_samples)
 				dump("Improper audio packet:", &p, packet_size(p));
 			buffer_depth--;
-			packet->SetAudioSamples(p.payload.audio.samples, true);
+			packet->SetAudioSamples(p.payload.audio3k.samples, true);
 		}
 		else
 		{
@@ -148,15 +144,15 @@ void CDV3003::ProcessPacket(const SDV_Packet &p)
 		}
 		if (Encoding::dstar == type)	// is this a DMR or a DStar device?
 		{
-			g_Cont.dstar_mux.lock();
-			g_Cont.RouteDstPacket(packet);
-			g_Cont.dstar_mux.unlock();
+			g_Transcoder.dstar_mux.lock();
+			g_Transcoder.RouteDstPacket(packet);
+			g_Transcoder.dstar_mux.unlock();
 		}
 		else
 		{
-			g_Cont.dmrst_mux.lock();
-			g_Cont.RouteDmrPacket(packet);
-			g_Cont.dmrst_mux.unlock();
+			g_Transcoder.dmrst_mux.lock();
+			g_Transcoder.RouteDmrPacket(packet);
+			g_Transcoder.dmrst_mux.unlock();
 		}
 	}
 }

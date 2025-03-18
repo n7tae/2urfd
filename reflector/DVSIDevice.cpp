@@ -34,9 +34,7 @@
 #include <thread>
 
 #include "DVSIDevice.h"
-#include "Configure.h"
-
-extern CConfigure g_Conf;
+#include "Global.h"
 
 CDVDevice::CDVDevice(Encoding t) : type(t), ftHandle(nullptr), buffer_depth(0), keep_running(true)
 {
@@ -564,7 +562,7 @@ void CDVDevice::dump(const char *title, const void *pointer, int length) const
 
 void CDVDevice::FeedDevice()
 {
-	const std::string modules(g_Conf.GetTCMods());
+	const std::string modules(g_Configure.GetString(g_Keys.tc.tcmodules));
 	const auto n = modules.size();
 	while (keep_running)
 	{
