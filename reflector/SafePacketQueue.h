@@ -60,11 +60,7 @@ public:
 	T PopWait(void)
 	{
 		std::unique_lock<std::mutex> lock(m);
-		while(q.empty())
-		{
-			// release lock as long as the wait and reacquire it afterwards.
-			c.wait(lock);
-		}
+		c.wait(lock, [this] { return not q.empty(); });
 		T val = std::move(q.front());
 		q.pop();
 		return val;
@@ -72,7 +68,7 @@ public:
 
 	bool IsEmpty(void)
 	{
-		std::unique_lock<std::mutex> lock(m);
+		std::lock_guard<std::mutex> lock(m);
 		return q.empty();
 	}
 
