@@ -70,15 +70,14 @@ public:
 	const CCallsign &GetCallsign(void) const        { return m_Callsign; }
 	CUsers  *GetUsers(void)                         { m_Users.Lock(); return &m_Users; }
 	void    ReleaseUsers(void)                      { m_Users.Unlock(); }
+	std::shared_ptr<CPacketStream> GetStream(char);
 
 	// check
 	bool IsValidModule(char c) const                { return m_Modules.npos!=m_Modules.find(c); }
 
-	// notifications
-
+	// notification
 	void OnPeersChanged(void);
-//	void OnClientsChanged(void);
-//	void OnUsersChanged(void);
+
 #ifndef NO_DHT
 	void GetDHTConfig(const std::string &cs);
 #endif
@@ -97,7 +96,6 @@ protected:
 	void StateReportThread(void);
 
 	// streams
-	std::shared_ptr<CPacketStream> GetStream(char);
 	bool IsStreamOpen(const std::unique_ptr<CDvHeaderPacket> &);
 	char GetStreamModule(std::shared_ptr<CPacketStream>);
 

@@ -29,7 +29,6 @@
 #include "codec2.h"
 #include "DV3000.h"
 #include "DV3003.h"
-#include "UnixDgramSocket.h"
 
 class CTranscoder
 {
@@ -39,23 +38,22 @@ public:
 	CTranscoder();
 	bool Start();
 	void Stop();
+	void Transcode(std::shared_ptr<CTranscoderPacket> packet);
 	void RouteDstPacket(std::shared_ptr<CTranscoderPacket> packet);
 	void RouteDmrPacket(std::shared_ptr<CTranscoderPacket> packet);
 	void Dump(const std::shared_ptr<CTranscoderPacket> packet, const std::string &title) const;
 
-protected:
+private:
 	std::atomic<bool> keep_running;
 	std::future<void> reflectorFuture, c2Future, imbeFuture;
 	std::unordered_map<char, int16_t[160]> audio_store;
 	std::unordered_map<char, uint8_t[8]> data_store;
-	CUnixDgramReader reader;
-	CUnixDgramWriter writer;
+	std::unordered_map<char, std::unique_ptr<CPacketQueue>> inQmap;
 	std::unordered_map<char, std::unique_ptr<CCodec2>> c2_16, c2_32;
 	std::unique_ptr<CDVDevice> dstar_device, dmrsf_device;
 
 	CPacketQueue codec2_queue;
 	CPacketQueue imbe_queue;
-	std::mutex send_mux;
 	int32_t ambe_in_num, ambe_out_num;
 	std::unordered_map<char, std::unique_ptr<imbe_vocoder_impl>> p25vocoder;
 
@@ -64,7 +62,6 @@ protected:
 	bool InitVocoders();
 
 	// processing threads
-	void ReadReflectorThread();
 	void ProcessC2Thread();
 	void ProcessIMBEThread();
 
@@ -72,5 +69,10 @@ protected:
 	void AudiotoCodec2(std::shared_ptr<CTranscoderPacket> packet);
 	void IMBEtoAudio(std::shared_ptr<CTranscoderPacket> packet);
 	void AudiotoIMBE(std::shared_ptr<CTranscoderPacket> packet);
-	void SendToReflector(std::shared_ptr<CTranscoderPacket> packet);
+	void ReadReflectorThread();
+	void UpdateStream(std::shared_ptr<CTranscoderPacket> packet);
+
+	std::mutex m_tcmux;	// for the Transcode input
+
+	const std::string m_tcmods;
 };

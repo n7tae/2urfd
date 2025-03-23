@@ -18,28 +18,16 @@
 
 
 #include "PacketStream.h"
+#include "Global.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructor
 
-CPacketStream::CPacketStream(char module) : m_PSModule(module)
+CPacketStream::CPacketStream(char module, bool istc) : m_PSModule(module), m_IsTranscoded(istc)
 {
 	m_uiStreamId = 0;
 	m_uiPacketCntr = 0;
 	m_OwnerClient = nullptr;
-	m_CodecStream = nullptr;
-}
-
-bool CPacketStream::InitCodecStream()
-{
-	m_CodecStream = std::unique_ptr<CCodecStream>(new CCodecStream(this, m_PSModule));
-	if (m_CodecStream)
-		return m_CodecStream->InitCodecStream();
-	else
-	{
-		std::cerr << "Could not create a CCodecStream for module '" << m_PSModule << "'" << std::endl;
-		return true;
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -56,8 +44,8 @@ bool CPacketStream::OpenPacketStream(const CDvHeaderPacket &DvHeader, std::share
 		m_DvHeader = DvHeader;
 		m_OwnerClient = client;
 		m_LastPacketTime.start();
-		if (m_CodecStream)
-			m_CodecStream->ResetStats(m_uiStreamId, m_DvHeader.GetCodecIn());
+		if (m_IsTranscoded)
+			ResetStats();
 		return true;
 	}
 	return false;
@@ -68,35 +56,122 @@ void CPacketStream::ClosePacketStream(void)
 	// update status
 	m_uiStreamId = 0;
 	m_OwnerClient.reset();
-	if (m_CodecStream)
-		m_CodecStream->ReportStats();
+	if(m_IsTranscoded)
+		ReportStats();
+	while (not m_HeaderQueue.empty())
+	{
+		auto header = std::move(m_HeaderQueue.front());
+		std::cerr << "ERROR: Module " << m_PSModule << " Header packet from " << header->GetMyCallsign() << " with SID " << std::hex << std::showbase << header->GetStreamId() << std::dec << std::noshowbase << " was not processed!" << std::endl;
+		m_HeaderQueue.pop();
+	}
+	while (not m_TCQueue.empty())
+	{
+		auto tp = m_TCQueue.front().tcpacket;
+		std::cerr << "ERROR: Module " << m_PSModule << " Frame packet with SID " << std::hex << std::showbase << tp->GetStreamId() << std::dec << std::noshowbase << " was not processed!" << std::endl;
+		m_TCQueue.pop();
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-// push & pop
-
-void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
+// Statistics
+void CPacketStream::ResetStats()
 {
-	// update stream dependent packet data
-	m_LastPacketTime.start();
-	if (Packet->IsDvFrame())
+	m_RTMin = -1;
+	m_RTMax = -1;
+	m_RTSum = 0;
+	m_RTCount = 0;
+	m_uiTotalPackets = 0;
+}
+
+void CPacketStream::ReportStats()
+{
+	if (m_RTCount > 0)
 	{
-		Packet->UpdatePids(m_uiPacketCntr++);
+		double min = 1000.0 * m_RTMin;
+		double max = 1000.0 * m_RTMax;
+		double ave = 1000.0 * m_RTSum / double(m_RTCount);
+		auto prec = std::cout.precision();
+		std::cout.precision(1);
+		std::cout << std::fixed << "TC round-trip time(ms): " << min << '/' << ave << '/' << max << ", " << m_RTCount << " total packets" << std::endl;
+		std::cout.precision(prec);
 	}
-	// ... Is there a CodecStream (is this module transcoded)?
-	// AND Is this voice data?
-	// AND Is this from a local client and not from an interlinked URF
-	if ( m_CodecStream && Packet->IsDvFrame() && Packet->IsLocalOrigin())
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+// action
+
+void CPacketStream::Update(CTimer &t)
+{
+	// update statistics
+	double rt = t.time();	// the round-trip time
+	if (0 == m_RTCount)
 	{
-		// yes, push packet to trancoder queue
-		// trancoder will push it after transcoding
-		// is completed
-		//auto pPacket = static_cast<CDvFramePacket *>(Packet.release());
-		m_CodecStream->Push(std::move(std::unique_ptr<CDvFramePacket>(static_cast<CDvFramePacket *>(Packet.release()))));
+		m_RTMin = rt;
+		m_RTMax = rt;
 	}
 	else
 	{
-		// no, just bypass transcoder
+		if (rt < m_RTMin)
+			m_RTMin = rt;
+		else if (rt > m_RTMax)
+			m_RTMax = rt;
+	}
+	m_RTSum += rt;
+	m_RTCount++;
+	if (m_TCQueue.empty())
+	{
+		std::cerr << "The transcoder sent an update, but the transcoder is empty!" << std::endl;
+	}
+	else
+	{
+		while (m_TCQueue.front().tcpacket->AllCodecsAreSet())
+		{
+			while (not m_HeaderQueue.empty())
+			{
+				m_Queue.Push(std::move(m_HeaderQueue.front()));
+				m_HeaderQueue.pop();
+			}
+			auto fp = std::move(m_TCQueue.front().fpacket);
+			auto tp = m_TCQueue.front().tcpacket;
+			m_TCQueue.pop();
+			fp->SetCodecData(tp->GetTCPacket());
+			m_Queue.Push(std::move(fp));
+		}
+		if (m_TCQueue.empty())
+			return;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+// push
+
+void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
+{
+	if ( m_IsTranscoded and Packet->IsLocalOrigin())
+	{
+		if (Packet->IsDvHeader())
+		{
+			// recast to a header packet
+			std::unique_ptr<CDvHeaderPacket> Header(static_cast<CDvHeaderPacket *>(Packet.release()));
+			// push this into the holding area for headers
+			m_HeaderQueue.push(std::move(Header));
+		}
+		else
+		{
+			Packet->UpdatePids(m_uiPacketCntr++);
+			// recast to a frame packet
+			std::unique_ptr<CDvFramePacket> frame(static_cast<CDvFramePacket *>(Packet.release()));
+			// create the transcoder packet from the codec packet data
+			auto tcp = std::make_shared<CTranscoderPacket>(*frame->GetCodecPacket());
+			// push it into the holding queue
+			m_TCQueue.emplace(tcp, std::move(frame));
+			// and send the transcoder packet to the TC
+			g_Transcoder.Transcode(tcp);
+		}
+	}
+	else
+	{
+		// bypass the transcoder
 		m_Queue.Push(std::move(Packet));
 	}
 }

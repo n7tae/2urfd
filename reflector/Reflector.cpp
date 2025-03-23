@@ -122,15 +122,9 @@ bool CReflector::Start(void)
 	// start one thread per reflector module
 	for (auto c : m_Modules)
 	{
-		auto stream = std::make_shared<CPacketStream>(c);
+		auto stream = std::make_shared<CPacketStream>(c, (tcmods.npos == tcmods.find(c)) ? false : true);
 		if (stream)
 		{
-			// if it's a transcoded module, then we need to initialize the codec stream
-			if (std::string::npos != tcmods.find(c))
-			{
-				if (stream->InitCodecStream())
-					return true;
-			}
 			m_Stream[c] = stream;
 		}
 		else

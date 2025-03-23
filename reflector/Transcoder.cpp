@@ -35,16 +35,15 @@ int32_t CTranscoder::calcNumerator(int32_t db) const
 	return int32_t(roundf(num));
 }
 
-CTranscoder::CTranscoder() : keep_running(true) {}
+CTranscoder::CTranscoder() : keep_running(true), m_tcmods(g_Configure.GetString(g_Keys.tc.tcmodules)) {}
 
 bool CTranscoder::Start()
 {
-	if (InitVocoders() || reader.Open(REF2TC))
+	if (InitVocoders())
 	{
 		keep_running = false;
 		return true;
 	}
-	std::cout << "Listening on Unix socket " << REF2TC << std::endl;
 
 	try
 	{
@@ -72,12 +71,11 @@ void CTranscoder::Stop()
 	if (imbeFuture.valid())
 		imbeFuture.get();
 
-	reader.Close();
 	dstar_device->CloseDevice();
 	dmrsf_device->CloseDevice();
 	dstar_device.reset();
 	dmrsf_device.reset();
-	for (const auto m : g_Configure.GetString(g_Keys.tc.tcmodules))
+	for (const auto m : m_tcmods)
 	{
 		c2_16[m].reset();
 		c2_32[m].reset();
@@ -131,12 +129,12 @@ bool CTranscoder::DiscoverFtdiDevices(std::list<std::pair<std::string, std::stri
 bool CTranscoder::InitVocoders()
 {
 	// M17 "devices", one for each module
-	const std::string modules(g_Configure.GetString(g_Keys.tc.tcmodules));
-	for ( auto c : modules)
+	for ( auto c : m_tcmods)
 	{
 		c2_16[c] = std::make_unique<CCodec2>(false);
 		c2_32[c] = std::make_unique<CCodec2>(true);
 		p25vocoder[c] = std::make_unique<imbe_vocoder_impl>();
+		inQmap.emplace(c, std::make_unique<CPacketQueue>());
 	}
 
 	// the 3000 or 3003 devices
@@ -169,15 +167,15 @@ bool CTranscoder::InitVocoders()
 	if (0==desc.compare("ThumbDV") || 0==desc.compare("DVstick-30") || 0==desc.compare("USB-3000") || 0==desc.compare("FT230X Basic UART"))
 		dvtype = Edvtype::dv3000;
 
-	if (modules.size() > ((Edvtype::dv3000 == dvtype) ? 1 : 3))
+	if (m_tcmods.size() > ((Edvtype::dv3000 == dvtype) ? 1 : 3))
 	{
 		std::cerr << "Too many transcoded modules for the devices" << std::endl;
 		return true;
 	}
 
-	for (unsigned int i=0; i<modules.size(); i++)
+	for (unsigned int i=0; i<m_tcmods.size(); i++)
 	{
-		auto c = modules.at(i);
+		auto c = m_tcmods.at(i);
 		if (c < 'A' || c > 'Z') {
 			std::cerr << "Transcoded modules[" << i << "] is not an uppercase letter!" << std::endl;
 			return true;
@@ -231,20 +229,33 @@ bool CTranscoder::InitVocoders()
 	return false;
 }
 
-// Encapsulate the incoming STCPacket into a CTranscoderPacket and push it into the appropriate queue
-// based on packet's codec_in.
+void CTranscoder::Transcode(std::shared_ptr<CTranscoderPacket> tcp)
+{
+	std::lock_guard<std::mutex> lock(m_tcmux);
+	auto qit = inQmap.find(tcp->GetModule());
+	if (inQmap.end() == qit)
+	{
+		Dump(tcp, "ERROR: Transcoder received a packet for a unconfigured module:");
+		return;
+	}
+	qit->second->push(tcp);
+}
+
 void CTranscoder::ReadReflectorThread()
 {
+	auto go_time = std::chrono::steady_clock::now();
+
 	while (keep_running)
 	{
-		STCPacket tcpack;
-		// wait up to 100 ms to read something on the unix port
-		if (reader.Receive(&tcpack, 100))
-		{
-			// create a shared pointer to a new packet
-			// there is only one CTranscoderPacket created for each new STCPacket received from the reflector
-			auto packet = std::make_shared<CTranscoderPacket>(tcpack);
+		go_time += std::chrono::milliseconds(20);
+		std::this_thread::sleep_until(go_time);
 
+		for (auto &pair : inQmap)
+		{
+			if (pair.second->IsEmpty())
+				continue;
+
+			auto packet = pair.second->pop();
 			switch (packet->GetCodecIn())
 			{
 			case ECodecType::dstar:
@@ -296,9 +307,8 @@ void CTranscoder::AudiotoCodec2(std::shared_ptr<CTranscoderPacket> packet)
 	}
 
 	// we might be all done...
-	send_mux.lock();
-	if (packet->AllCodecsAreSet() && packet->HasNotBeenSent()) SendToReflector(packet);
-	send_mux.unlock();
+	if (packet->AllCodecsAreSet()) 
+		UpdateStream(packet);
 }
 
 // The original incoming coded was M17, so we will calculate the audio and then
@@ -379,9 +389,8 @@ void CTranscoder::AudiotoIMBE(std::shared_ptr<CTranscoderPacket> packet)
 	p25vocoder[packet->GetModule()]->encode_4400((int16_t *)packet->GetAudioSamples(), imbe);
 	packet->SetP25Data(imbe);
 	// we might be all done...
-	send_mux.lock();
-	if (packet->AllCodecsAreSet() && packet->HasNotBeenSent()) SendToReflector(packet);
-	send_mux.unlock();
+	if (packet->AllCodecsAreSet()) 
+		UpdateStream(packet);
 }
 
 void CTranscoder::IMBEtoAudio(std::shared_ptr<CTranscoderPacket> packet)
@@ -408,17 +417,11 @@ void CTranscoder::ProcessIMBEThread()
 	std::cout << "IMBE process thread shut down" << std::endl;
 }
 
-void CTranscoder::SendToReflector(std::shared_ptr<CTranscoderPacket> packet)
+void CTranscoder::UpdateStream(std::shared_ptr<CTranscoderPacket> packet)
 {
-	// open a socket to the reflector channel
-	CUnixDgramWriter socket;
-	std::string name(TC2REF);
-	name.append(1, packet->GetModule());
-	socket.SetUp(name.c_str());
-	// send the packet over the socket
-	socket.Send(packet->GetTCPacket());
-	// the socket will automatically close after sending
-	packet->Sent();
+	auto stream = g_Reflector.GetStream(packet->GetModule());
+	if (stream)
+		stream->Update(packet->GetTimer());
 }
 
 void CTranscoder::RouteDstPacket(std::shared_ptr<CTranscoderPacket> packet)
@@ -432,9 +435,8 @@ void CTranscoder::RouteDstPacket(std::shared_ptr<CTranscoderPacket> packet)
 	}
 	else
 	{
-		send_mux.lock();
-		if (packet->AllCodecsAreSet() && packet->HasNotBeenSent()) SendToReflector(packet);
-		send_mux.unlock();
+		if (packet->AllCodecsAreSet()) 
+			UpdateStream(packet);
 	}
 }
 
@@ -448,9 +450,8 @@ void CTranscoder::RouteDmrPacket(std::shared_ptr<CTranscoderPacket> packet)
 	}
 	else
 	{
-		send_mux.lock();
-		if (packet->AllCodecsAreSet() && packet->HasNotBeenSent()) SendToReflector(packet);
-		send_mux.unlock();
+		if (packet->AllCodecsAreSet()) 
+			UpdateStream(packet);
 	}
 }
 

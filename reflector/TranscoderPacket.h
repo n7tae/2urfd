@@ -51,6 +51,7 @@ public:
 	uint16_t GetStreamId() const;
 	uint32_t GetSequence() const;
 	double GetTimeMS() const;
+	CTimer &GetTimer() { return tcpacket.rt_timer; } 
 	bool IsLast() const;
 	bool IsSecond() const;
 	bool DStarIsSet() const;
@@ -58,8 +59,6 @@ public:
 	bool P25IsSet() const;
 	bool M17IsSet() const;
 	bool AllCodecsAreSet() const;
-	void Sent();
-	bool HasNotBeenSent() const;
 
 	// the all important packet
 	const STCPacket *GetTCPacket() const;
@@ -67,5 +66,5 @@ public:
 private:
 	STCPacket tcpacket;
 	int16_t audio[160];
-	std::atomic_bool dstar_set, dmr_set, p25_set, m17_set, not_sent;
+	std::atomic_bool dstar_set, dmr_set, p25_set, m17_set;
 };

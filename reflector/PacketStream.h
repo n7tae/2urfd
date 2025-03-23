@@ -18,32 +18,53 @@
 
 #pragma once
 
-#include "Timer.h"
-#include "DVHeaderPacket.h"
-#include "Client.h"
-#include "CodecStream.h"
+#include <memory>
+#include <queue>
 
-////////////////////////////////////////////////////////////////////////////////////////
+#include "Timer.h"
+#include "DVFramePacket.h"
+#include "DVHeaderPacket.h"
+#include "TranscoderPacket.h"
+#include "SafePacketQueue.h"
+#include "Client.h"
 
 #define STREAM_TIMEOUT      (1.600)
 
-////////////////////////////////////////////////////////////////////////////////////////
-// class
+struct STCFP
+{
+	STCFP(std::shared_ptr<CTranscoderPacket> tp, std::unique_ptr<CDvFramePacket> fp)
+	{
+		tcpacket = tp;
+		fpacket = std::move(fp);
+	}
+	STCFP() = delete;
+	STCFP(const STCFP &) = delete;
+	STCFP(const STCFP &&) = delete;
+	STCFP &operator= (const STCFP &) = delete;
+	STCFP &operator= (const STCFP &&) = delete;
+	~STCFP()
+	{
+		tcpacket.reset();
+		fpacket.release();
+	}
+	std::shared_ptr<CTranscoderPacket> tcpacket;
+	std::unique_ptr<CDvFramePacket> fpacket;
+};
 
 class CPacketStream
 {
 public:
-	CPacketStream(char module);
-	bool InitCodecStream();
+	CPacketStream(char module, bool istc);
+
+	void ResetStats();
+	void ReportStats();
 
 	// open / close
 	bool OpenPacketStream(const CDvHeaderPacket &, std::shared_ptr<CClient>);
 	void ClosePacketStream(void);
 
-	// push & pop
-	void ReturnPacket(std::unique_ptr<CPacket> p) { m_Queue.Push(std::move(p)); }
-	void Push(std::unique_ptr<CPacket> packet);
 	void Tickle(void)                               { m_LastPacketTime.start(); }
+	void Update(CTimer &t);
 
 	// get
 	std::shared_ptr<CClient> GetOwnerClient(void)   { return m_OwnerClient; }
@@ -54,19 +75,25 @@ public:
 	const CCallsign &GetUserCallsign(void) const    { return m_DvHeader.GetMyCallsign(); }
 	char             GetRpt2Module(void) const      { return m_DvHeader.GetRpt2Module(); }
 
-	// pass-through
+	// push & pop
+	void Push(std::unique_ptr<CPacket> packet);
 	std::unique_ptr<CPacket> Pop()        { return m_Queue.Pop(); }
 	std::unique_ptr<CPacket> PopWait()    { return m_Queue.PopWait(); }
 	bool IsEmpty()                        { return m_Queue.IsEmpty(); }
 
 protected:
 	// data
-	CSafePacketQueue<std::unique_ptr<CPacket>> m_Queue;
-	const char          m_PSModule;
-	uint16_t            m_uiStreamId;
-	uint32_t            m_uiPacketCntr;
-	CTimer              m_LastPacketTime;
-	CDvHeaderPacket     m_DvHeader;
+	const char      m_PSModule;
+	const bool      m_IsTranscoded;
+	uint16_t        m_uiStreamId;
+	uint32_t        m_uiPacketCntr;
+	CTimer          m_LastPacketTime;
+	CDvHeaderPacket m_DvHeader;
 	std::shared_ptr<CClient> m_OwnerClient;
-	std::unique_ptr<CCodecStream> m_CodecStream;
+	CSafePacketQueue<std::unique_ptr<CPacket>> m_Queue;
+	std::queue<STCFP> m_TCQueue;
+	std::queue<std::unique_ptr<CDvHeaderPacket>> m_HeaderQueue;
+	double m_RTMin, m_RTMax, m_RTSum;
+	long m_RTCount, m_uiTotalPackets;
+
 };
