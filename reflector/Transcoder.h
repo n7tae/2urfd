@@ -74,5 +74,5 @@ private:
 
 	std::mutex m_tcmux;	// for the Transcode input
 
-	const std::string m_tcmods;
+	std::string m_tcmods;
 };

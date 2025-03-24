@@ -24,7 +24,6 @@
 #include <thread>
 
 #include "TranscoderPacket.h"
-#include "Configure.h"
 
 #include "Global.h"
 
@@ -35,10 +34,11 @@ int32_t CTranscoder::calcNumerator(int32_t db) const
 	return int32_t(roundf(num));
 }
 
-CTranscoder::CTranscoder() : keep_running(true), m_tcmods(g_Configure.GetString(g_Keys.tc.tcmodules)) {}
+CTranscoder::CTranscoder() : keep_running(true) {}
 
 bool CTranscoder::Start()
 {
+	m_tcmods = g_Configure.GetString(g_Keys.tc.tcmodules);
 	if (InitVocoders()) // this will also create the inQmap queues
 	{
 		keep_running = false;
