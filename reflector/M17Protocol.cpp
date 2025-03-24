@@ -359,7 +359,7 @@ bool CM17Protocol::IsValidDvPacket(const CBuffer &Buffer, std::unique_ptr<CDvHea
 	// the 0x1CU mask (00011100 binary) just lets us see:
 	// 1. the encryptions bytes (mask 0x18U) which must be zero, and
 	// 2. the msb of the 2-bit payload type (mask 0x4U) which must be set. This bit set means it's voice or voice+data.
-	// An masked result of 0x4U means the payload contains Codec2 voice data and there is no encryption.
+	// A masked result of 0x4U means the payload contains Codec2 voice data and there is no encryption.
 	{
 		// Make the M17 header
 		CM17Packet m17(Buffer.data());

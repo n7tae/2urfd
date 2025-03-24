@@ -1,4 +1,4 @@
-# Copyright (c) 2021 by Thomas A. Early N7TAE
+# Copyright (c) 2025 by Thomas A. Early N7TAE
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -45,9 +45,3 @@ uninstall :
 	$(RM) /etc/systemd/system/urfd.service
 	systemctl daemon-reload
 	$(RM) $(BINDIR)/urfd
-	# Uninstall Transcoder...
-	systemctl stop tcd
-	systemctl disable tcd
-	$(RM) /etc/systemd/system/tcd.service
-	$(RM) $(BINDIR)/tcd
-	systemctl daemon-reload
