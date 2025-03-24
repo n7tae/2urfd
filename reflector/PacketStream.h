@@ -95,6 +95,4 @@ protected:
 	std::queue<STCFP> m_TCQueue;
 	std::queue<std::unique_ptr<CDvHeaderPacket>> m_HeaderQueue;
 	double m_RTMin, m_RTMax, m_RTSum;
-	long m_RTCount, m_uiTotalPackets;
-
 };

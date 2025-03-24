@@ -79,20 +79,18 @@ void CPacketStream::ResetStats()
 	m_RTMin = -1;
 	m_RTMax = -1;
 	m_RTSum = 0;
-	m_RTCount = 0;
-	m_uiTotalPackets = 0;
 }
 
 void CPacketStream::ReportStats()
 {
-	if (m_RTCount > 0)
+	if (m_uiPacketCntr > 0)
 	{
 		double min = 1000.0 * m_RTMin;
 		double max = 1000.0 * m_RTMax;
-		double ave = 1000.0 * m_RTSum / double(m_RTCount);
+		double ave = 1000.0 * m_RTSum / double(m_uiPacketCntr);
 		auto prec = std::cout.precision();
 		std::cout.precision(1);
-		std::cout << std::fixed << "TC round-trip time(ms): " << min << '/' << ave << '/' << max << ", " << m_RTCount << " total packets" << std::endl;
+		std::cout << std::fixed << "TC round-trip time(ms): " << min << '/' << ave << '/' << max << ", " << m_uiPacketCntr << " total packets" << std::endl;
 		std::cout.precision(prec);
 	}
 }
@@ -104,7 +102,7 @@ void CPacketStream::Update(CTimer &t)
 {
 	// update statistics
 	double rt = t.time();	// the round-trip time
-	if (0 == m_RTCount)
+	if (0 == m_uiPacketCntr)
 	{
 		m_RTMin = rt;
 		m_RTMax = rt;
@@ -117,7 +115,7 @@ void CPacketStream::Update(CTimer &t)
 			m_RTMax = rt;
 	}
 	m_RTSum += rt;
-	m_RTCount++;
+	m_uiPacketCntr++;
 	if (m_TCQueue.empty())
 	{
 		std::cerr << "The transcoder sent an update, but the transcoder is empty!" << std::endl;
@@ -147,9 +145,19 @@ void CPacketStream::Update(CTimer &t)
 
 void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 {
-	if (0 == m_uiStreamId)
+	if (Packet->GetStreamId() != m_uiStreamId)
 	{
-		return;	// the stream is closed!
+#ifdef DEBUG
+		std::cout << "PacketStream[" << m_PSModule << "]: Packet ignored. ";
+		if (0 == m_uiStreamId)
+			std::cout << "The stream is closed: ";
+		if (Packet->IsDvFrame())
+			std::cout << "Frame";
+		else
+			std::cout << "Header";
+		std::cout << std::hex << std::showbase << "Packet SID=" << ntohs(Packet->GetStreamId()) << std::noshowbase << std::dec << std::endl;
+#endif
+		return;
 	}
 	
 	if (m_IsTranscoded and Packet->IsLocalOrigin())
@@ -163,7 +171,7 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 		}
 		else
 		{
-			Packet->UpdatePids(m_uiPacketCntr++);
+			Packet->UpdatePids(m_uiPacketCntr);
 			// recast to a frame packet
 			std::unique_ptr<CDvFramePacket> frame(static_cast<CDvFramePacket *>(Packet.release()));
 			// create the transcoder packet from the codec packet data

@@ -343,7 +343,14 @@ void CReflector::RouterThread(const char ThisModule)
 		// wait until something shows up
 		auto packet = streamIn->PopWait();
 
-		packet->SetPacketModule(ThisModule);
+		if (packet->GetPacketModule() != ThisModule)
+		{
+			// if we're here, something is wrong internally
+			// For header packets, the module is set in CReflector::OpenStream, and
+			// for Frame packets, the module is set in CProtocol::OnDvFramePacketIn
+			std::cerr << "RouterThread[" << ThisModule << "]: " << (packet->IsDvHeader()?"Header":"Frame") << "Packet has wrong module: '" << packet->GetPacketModule() << ". Reset!" << std::endl;
+			packet->SetPacketModule(ThisModule);
+		}
 
 		// iterate on all protocols
 		m_Protocols.Lock();
@@ -358,7 +365,7 @@ void CReflector::RouterThread(const char ThisModule)
 				CCallsign csRPT = (*it)->GetReflectorCallsign();
 				csRPT.SetCSModule(ThisModule);
 				// and put it in the copy
-				(dynamic_cast<CDvHeaderPacket *>(copy.get()))->SetRpt2Callsign(csRPT);
+				(static_cast<CDvHeaderPacket *>(copy.get()))->SetRpt2Callsign(csRPT);
 			}
 
 			(*it)->Push(std::move(copy));
