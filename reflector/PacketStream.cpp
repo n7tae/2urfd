@@ -147,7 +147,12 @@ void CPacketStream::Update(CTimer &t)
 
 void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 {
-	if ( m_IsTranscoded and Packet->IsLocalOrigin())
+	if (0 == m_uiStreamId)
+	{
+		return;	// the stream is closed!
+	}
+	
+	if (m_IsTranscoded and Packet->IsLocalOrigin())
 	{
 		if (Packet->IsDvHeader())
 		{

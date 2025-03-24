@@ -39,7 +39,7 @@ CTranscoder::CTranscoder() : keep_running(true), m_tcmods(g_Configure.GetString(
 
 bool CTranscoder::Start()
 {
-	if (InitVocoders())
+	if (InitVocoders()) // this will also create the inQmap queues
 	{
 		keep_running = false;
 		return true;
@@ -70,6 +70,7 @@ void CTranscoder::Stop()
 		c2Future.get();
 	if (imbeFuture.valid())
 		imbeFuture.get();
+	inQmap.clear();
 
 	dstar_device->CloseDevice();
 	dmrsf_device->CloseDevice();
