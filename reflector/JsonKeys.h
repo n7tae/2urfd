@@ -46,7 +46,7 @@ struct SJsonKeys {
 		"DescriptionA", "DescriptionB", "DescriptionC", "DescriptionD", "DescriptionE", "DescriptionF", "DescriptionG", "DescriptionH", "DescriptionI", "DescriptionJ", "DescriptionK", "DescriptionL", "DescriptionM", "DescriptionN", "DescriptionO", "DescriptionP", "DescriptionQ", "DescriptionR", "DescriptionS", "DescriptionT", "DescriptionU", "DescriptionV", "DescriptionW", "DescriptionX", "DescriptionY", "DescriptionZ" };
 
 	struct TRANSCODER { const std::string tcmodules, dstargainin, dstargainout, dmrgainin, dmrgainout; }
-	tc { "TranscodedModules", "dstarGainIn", "dstarGainOut", "dmrGainIn", "dmrGainOut" };
+	tc { "Transcoded", "dstarGainIn", "dstarGainOut", "dmrGainIn", "dmrGainOut" };
 
 	struct P25NXDN { const std::string port, autolinkmod, reflectorid; }
 	p25 { "P25Port",  "P25AutolinkMod",   "P25ReflectorID" },
