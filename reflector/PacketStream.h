@@ -94,5 +94,5 @@ protected:
 	CSafePacketQueue<std::unique_ptr<CPacket>> m_Queue;
 	std::queue<STCFP> m_TCQueue;
 	std::queue<std::unique_ptr<CDvHeaderPacket>> m_HeaderQueue;
-	double m_RTMin, m_RTMax, m_RTSum;
+	double m_RTMin, m_RTMax, m_RTSum, m_RTSumSq;
 };

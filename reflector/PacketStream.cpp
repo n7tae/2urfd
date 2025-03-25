@@ -76,21 +76,24 @@ void CPacketStream::ClosePacketStream(void)
 // Statistics
 void CPacketStream::ResetStats()
 {
-	m_RTMin = -1;
-	m_RTMax = -1;
-	m_RTSum = 0;
+	m_RTMin = 1.0e6;
+	m_RTMax = -1.0;
+	m_RTSum = 0.0;
 }
 
 void CPacketStream::ReportStats()
 {
 	if (m_uiPacketCntr > 0)
 	{
+		double norm = 1.0 / double(m_uiPacketCntr);
 		double min = 1000.0 * m_RTMin;
 		double max = 1000.0 * m_RTMax;
-		double ave = 1000.0 * m_RTSum / double(m_uiPacketCntr);
+		double average = m_RTSum * norm;
+		double ave = 1000.0 * average;
+		double dev = 1000.0 * sqrt((m_RTSumSq * norm) - (average * average));
 		auto prec = std::cout.precision();
 		std::cout.precision(1);
-		std::cout << std::fixed << "TC round-trip time(ms): " << min << '/' << ave << '/' << max << ", " << m_uiPacketCntr << " total packets" << std::endl;
+		std::cout << std::fixed << "TC round-trip time(ms): " << min << '/' << ave << "+/-" << dev << '/' << max << ", " << m_uiPacketCntr << " total packets" << std::endl;
 		std::cout.precision(prec);
 	}
 }
@@ -102,23 +105,16 @@ void CPacketStream::Update(CTimer &t)
 {
 	// update statistics
 	double rt = t.time();	// the round-trip time
-	if (0 == m_uiPacketCntr)
-	{
+	if (rt < m_RTMin)
 		m_RTMin = rt;
+	else if (rt > m_RTMax)
 		m_RTMax = rt;
-	}
-	else
-	{
-		if (rt < m_RTMin)
-			m_RTMin = rt;
-		else if (rt > m_RTMax)
-			m_RTMax = rt;
-	}
 	m_RTSum += rt;
+	m_RTSumSq += rt * rt;
 	m_uiPacketCntr++;
 	if (m_TCQueue.empty())
 	{
-		std::cerr << "The transcoder sent an update, but the transcoder is empty!" << std::endl;
+		std::cerr << "The transcoder sent an update, but the transcoder queue is empty!" << std::endl;
 	}
 	else
 	{
@@ -174,6 +170,8 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 			Packet->UpdatePids(m_uiPacketCntr);
 			// recast to a frame packet
 			std::unique_ptr<CDvFramePacket> frame(static_cast<CDvFramePacket *>(Packet.release()));
+			// update the tcp param
+			frame->SetTCParams(m_uiPacketCntr);
 			// create the transcoder packet from the codec packet data
 			auto tcp = std::make_shared<CTranscoderPacket>(*frame->GetCodecPacket());
 			// push it into the holding queue
