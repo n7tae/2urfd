@@ -62,13 +62,13 @@ void CPacketStream::ClosePacketStream(void)
 	{
 		auto header = std::move(m_HeaderQueue.front());
 		std::cerr << "ERROR: Module " << m_PSModule << " Header packet from " << header->GetMyCallsign() << " with SID " << std::hex << std::showbase << header->GetStreamId() << std::dec << std::noshowbase << " was not processed!" << std::endl;
-		m_HeaderQueue.pop();
+		m_HeaderQueue.pop_front();
 	}
 	while (not m_TCQueue.empty())
 	{
 		auto tp = m_TCQueue.front().tcpacket;
 		std::cerr << "ERROR: Module " << m_PSModule << " Frame packet with SID " << std::hex << std::showbase << tp->GetStreamId() << std::dec << std::noshowbase << " was not processed!" << std::endl;
-		m_TCQueue.pop();
+		m_TCQueue.pop_front();
 	}
 }
 
@@ -120,15 +120,22 @@ void CPacketStream::Update(CTimer &t)
 	{
 		while (m_TCQueue.front().tcpacket->AllCodecsAreSet())
 		{
+			// if there is a waiting frame pack, now is the time for it
+			// there should just be one, but if not we'll do 'em all
 			while (not m_HeaderQueue.empty())
 			{
 				m_Queue.Push(std::move(m_HeaderQueue.front()));
-				m_HeaderQueue.pop();
+				m_HeaderQueue.pop_front();
 			}
+			// get both pointers from the front
 			auto fp = std::move(m_TCQueue.front().fpacket);
 			auto tp = m_TCQueue.front().tcpacket;
-			m_TCQueue.pop();
+			// throw away the STCFP container
+			m_TCQueue.pop_front();
+			// update the frame with the codec data
 			fp->SetCodecData(tp->GetTCPacket());
+			// push it back to the reflector where it can be
+			// distriubed to all clients by the client's protocol
 			m_Queue.Push(std::move(fp));
 		}
 		if (m_TCQueue.empty())
@@ -163,7 +170,7 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 			// recast to a header packet
 			std::unique_ptr<CDvHeaderPacket> Header(static_cast<CDvHeaderPacket *>(Packet.release()));
 			// push this into the holding area for headers
-			m_HeaderQueue.push(std::move(Header));
+			m_HeaderQueue.push_back(std::move(Header));
 		}
 		else
 		{
@@ -174,12 +181,12 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 			frame->SetTCParams(m_uiPacketCntr);
 			// create the transcoder packet from the codec packet data
 			auto tcp = std::make_shared<CTranscoderPacket>(*frame->GetCodecPacket());
-			// make a copy because emplace will forward the pointer, leaving a nullptr
-			auto cpy = tcp;
-			// push it into the holding queue
-			m_TCQueue.emplace(tcp, std::move(frame));
+			
+			m_TCQueue.push_back(STCFP());
+			m_TCQueue.front().fpacket = std::move(frame);
+			m_TCQueue.front().tcpacket = tcp;
 			// and send the transcoder packet to the TC
-			g_Transcoder.Transcode(cpy);
+			g_Transcoder.Transcode(tcp);
 		}
 	}
 	else

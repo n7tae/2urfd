@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <queue>
+#include <list>
 
 #include "Timer.h"
 #include "DVFramePacket.h"
@@ -32,21 +33,7 @@
 
 struct STCFP
 {
-	STCFP(std::shared_ptr<CTranscoderPacket> tp, std::unique_ptr<CDvFramePacket> fp)
-	{
-		tcpacket = tp;
-		fpacket = std::move(fp);
-	}
-	STCFP() = delete;
-	STCFP(const STCFP &) = delete;
-	STCFP(const STCFP &&) = delete;
-	STCFP &operator= (const STCFP &) = delete;
-	STCFP &operator= (const STCFP &&) = delete;
-	~STCFP()
-	{
-		tcpacket.reset();
-		fpacket.release();
-	}
+	STCFP() : tcpacket(nullptr), fpacket(nullptr) {}
 	std::shared_ptr<CTranscoderPacket> tcpacket;
 	std::unique_ptr<CDvFramePacket> fpacket;
 };
@@ -92,7 +79,7 @@ protected:
 	CDvHeaderPacket m_DvHeader;
 	std::shared_ptr<CClient> m_OwnerClient;
 	CSafePacketQueue<std::unique_ptr<CPacket>> m_Queue;
-	std::queue<STCFP> m_TCQueue;
-	std::queue<std::unique_ptr<CDvHeaderPacket>> m_HeaderQueue;
+	std::list<STCFP> m_TCQueue;
+	std::list<std::unique_ptr<CDvHeaderPacket>> m_HeaderQueue;
 	double m_RTMin, m_RTMax, m_RTSum, m_RTSumSq;
 };
