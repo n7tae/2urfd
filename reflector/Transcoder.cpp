@@ -232,7 +232,7 @@ bool CTranscoder::InitVocoders()
 
 void CTranscoder::Transcode(std::shared_ptr<CTranscoderPacket> tcp)
 {
-	std::lock_guard<std::mutex> lock(m_tcmux);
+	
 	auto qit = inQmap.find(tcp->GetModule());
 	if (inQmap.end() == qit)
 	{

@@ -72,7 +72,5 @@ private:
 	void ReadReflectorThread();
 	void UpdateStream(std::shared_ptr<CTranscoderPacket> packet);
 
-	std::mutex m_tcmux;	// for the Transcode input
-
 	std::string m_tcmods;
 };
