@@ -174,10 +174,12 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 			frame->SetTCParams(m_uiPacketCntr);
 			// create the transcoder packet from the codec packet data
 			auto tcp = std::make_shared<CTranscoderPacket>(*frame->GetCodecPacket());
+			// make a copy because emplace will forward the pointer, leaving a nullptr
+			auto cpy = tcp;
 			// push it into the holding queue
 			m_TCQueue.emplace(tcp, std::move(frame));
 			// and send the transcoder packet to the TC
-			g_Transcoder.Transcode(tcp);
+			g_Transcoder.Transcode(cpy);
 		}
 	}
 	else
