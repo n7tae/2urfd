@@ -19,7 +19,7 @@
 
 #include <cstring>
 #include <cstdint>
-#include <atomic>
+#include <mutex>
 
 #include "TCPacketDef.h"
 
@@ -58,7 +58,7 @@ public:
 	bool DMRIsSet() const;
 	bool P25IsSet() const;
 	bool M17IsSet() const;
-	bool AllCodecsAreSet() const;
+	bool AllCodecsAreSet();
 
 	// the all important packet
 	const STCPacket *GetTCPacket() const;
@@ -66,5 +66,6 @@ public:
 private:
 	STCPacket tcpacket;
 	int16_t audio[160];
-	std::atomic_bool dstar_set, dmr_set, p25_set, m17_set;
+	bool dstar_set, dmr_set, p25_set, m17_set;
+	std::mutex mx;
 };
