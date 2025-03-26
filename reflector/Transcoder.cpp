@@ -420,9 +420,12 @@ void CTranscoder::ProcessIMBEThread()
 
 void CTranscoder::UpdateStream(std::shared_ptr<CTranscoderPacket> packet)
 {
-	auto stream = g_Reflector.GetStream(packet->GetModule());
+	const auto m = packet->GetModule();
+	auto stream = g_Reflector.GetStream(m);
 	if (stream)
-		stream->Update(packet->GetTimer());
+		stream->Update(packet->GetTimer().time());
+	else
+		std::cerr << "CTranscoder::UpdateStrream could not find a PacketStream[" << m << "]!" << std::endl;
 }
 
 void CTranscoder::RouteDstPacket(std::shared_ptr<CTranscoderPacket> packet)

@@ -19,7 +19,7 @@
 
 #include "TranscoderPacket.h"
 
-CTranscoderPacket::CTranscoderPacket(const STCPacket &tcp) : dstar_set(false), dmr_set(false), p25_set(false), m17_set(false)
+CTranscoderPacket::CTranscoderPacket(const STCPacket &tcp) : dstar_set(false), dmr_set(false), imbe_set(false), m17_set(false)
 {
 	tcpacket.module = tcp.module;
 	tcpacket.is_last = tcp.is_last;
@@ -79,30 +79,26 @@ const STCPacket *CTranscoderPacket::GetTCPacket() const
 
 void CTranscoderPacket::SetM17Data(const uint8_t *data)
 {
-	std::lock_guard<std::mutex> lock(mx);
 	memcpy(tcpacket.m17, data, 16);
 	m17_set = true;
 }
 
 void CTranscoderPacket::SetDStarData(const uint8_t *dstar)
 {
-	std::lock_guard<std::mutex> lock(mx);
 	memcpy(tcpacket.dstar, dstar, 9);
 	dstar_set = true;
 }
 
 void CTranscoderPacket::SetDMRData(const uint8_t *dmr)
 {
-	std::lock_guard<std::mutex> lock(mx);
 	memcpy(tcpacket.dmr, dmr, 9);
 	dmr_set = true;
 }
 
 void CTranscoderPacket::SetP25Data(const uint8_t *p25)
 {
-	std::lock_guard<std::mutex> lock(mx);
 	memcpy(tcpacket.p25, p25, 11);
-	p25_set = true;
+	imbe_set = true;
 }
 
 void CTranscoderPacket::SetAudioSamples(const int16_t *sample, bool swap)
@@ -158,7 +154,7 @@ bool CTranscoderPacket::DMRIsSet() const
 
 bool CTranscoderPacket::P25IsSet() const
 {
-	return p25_set;
+	return imbe_set;
 }
 
 bool CTranscoderPacket::M17IsSet() const
@@ -168,6 +164,5 @@ bool CTranscoderPacket::M17IsSet() const
 
 bool CTranscoderPacket::AllCodecsAreSet()
 {
-	std::lock_guard<std::mutex> lock(mx);
-	return (dstar_set && dmr_set && m17_set && p25_set);
+	return (dstar_set && dmr_set && m17_set && imbe_set);
 }

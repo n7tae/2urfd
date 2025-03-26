@@ -101,10 +101,9 @@ void CPacketStream::ReportStats()
 ////////////////////////////////////////////////////////////////////////////////////////
 // action
 
-void CPacketStream::Update(CTimer &t)
+void CPacketStream::Update(double rt)
 {
 	// update statistics
-	double rt = t.time();	// the round-trip time
 	if (rt < m_RTMin)
 		m_RTMin = rt;
 	else if (rt > m_RTMax)

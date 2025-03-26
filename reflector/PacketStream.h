@@ -51,7 +51,7 @@ public:
 	void ClosePacketStream(void);
 
 	void Tickle(void)                               { m_LastPacketTime.start(); }
-	void Update(CTimer &t);
+	void Update(double rt);
 
 	// get
 	std::shared_ptr<CClient> GetOwnerClient(void)   { return m_OwnerClient; }
