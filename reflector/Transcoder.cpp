@@ -257,6 +257,7 @@ void CTranscoder::ReadReflectorThread()
 				continue;
 
 			auto packet = pair.second->pop();
+			packet->GetTimer().start();
 			switch (packet->GetCodecIn())
 			{
 			case ECodecType::dstar:

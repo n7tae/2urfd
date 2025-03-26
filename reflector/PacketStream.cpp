@@ -93,7 +93,7 @@ void CPacketStream::ReportStats()
 		double dev = 1000.0 * sqrt((m_RTSumSq * norm) - (average * average));
 		auto prec = std::cout.precision();
 		std::cout.precision(1);
-		std::cout << std::fixed << "TC round-trip time(ms): " << min << '/' << ave << "+/-" << dev << '/' << max << ", " << m_uiPacketCntr << " total packets" << std::endl;
+		std::cout << std::fixed << "TC round-trip time(ms): " << min << '/' << ave << ':' << dev << '/' << max << ", " << m_uiPacketCntr << " total packets" << std::endl;
 		std::cout.precision(prec);
 	}
 }
