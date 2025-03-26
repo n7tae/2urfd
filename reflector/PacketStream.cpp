@@ -134,11 +134,11 @@ void CPacketStream::Update(double rt)
 			// update the frame with the codec data
 			fp->SetCodecData(tp->GetTCPacket());
 			// push it back to the reflector where it can be
-			// distriubed to all clients by the client's protocol
+			// distriubed to all clients using the client's protocol
 			m_Queue.Push(std::move(fp));
+			if (m_TCQueue.empty())
+				return;
 		}
-		if (m_TCQueue.empty())
-			return;
 	}
 }
 
