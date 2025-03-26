@@ -79,6 +79,7 @@ void CPacketStream::ResetStats()
 	m_RTMin = 1.0e6;
 	m_RTMax = -1.0;
 	m_RTSum = 0.0;
+	m_RTSumSq = 0.0;
 }
 
 void CPacketStream::ReportStats()
