@@ -182,8 +182,8 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 			auto tcp = std::make_shared<CTranscoderPacket>(*frame->GetCodecPacket());
 			
 			m_TCQueue.push_back(STCFP());
-			m_TCQueue.front().fpacket = std::move(frame);
-			m_TCQueue.front().tcpacket = tcp;
+			m_TCQueue.back().fpacket = std::move(frame);
+			m_TCQueue.back().tcpacket = tcp;
 			// and send the transcoder packet to the TC
 			g_Transcoder.Transcode(tcp);
 		}
