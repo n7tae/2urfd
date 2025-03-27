@@ -70,7 +70,7 @@ void CTranscoder::Stop()
 		c2Future.get();
 	if (imbeFuture.valid())
 		imbeFuture.get();
-	inQmap.clear();
+	inQueue.Shutdown();
 
 	dstar_device->CloseDevice();
 	dmrsf_device->CloseDevice();
@@ -135,7 +135,6 @@ bool CTranscoder::InitVocoders()
 		c2_16[c] = std::make_unique<CCodec2>(false);
 		c2_32[c] = std::make_unique<CCodec2>(true);
 		p25vocoder[c] = std::make_unique<imbe_vocoder_impl>();
-		inQmap.emplace(c, std::make_unique<CPacketQueue>());
 	}
 
 	// the 3000 or 3003 devices
@@ -232,31 +231,16 @@ bool CTranscoder::InitVocoders()
 
 void CTranscoder::Transcode(std::shared_ptr<CTranscoderPacket> tcp)
 {
-	
-	auto qit = inQmap.find(tcp->GetModule());
-	if (inQmap.end() == qit)
-	{
-		Dump(tcp, "ERROR: Transcoder received a packet for a unconfigured module:");
-		return;
-	}
-	qit->second->push(tcp);
+	inQueue.push(tcp);
 }
 
 void CTranscoder::ReadReflectorThread()
 {
-	auto go_time = std::chrono::steady_clock::now();
-
 	while (keep_running)
 	{
-		go_time += std::chrono::milliseconds(20);
-		std::this_thread::sleep_until(go_time);
-
-		for (auto &pair : inQmap)
+		auto packet = inQueue.pop();
+		if (packet)
 		{
-			if (pair.second->IsEmpty())
-				continue;
-
-			auto packet = pair.second->pop();
 			packet->GetTimer().start();
 			switch (packet->GetCodecIn())
 			{
@@ -277,6 +261,10 @@ void CTranscoder::ReadReflectorThread()
 				Dump(packet, "ERROR: Received a reflector packet with unknown Codec:");
 				break;
 			}
+		}
+		else
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 	}
 	std::cout << "Read reflector thread shut down" << std::endl;

@@ -44,11 +44,12 @@ public:
 	void Dump(const std::shared_ptr<CTranscoderPacket> packet, const std::string &title) const;
 
 private:
+	std::mutex inqmx;
 	std::atomic<bool> keep_running;
 	std::future<void> reflectorFuture, c2Future, imbeFuture;
 	std::unordered_map<char, int16_t[160]> audio_store;
 	std::unordered_map<char, uint8_t[8]> data_store;
-	std::unordered_map<char, std::unique_ptr<CPacketQueue>> inQmap;
+	CPacketQueue inQueue;
 	std::unordered_map<char, std::unique_ptr<CCodec2>> c2_16, c2_32;
 	std::unique_ptr<CDVDevice> dstar_device, dmrsf_device;
 
