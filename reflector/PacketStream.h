@@ -33,7 +33,13 @@
 
 struct STCFP
 {
-	STCFP() : tcpacket(nullptr), fpacket(nullptr) {}
+	STCFP(std::shared_ptr<CTranscoderPacket> t, std::unique_ptr<CDvFramePacket> f) { tcpacket = t; fpacket = std::move(f); }
+	// STCFP() = delete;
+	// STCFP(const STCFP &) = delete;
+	// STCFP(const STCFP &&) = delete;
+	// STCFP &operator=(const STCFP &) = delete;
+	// STCFP &operator=(const STCFP &&) = delete;
+	// ~STCFP() { tcpacket.reset(); fpacket.release(); }
 	std::shared_ptr<CTranscoderPacket> tcpacket;
 	std::unique_ptr<CDvFramePacket> fpacket;
 };
