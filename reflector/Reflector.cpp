@@ -226,11 +226,6 @@ void CReflector::Stop(void)
 ////////////////////////////////////////////////////////////////////////////////////////
 // stream opening & closing
 
-bool CReflector::IsStreaming(char module)
-{
-	return false;
-}
-
 // clients MUST have bee locked by the caller so we can freely access it within the function
 std::shared_ptr<CPacketStream> CReflector::OpenStream(std::unique_ptr<CDvHeaderPacket> &DvHeader, std::shared_ptr<CClient>client)
 {
@@ -348,7 +343,7 @@ void CReflector::RouterThread(const char ThisModule)
 			// if we're here, something is wrong internally
 			// For header packets, the module is set in CReflector::OpenStream, and
 			// for Frame packets, the module is set in CProtocol::OnDvFramePacketIn
-			std::cerr << "RouterThread[" << ThisModule << "]: " << (packet->IsDvHeader()?"Header":"Frame") << "Packet has wrong module: '" << packet->GetPacketModule() << ". Reset!" << std::endl;
+			std::cerr << "RouterThread[" << ThisModule << "]: " << (packet->IsDvHeader()?"Header":"Frame") << "Packet has wrong module: '" << packet->GetPacketModule() << "'. Reset!" << std::endl;
 			packet->SetPacketModule(ThisModule);
 		}
 

@@ -28,6 +28,7 @@ CPacketStream::CPacketStream(char module, bool istc) : m_PSModule(module), m_IsT
 	m_uiStreamId = 0;
 	m_uiPacketCntr = 0;
 	m_OwnerClient = nullptr;
+	std::cout << "PacketStream[" << m_PSModule << "] allocated and " << (m_IsTranscoded ? "IS " : "is NOT ") << "transcoded." << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +95,7 @@ void CPacketStream::ReportStats()
 		double dev = 1000.0 * sqrt((m_RTSumSq * norm) - (average * average));
 		auto prec = std::cout.precision();
 		std::cout.precision(1);
-		std::cout << std::fixed << "TC round-trip time(ms): " << min << '/' << ave << ':' << dev << '/' << max << ", " << m_uiPacketCntr << " total packets" << std::endl;
+		std::cout << std::fixed << "TC round-trip time(ms): " << min << '/' << ave << '(' << dev << ")/" << max << ", " << m_uiPacketCntr << " total packets" << std::endl;
 		std::cout.precision(prec);
 	}
 }
@@ -129,11 +130,11 @@ void CPacketStream::Update(double rt)
 			}
 			// get both pointers from the front
 			auto fp = std::move(m_TCQueue.front().fpacket);
-			auto tp = m_TCQueue.front().tcpacket;
+			auto tcp = m_TCQueue.front().tcpacket;
 			// throw away the STCFP container
 			m_TCQueue.pop_front();
 			// update the frame with the codec data
-			fp->SetCodecData(tp->GetTCPacket());
+			fp->SetCodecData(tcp->GetTCPacket());
 			// push it back to the reflector where it can be
 			// distriubed to all clients using the client's protocol
 			m_Queue.Push(std::move(fp));
@@ -162,6 +163,8 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 #endif
 		return;
 	}
+
+	m_LastPacketTime.start();
 	
 	if (m_IsTranscoded and Packet->IsLocalOrigin())
 	{
