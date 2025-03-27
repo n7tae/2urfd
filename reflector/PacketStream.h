@@ -39,7 +39,7 @@ struct STCFP
 	// STCFP(const STCFP &&) = delete;
 	// STCFP &operator=(const STCFP &) = delete;
 	// STCFP &operator=(const STCFP &&) = delete;
-	// ~STCFP() { tcpacket.reset(); fpacket.release(); }
+	~STCFP() { tcpacket.reset(); fpacket.release(); }
 	std::shared_ptr<CTranscoderPacket> tcpacket;
 	std::unique_ptr<CDvFramePacket> fpacket;
 };

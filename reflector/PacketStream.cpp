@@ -184,7 +184,7 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 			frame->SetTCParams(m_uiPacketCntr);
 			// create the transcoder packet from the codec packet data
 			auto tcp = std::make_shared<CTranscoderPacket>(*frame->GetCodecPacket());
-			// create a new item on the queue to wait on the transcoder
+			// create a new item in the queue to wait on the transcoder
 			m_TCQueue.emplace_back(tcp, std::move(frame));
 			// and send the transcoder packet to the TC
 			g_Transcoder.Transcode(tcp);
