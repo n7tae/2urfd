@@ -41,7 +41,7 @@ bool CPacketStream::OpenPacketStream(const CDvHeaderPacket &DvHeader, std::share
 	{
 		// update status
 		m_uiStreamId = DvHeader.GetStreamId();
-		m_uiPacketCntr = 0;
+		m_uiPacketCntr = m_uiTotalPackets = 0u;
 		m_DvHeader = DvHeader;
 		m_OwnerClient = client;
 		m_LastPacketTime.start();
@@ -81,13 +81,14 @@ void CPacketStream::ResetStats()
 	m_RTMax = -1.0;
 	m_RTSum = 0.0;
 	m_RTSumSq = 0.0;
+	m_RTCount = 0u;
 }
 
 void CPacketStream::ReportStats()
 {
-	if (m_uiPacketCntr > 0)
+	if (m_RTCount > 0)
 	{
-		double norm = 1.0 / double(m_uiPacketCntr);
+		double norm = 1.0 / double(m_RTCount);
 		double min = 1000.0 * m_RTMin;
 		double max = 1000.0 * m_RTMax;
 		double average = m_RTSum * norm;
@@ -95,7 +96,7 @@ void CPacketStream::ReportStats()
 		double dev = 1000.0 * sqrt((m_RTSumSq * norm) - (average * average));
 		auto prec = std::cout.precision();
 		std::cout.precision(1);
-		std::cout << std::fixed << "TC round-trip time(ms): " << min << '/' << ave << '(' << dev << ")/" << max << ", " << m_uiPacketCntr << " total packets" << std::endl;
+		std::cout << std::fixed << "TC round-trip time(ms): " << min << '/' << ave << '(' << dev << ")/" << max << ", " << m_RTCount << " total packets" << std::endl;
 		std::cout.precision(prec);
 	}
 }
@@ -112,7 +113,7 @@ void CPacketStream::Update(double rt)
 		m_RTMax = rt;
 	m_RTSum += rt;
 	m_RTSumSq += rt * rt;
-	m_uiPacketCntr++;
+	m_RTCount++;
 	if (m_TCQueue.empty())
 	{
 		std::cerr << "The transcoder sent an update, but the transcoder queue is empty!" << std::endl;
@@ -135,6 +136,12 @@ void CPacketStream::Update(double rt)
 			m_TCQueue.pop_front();
 			// update the frame with the codec data
 			fp->SetCodecData(tcp->GetTCPacket());
+			// mark the DStar sync frames if the source isn't DStar
+			if (ECodecType::dstar!=fp->GetCodecIn() and 0==fp->GetPacketId())
+			{
+				const uint8_t DStarSync[] = { 0x55u, 0x2du, 0x16u };
+				fp->SetDvData(DStarSync);
+			}
 			// push it back to the reflector where it can be
 			// distriubed to all clients using the client's protocol
 			m_Queue.Push(std::move(fp));
@@ -166,6 +173,11 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 
 	m_LastPacketTime.start();
 	
+	if (Packet->IsDvFrame())
+	{
+		Packet->UpdatePids(m_uiPacketCntr++);
+	}
+
 	if (m_IsTranscoded and Packet->IsLocalOrigin())
 	{
 		if (Packet->IsDvHeader())
@@ -177,11 +189,10 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 		}
 		else
 		{
-			Packet->UpdatePids(m_uiPacketCntr);
 			// recast to a frame packet
 			std::unique_ptr<CDvFramePacket> frame(static_cast<CDvFramePacket *>(Packet.release()));
 			// update the tcp param
-			frame->SetTCParams(m_uiPacketCntr);
+			frame->SetTCParams(m_uiTotalPackets++);
 			// create the transcoder packet from the codec packet data
 			auto tcp = std::make_shared<CTranscoderPacket>(*frame->GetCodecPacket());
 			// create a new item in the queue to wait on the transcoder

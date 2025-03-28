@@ -81,6 +81,8 @@ protected:
 	const bool      m_IsTranscoded;
 	uint16_t        m_uiStreamId;
 	uint32_t        m_uiPacketCntr;
+	uint32_t        m_uiTotalPackets;
+	unsigned        m_RTCount;
 	CTimer          m_LastPacketTime;
 	CDvHeaderPacket m_DvHeader;
 	std::shared_ptr<CClient> m_OwnerClient;
