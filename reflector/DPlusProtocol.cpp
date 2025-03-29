@@ -180,8 +180,8 @@ void CDplusProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header
 	{
 		// no stream open yet, open a new one
 		CCallsign my(Header->GetMyCallsign());
-		CCallsign rpt1(Header->GetRpt1Callsign());
-		CCallsign rpt2(Header->GetRpt2Callsign());
+		CCallsign rpt1(Header->GetRpt2Callsign());
+		CCallsign rpt2(Header->GetRpt1Callsign());
 
 		// first, check module is valid
 		if ( g_Reflector.IsValidModule(rpt2.GetCSModule()) )
