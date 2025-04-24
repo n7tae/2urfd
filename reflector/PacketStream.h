@@ -31,19 +31,6 @@
 
 #define STREAM_TIMEOUT      (1.600)
 
-struct STCFP
-{
-	STCFP(std::shared_ptr<CTranscoderPacket> t, std::unique_ptr<CDvFramePacket> f) { tcpacket = t; fpacket = std::move(f); }
-	// STCFP() = delete;
-	// STCFP(const STCFP &) = delete;
-	// STCFP(const STCFP &&) = delete;
-	// STCFP &operator=(const STCFP &) = delete;
-	// STCFP &operator=(const STCFP &&) = delete;
-	~STCFP() { tcpacket.reset(); fpacket.release(); }
-	std::shared_ptr<CTranscoderPacket> tcpacket;
-	std::unique_ptr<CDvFramePacket> fpacket;
-};
-
 class CPacketStream
 {
 public:
@@ -87,7 +74,8 @@ protected:
 	CDvHeaderPacket m_DvHeader;
 	std::shared_ptr<CClient> m_OwnerClient;
 	CSafePacketQueue<std::unique_ptr<CPacket>> m_Queue;
-	std::list<STCFP> m_TCQueue;
-	std::list<std::unique_ptr<CDvHeaderPacket>> m_HeaderQueue;
+	std::list<std::shared_ptr<CTranscoderPacket>> m_TCQueue;
+	CSafePacketQueue<std::unique_ptr<CDvHeaderPacket>> m_HeaderQueue;
+	CSafePacketQueue<std::unique_ptr<CDvFramePacket>> m_FrameQueue;
 	double m_RTMin, m_RTMax, m_RTSum, m_RTSumSq;
 };
