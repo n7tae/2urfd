@@ -113,32 +113,30 @@ void CPacketStream::Update(double rt)
 	m_RTSum += rt;
 	m_RTSumSq += rt * rt;
 	m_RTCount++;
-	if (m_TCQueue.empty())
+	while (not m_TCQueue.empty())
 	{
-		std::cerr << "The transcoder sent an update, but the transcoder queue is empty!" << std::endl;
-	}
-	else
-	{
-		while (m_TCQueue.front()->AllCodecsAreSet())
+		if (m_TCQueue.front()->AllCodecsAreSet())
 		{
-			// if there is a waiting frame pack, now is the time for it
+			// if there is a waiting header pack, now is the time for it
 			// there should just be one, but if not we'll do 'em all
 			while (not m_HeaderQueue.IsEmpty())
 			{
 				m_Queue.Push(std::move(m_HeaderQueue.Pop()));
 			}
+			// get the transcoded data
 			auto tcp = m_TCQueue.front();
 			m_TCQueue.pop_front();
 			// paranoia check
 			if (m_FrameQueue.IsEmpty())
 			{
 				std::cerr << "ERROR: Module " << m_PSModule << " Frame packet with SID " << std::hex << std::showbase << tcp->GetStreamId() << std::dec << std::noshowbase << " Has no waiting Frame!" << std::endl;
+				// this is bad, but we'll just throw away the transcoded and move on
 				continue;
 			}
-			// get both pointers from the front
+			// get the waiting frame
 			auto fp = std::move(m_FrameQueue.Pop());
 
-			// TODO: More checks??
+			// check for out of sequence errors
 			if (fp->GetCodecPacket()->sequence != tcp->GetSequence())
 			{
 				std::cerr << "CodecPacket sequence, " << tcp->GetSequence() << ", is NOT equal to the frame sequence, " << fp->GetCodecPacket()->sequence << std::endl;
@@ -155,8 +153,10 @@ void CPacketStream::Update(double rt)
 			// push it back to the reflector where it can be
 			// distriubed to all clients using the client's protocol
 			m_Queue.Push(std::move(fp));
-			if (m_TCQueue.empty())
-				return;
+		}
+		else
+		{
+			return;
 		}
 	}
 }
