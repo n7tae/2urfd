@@ -29,7 +29,7 @@ CReflector  g_Reflector;
 CTranscoder g_Transcoder;
 CGateKeeper g_GateKeeper;
 CConfigure  g_Configure;
-CVersion    g_Version(2,8,7); // The major byte should only change if the interlink packet changes!
+CVersion    g_Version(2,8,8); // The major byte should only change if the interlink packet changes!
 CLookupDmr  g_LDid;
 CLookupNxdn g_LNid;
 CLookupYsf  g_LYtr;
