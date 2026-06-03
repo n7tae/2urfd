@@ -49,6 +49,7 @@ CProtocol::~CProtocol()
 bool CProtocol::Initialize(const char *type, const EProtocol ptype, const uint16_t port, const bool has_ipv4, const bool has_ipv6)
 {
 	m_Port = port;
+	m_Type = ptype;
 	// init reflector apparent callsign
 	m_ReflectorCallsign = g_Reflector.GetCallsign();
 
@@ -58,22 +59,6 @@ bool CProtocol::Initialize(const char *type, const EProtocol ptype, const uint16
 	// update the reflector callsign
 	if (type)
 		m_ReflectorCallsign.PatchCallsign(0, type, 3);
-
-	switch (ptype)
-	{
-		case EProtocol::bm:       m_protocolName.assign("BM");    break;
-		case EProtocol::dcs:      m_protocolName.assign("DCS");   break;
-		case EProtocol::dextra:   m_protocolName.assign("XRF");   break;
-		case EProtocol::dmrmmdvm: m_protocolName.assign("MMDVM"); break;
-		case EProtocol::dmrplus:  m_protocolName.assign("DMR+");  break;
-		case EProtocol::dplus:    m_protocolName.assign("REF");   break;
-		case EProtocol::m17:      m_protocolName.assign("M17");   break;
-		case EProtocol::nxdn:     m_protocolName.assign("NXDN");  break;
-		case EProtocol::p25:      m_protocolName.assign("P25");   break;
-		case EProtocol::urf:      m_protocolName.assign("URF");   break;
-		case EProtocol::ysf:      m_protocolName.assign("YSF");   break;
-		default:                  m_protocolName.assign("????");  break;
-	}
 
 	// create our sockets
 	if (has_ipv4)
@@ -127,7 +112,7 @@ void CProtocol::Thread()
 	{
 		Task();
 	}
-	std::cout << "Protocol Task() for " << m_protocolName << " is done" << std::endl;
+	std::cout << g_GateKeeper.ProtocolName(m_Type) << " protocol Thread is done" << std::endl;
 }
 
 void CProtocol::Close(void)
@@ -136,7 +121,6 @@ void CProtocol::Close(void)
 	if ( m_Future.valid() )
 	{
 		m_Future.get();
-		std::cout << "Thread for " << m_protocolName << " is closed" << std::endl;
 	}
 	m_Socket4.Close();
 	m_Socket6.Close();

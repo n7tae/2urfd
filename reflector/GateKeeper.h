@@ -37,6 +37,7 @@ public:
 	// destructor
 	virtual ~CGateKeeper();
 
+	const std::string ProtocolName(EProtocol) const;
 	// init & clode
 	bool Init(void);
 	void Close(void);
@@ -56,7 +57,6 @@ protected:
 	bool IsNodeListedOk(const std::string &) const;
 	bool IsPeerListedOk(const std::string &, char) const;
 	bool IsPeerListedOk(const std::string &, const CIp &, char *) const;
-	const std::string ProtocolName(EProtocol) const;
 
 protected:
 	// data

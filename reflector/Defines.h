@@ -119,18 +119,6 @@ enum class EProtocol { any, none, dextra, dplus, dcs, bm, urf, dmrplus, dmrmmdvm
 #define NXDN_KEEPALIVE_PERIOD          3                                   // in seconds
 #define NXDN_KEEPALIVE_TIMEOUT         (NXDN_KEEPALIVE_PERIOD*10)         // in seconds
 
-// USRP
-#define USRP_KEEPALIVE_PERIOD          1                                   // in seconds
-#define USRP_KEEPALIVE_TIMEOUT         (USRP_KEEPALIVE_PERIOD*10)         // in seconds
-
-// G3 Terminal
-#define G3_PRESENCE_PORT                12346                               // UDP port
-#define G3_CONFIG_PORT                  12345                               // UDP port
-#define G3_DV_PORT                      40000                               // UDP port
-#define G3_KEEPALIVE_PERIOD             10                                  // in seconds
-#define G3_KEEPALIVE_TIMEOUT            3600                                // in seconds, 1 hour
-
-
 ////////////////////////////////////////////////////////////////////////////////////////
 // macros
 

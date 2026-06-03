@@ -136,8 +136,9 @@ protected:
 	CCallsign       m_ReflectorCallsign;
 
 	// data
-	std::string m_protocolName;
-	uint16_t m_Port;
+	EProtocol m_Type;
+	uint16_t  m_Port;
+
 	// debug
 	CTimer      m_DebugTimer;
 };
