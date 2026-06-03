@@ -133,7 +133,8 @@ protected:
 	std::future<void> m_Future;
 
 	// identity
-	CCallsign       m_ReflectorCallsign;
+	EProtocol m_PType;
+	CCallsign m_ReflectorCallsign;
 
 	// data
 	uint16_t m_Port;

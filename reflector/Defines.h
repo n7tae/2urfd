@@ -50,7 +50,6 @@
 #define M17_IPV4 true
 #define P25_IPV4 true
 #define NXDN_IPV4 true
-#define USRP_IPV4 true
 #define URF_IPV4 true
 
 
@@ -61,12 +60,11 @@
 #define M17_IPV6 true
 #define P25_IPV6 false
 #define NXDN_IPV6 false
-#define USRP_IPV6 false
 #define URF_IPV6 true
 
 // protocols ---------------------------------------------------
 
-enum class EProtocol { any, none, dextra, dplus, dcs, g3, bm, urf, dmrplus, dmrmmdvm, nxdn, p25, usrp, ysf, m17 };
+enum class EProtocol { any, none, dextra, dplus, dcs, bm, urf, dmrplus, dmrmmdvm, nxdn, p25, ysf, m17 };
 
 // DExtra
 #define DEXTRA_KEEPALIVE_PERIOD         3                                   // in seconds
@@ -118,18 +116,6 @@ enum class EProtocol { any, none, dextra, dplus, dcs, g3, bm, urf, dmrplus, dmrm
 // NXDN
 #define NXDN_KEEPALIVE_PERIOD          3                                   // in seconds
 #define NXDN_KEEPALIVE_TIMEOUT         (NXDN_KEEPALIVE_PERIOD*10)         // in seconds
-
-// USRP
-#define USRP_KEEPALIVE_PERIOD          1                                   // in seconds
-#define USRP_KEEPALIVE_TIMEOUT         (USRP_KEEPALIVE_PERIOD*10)         // in seconds
-
-// G3 Terminal
-#define G3_PRESENCE_PORT                12346                               // UDP port
-#define G3_CONFIG_PORT                  12345                               // UDP port
-#define G3_DV_PORT                      40000                               // UDP port
-#define G3_KEEPALIVE_PERIOD             10                                  // in seconds
-#define G3_KEEPALIVE_TIMEOUT            3600                                // in seconds, 1 hour
-
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // macros

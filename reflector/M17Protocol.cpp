@@ -147,10 +147,13 @@ void CM17Protocol::Task(void)
 		}
 		else
 		{
-			// invalid packet
-			std::string title("Unknown M17 packet from ");
-			title += Ip.GetAddress();
-			Buffer.Dump(title);
+			if (memcmp(Buffer.data(), "LSTN", 4)) // this will no log any incoming LSTN packets
+			{
+				// invalid packet
+				std::string title("Unknown M17 packet from ");
+				title += Ip.GetAddress();
+				Buffer.Dump(title);
+			}
 		}
 	}
 

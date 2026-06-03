@@ -49,6 +49,7 @@ CProtocol::~CProtocol()
 bool CProtocol::Initialize(const char *type, const EProtocol ptype, const uint16_t port, const bool has_ipv4, const bool has_ipv6)
 {
 	m_Port = port;
+	m_PType = ptype;
 	// init reflector apparent callsign
 	m_ReflectorCallsign = g_Reflector.GetCallsign();
 
@@ -111,6 +112,7 @@ void CProtocol::Thread()
 	{
 		Task();
 	}
+	std::cout << g_GateKeeper.ProtocolName(m_PType) << "protocol thread is done" << std::endl;
 }
 
 void CProtocol::Close(void)
@@ -140,7 +142,7 @@ void CProtocol::OnDvFramePacketIn(std::unique_ptr<CDvFramePacket> &Frame, const 
 	}
 	else
 	{
-		std::cout << "Orphaned Frame with ID " << std::hex << std::showbase << Frame->GetStreamId() << std::noshowbase << std::dec << " on " << *Ip << std::endl;
+		//std::cout << "Orphaned Frame with ID " << std::hex << std::showbase << Frame->GetStreamId() << std::noshowbase << std::dec << " on " << *Ip << std::endl;
 		Frame.reset();
 	}
 }

@@ -86,9 +86,7 @@ bool CGateKeeper::MayLink(const CCallsign &callsign, const CIp &ip, EProtocol pr
 	case EProtocol::ysf:
 	case EProtocol::m17:
 	case EProtocol::p25:
-	case EProtocol::usrp:
 	case EProtocol::nxdn:
-	case EProtocol::g3:
 		// is callsign listed OK
 		ok = IsNodeListedOk(base);
 		break;
@@ -134,8 +132,6 @@ bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EP
 	case EProtocol::m17:
 	case EProtocol::p25:
 	case EProtocol::nxdn:
-	case EProtocol::usrp:
-	case EProtocol::g3:
 		// first check is IP & callsigned listed OK
 		ok = IsNodeListedOk(base);
 		// todo: then apply any protocol specific authorisation for the operation
@@ -289,12 +285,8 @@ const std::string CGateKeeper::ProtocolName(const EProtocol p) const
 			return "P25";
 		case EProtocol::nxdn:
 			return "NXDN";
-		case EProtocol::usrp:
-			return "USRP";
 		case EProtocol::bm:
 			return "Brandmeister";
-		case EProtocol::g3:
-			return "Icom G3";
 		default:
 			return "NONE";
 	}
