@@ -343,7 +343,7 @@ void CReflector::RouterThread(const char ThisModule)
 			// if we're here, something is wrong internally
 			// For header packets, the module is set in CReflector::OpenStream, and
 			// for Frame packets, the module is set in CProtocol::OnDvFramePacketIn
-			std::cerr << "RouterThread[" << ThisModule << "]: " << (packet->IsDvHeader()?"Header":"Frame") << "Packet has wrong module: '" << packet->GetPacketModule() << "'. Reset to '" << ThisModule << "'" << std::endl;
+			std::cerr << "RouterThread[" << ThisModule << "]: " << (packet->IsDvHeader()?"Header":"Frame") << " Packet has wrong module: '" << packet->GetPacketModule() << "'. Reset to '" << ThisModule << "'" << std::endl;
 			packet->SetPacketModule(ThisModule);
 		}
 
