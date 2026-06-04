@@ -42,6 +42,7 @@ bool CYsfProtocol::Initialize(const char *type, const EProtocol ptype, const uin
 {
 	// config data
 	m_AutolinkModule = g_Configure.GetAutolinkModule(g_Keys.ysf.autolinkmod);
+	m_EnableDGID = g_Configure.GetBoolean(g_Keys.ysf.enabledgid);
 	m_RegistrationId = g_Configure.GetUnsigned(g_Keys.ysf.ysfreflectordb.id);
 	m_RegistrationName.assign(g_Configure.GetString(g_Keys.ysf.ysfreflectordb.name));
 	m_RegistrationDesc.assign(g_Configure.GetString(g_Keys.ysf.ysfreflectordb.description));
@@ -130,7 +131,7 @@ void CYsfProtocol::Task(void)
 				if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::ysf, Header->GetRpt2Module())  )
 				{
 					// handle it
-					OnDvHeaderPacketIn(Header, Ip);
+					OnDvHeaderPacketIn(Header, Ip, Fich.getSQ());
 					//OnDvFramePacketIn(Frames[0], &Ip);
 					//OnDvFramePacketIn(Frames[1], &Ip);
 				}
@@ -252,7 +253,7 @@ void CYsfProtocol::Task(void)
 ////////////////////////////////////////////////////////////////////////////////////////
 // streams helpers
 
-void CYsfProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header, const CIp &Ip)
+void CYsfProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header, const CIp &Ip, uint8_t dgid)
 {
 	// find the stream
 	auto stream = GetStream(Header->GetStreamId());
@@ -275,6 +276,16 @@ void CYsfProtocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header, 
 		{
 			// get client callsign
 			rpt1 = client->GetCallsign();
+
+			// module selection by DGID
+			if (m_EnableDGID && dgid >= 10 && dgid <= 35) {
+				char newModule = 'A' + (dgid - 10);
+				if (client->GetReflectorModule() != newModule) {
+					std::cout << "YSF: DGID module switch for " << client->GetCallsign() << " from " << client->GetReflectorModule() << " to " << newModule << std::endl;
+					client->SetReflectorModule(newModule);
+				}
+			}
+
 			// get module it's linked to
 			auto m = client->GetReflectorModule();
 			Header->SetRpt2Module(m);
@@ -537,7 +548,7 @@ bool CYsfProtocol::IsValidDvFramePacket(const CIp &Ip, const CYSFFICH &Fich, con
 
 			if ( g_GateKeeper.MayTransmit(header->GetMyCallsign(), Ip, EProtocol::ysf, header->GetRpt2Module())  )
 			{
-				OnDvHeaderPacketIn(header, Ip);
+				OnDvHeaderPacketIn(header, Ip, Fich.getSQ());
 			}
 		}
 
