@@ -79,7 +79,7 @@ protected:
 	void HandleKeepalives(void);
 
 	// stream helpers
-	void OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &, const CIp &);
+	void OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &, const CIp &, uint8_t = 0);
 
 	// DV packet decoding helpers
 	bool IsValidConnectPacket(const CBuffer &, CCallsign *);
@@ -132,6 +132,7 @@ protected:
 
 	// config data
 	char m_AutolinkModule;
+	bool m_EnableDGID;
 	unsigned m_RegistrationId;
 	std::string m_RegistrationName, m_RegistrationDesc;
 };

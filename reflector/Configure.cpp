@@ -52,6 +52,7 @@
 #define JDSTARGAININ             "DStarGainIn"
 #define JDSTARGAINOUT            "DStarGainOut"
 #define JENABLE                  "Enable"
+#define JENABLEDGID              "EnableDGID"
 #define JFILES                   "Files"
 #define JFILEPATH                "FilePath"
 #define JINTERLINKPATH           "InterlinkPath"
@@ -378,6 +379,8 @@ bool CConfigure::ReadData(const std::string &path)
 					data[g_Keys.ysf.port] = getUnsigned(value, "YSF Port", 1024, 65535, 42000);
 				else if (0 == key.compare(JAUTOLINKMODULE))
 					setAutolink(JYSF, g_Keys.ysf.autolinkmod, value);
+				else if (0 == key.compare(JENABLEDGID))
+					data[g_Keys.ysf.enabledgid] = IS_TRUE(value[0]);
 				else if (0 == key.compare(JDEFAULTTXFREQ))
 					data[g_Keys.ysf.defaulttxfreq] = getUnsigned(value, "YSF DefaultTxFreq", 40000000, 2600000000, 439000000);
 				else if (0 == key.compare(JDEFAULTRXFREQ))
@@ -667,6 +670,7 @@ bool CConfigure::ReadData(const std::string &path)
 
 	// YSF
 	isDefined(ErrorLevel::fatal, JYSF, JPORT, g_Keys.ysf.port, rval);
+	isDefined(ErrorLevel::fatal, JYSF, JENABLEDGID, g_Keys.ysf.enabledgid, rval);
 	checkAutoLink(JYSF, JAUTOLINKMODULE, g_Keys.ysf.autolinkmod, rval);
 	isDefined(ErrorLevel::fatal, JYSF, JDEFAULTRXFREQ, g_Keys.ysf.defaultrxfreq, rval);
 	isDefined(ErrorLevel::fatal, JYSF, JDEFAULTTXFREQ, g_Keys.ysf.defaulttxfreq, rval);
@@ -928,7 +932,7 @@ int CConfigure::GetInt(const std::string &key) const
 
 bool CConfigure::GetBoolean(const std::string &key) const
 {
-	if (data[key].is_boolean())
+	if (data.contains(key) and data[key].is_boolean())
 		return data[key];
 	else
 		return false;
