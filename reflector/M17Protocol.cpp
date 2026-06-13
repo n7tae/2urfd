@@ -346,7 +346,7 @@ bool CM17Protocol::IsValidKeepAlivePacket(const CBuffer &Buffer, CCallsign &call
 {
 	uint8_t tag[] = { 'P', 'O', 'N', 'G' };
 	bool valid = false;
-	if ( (Buffer.size() == 10) || (0 == Buffer.Compare(tag, 4)) )
+	if ( (Buffer.size() == 10) && (0 == Buffer.Compare(tag, 4)) )
 	{
 		callsign.CodeIn(Buffer.data() + 4);
 		valid = callsign.IsValid();
