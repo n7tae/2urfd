@@ -21,14 +21,8 @@
 #include <netdb.h>
 #include "IP.h"
 
-CIp::CIp() : is_set(false)
-{
-	Clear();
-}
-
 CIp::CIp(const char *address, int family, int type, uint16_t port) : is_set(true)
 {
-	Clear();
 	if (0 == strncasecmp(address, "none", 4))
 	{
 		is_set = false;
@@ -46,17 +40,17 @@ CIp::CIp(const char *address, int family, int type, uint16_t port) : is_set(true
 	}
 	SetPort(port);
 }
-CIp::CIp(const int family, const uint16_t port, const char *address) : is_set(true)
+CIp::CIp(const int family, const uint16_t port, const char *address)
 {
 	Initialize(family, port, address);
 }
 
 void CIp::Initialize(const int family, const uint16_t port, const char *address)
 {
-	Clear();
+	addr.ss_family = family;
 	if (0 == strncasecmp(address, "none", 4))
 	{
-		is_set = false;
+		SetPort(port);
 		return;
 	}
 	is_set = true;

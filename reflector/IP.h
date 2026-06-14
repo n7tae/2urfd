@@ -32,13 +32,13 @@
 class CIp
 {
 public:
+	CIp() = default;
 	// constructors
-	CIp();
 	CIp(const char *address, int family = AF_UNSPEC, int type = SOCK_DGRAM, uint16_t port = 0U);
-	CIp(const int family, const uint16_t port = 0U, const char *address = nullptr);
+	CIp(const int family, const uint16_t port = 0U, const char *address = "none");
 
 	// initializer for empty constructor
-	void Initialize(const int family, const uint16_t port = 0U, const char *address = nullptr);
+	void Initialize(const int family, const uint16_t port = 0U, const char *address = "none");
 
 	// comparison operators
 	bool operator==(const CIp &rhs) const;
@@ -66,9 +66,9 @@ public:
 	void Clear();
 
 private:
-	struct sockaddr_storage addr;
-	mutable char straddr[INET6_ADDRSTRLEN];
-	bool is_set;
+	struct sockaddr_storage addr {};
+	mutable char straddr[INET6_ADDRSTRLEN] {};
+	bool is_set { false };
 };
 
 std::ostream &operator<<(std::ostream &stream, const CIp &Ip);
