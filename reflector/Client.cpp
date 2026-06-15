@@ -24,15 +24,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CClient::CClient()
-{
-	m_ReflectorModule = ' ';
-	m_ModuleMastered = ' ';
-	m_LastKeepaliveTime.start();
-	m_ConnectTime = std::time(nullptr);
-	m_LastHeardTime = std::time(nullptr);
-}
-
 CClient::CClient(const CCallsign &callsign, const CIp &ip, char reflectorModule)
 {
 	m_ReflectorModule = reflectorModule;
@@ -42,17 +33,6 @@ CClient::CClient(const CCallsign &callsign, const CIp &ip, char reflectorModule)
 	m_LastKeepaliveTime.start();
 	m_ConnectTime = std::time(nullptr);
 	m_LastHeardTime = std::time(nullptr);
-}
-
-CClient::CClient(const CClient &client)
-{
-	m_Callsign = client.m_Callsign;
-	m_Ip = client.m_Ip;
-	m_ReflectorModule = client.m_ReflectorModule;
-	m_ModuleMastered = client.m_ModuleMastered;
-	m_LastKeepaliveTime = client.m_LastKeepaliveTime;
-	m_ConnectTime = client.m_ConnectTime;
-	m_LastHeardTime = client.m_LastHeardTime;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
