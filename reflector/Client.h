@@ -33,8 +33,9 @@ class CClient
 {
 public:
 	// constructors
-	CClient() = default;
+	CClient();
 	CClient(const CCallsign &, const CIp &, char = ' ');
+	CClient(const CClient &);
 
 	// destructor
 	virtual ~CClient() {};
@@ -69,7 +70,6 @@ public:
 	virtual void Alive(void);
 	virtual bool IsAlive(void) const                    { return false; }
 	virtual bool IsAMaster(void) const                  { return (m_ModuleMastered != ' '); }
-	virtual bool IsListenOnly(void) const               { return m_IsListenOnly; }
 	virtual void SetMasterOfModule(char c)              { m_ModuleMastered = c; }
 	virtual void NotAMaster(void)                       { m_ModuleMastered = ' '; }
 	virtual void Heard(void)                            { m_LastHeardTime = std::time(nullptr); }
@@ -84,11 +84,10 @@ protected:
 	CIp         m_Ip;
 
 	// linked to
-	char        m_ReflectorModule { ' ' };
+	char        m_ReflectorModule;
 
 	// status
-	char        m_ModuleMastered { ' ' };
-	bool        m_IsListenOnly { false };
+	char        m_ModuleMastered;
 	CTimer      m_LastKeepaliveTime;
 	std::time_t m_ConnectTime;
 	std::time_t m_LastHeardTime;
