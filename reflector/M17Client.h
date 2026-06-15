@@ -23,9 +23,8 @@ class CM17Client : public CClient
 {
 public:
 	// constructors
-	CM17Client();
-	CM17Client(const CCallsign &, const CIp &, char);
-	CM17Client(const CM17Client &);
+	CM17Client() = default;
+	CM17Client(const CCallsign &cs, const CIp &ip, char module, bool isListenOnly);
 
 	// destructor
 	virtual ~CM17Client() {};

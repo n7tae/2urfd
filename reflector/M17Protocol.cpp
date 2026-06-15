@@ -50,6 +50,7 @@ void CM17Protocol::Task(void)
 	CIp       Ip;
 	CCallsign Callsign;
 	char      ToLinkModule;
+	bool      isListenOnly;
 	std::unique_ptr<CDvHeaderPacket> Header;
 	std::unique_ptr<CDvFramePacket>  Frame;
 
@@ -67,27 +68,36 @@ void CM17Protocol::Task(void)
 		// crack the packet
 		if ( IsValidDvPacket(Buffer, Header, Frame) )
 		{
-			// callsign muted?
-			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::m17, Header->GetRpt2Module()) )
+			auto client = g_Reflector.GetClients()->FindClient(Ip, EProtocol::m17);
+			g_Reflector.ReleaseClients();
+			if (client->IsListenOnly())
 			{
-				OnDvHeaderPacketIn(Header, Ip);
+				std::cout << "Listen-only client " << client->GetCallsign().GetCS() << " at " << Ip.GetAddress() << " is trying to transmit!" << std::endl;
+			}
+			else
+			{
+				// callsign muted?
+				if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::m17, Header->GetRpt2Module()) )
+				{
+					OnDvHeaderPacketIn(Header, Ip);
 
-				// xrf needs a voice frame every 20 ms and an M17 frame is 40 ms, so we need a duplicate
-				auto secondFrame = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(*Frame.get()));
+					// xrf needs a voice frame every 20 ms and an M17 frame is 40 ms, so we need a duplicate
+					auto secondFrame = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(*Frame.get()));
 
-				// This is not a second packet, so clear the last packet status, since the real last packet it the secondFrame
-				if (Frame->IsLastPacket())
-					Frame->SetLastPacket(false);
+					// This is not a second packet, so clear the last packet status, since the real last packet it the secondFrame
+					if (Frame->IsLastPacket())
+						Frame->SetLastPacket(false);
 
-				// push the "first" packet
-				OnDvFramePacketIn(Frame, &Ip);
-				// push the "second" packet
-				OnDvFramePacketIn(secondFrame, &Ip); // push two packet because we need a packet every 20 ms
+					// push the "first" packet
+					OnDvFramePacketIn(Frame, &Ip);
+					// push the "second" packet
+					OnDvFramePacketIn(secondFrame, &Ip); // push two packet because we need a packet every 20 ms
+				}
 			}
 		}
-		else if ( IsValidConnectPacket(Buffer, Callsign, ToLinkModule) )
+		else if ( IsValidConnectPacket(Buffer, Callsign, ToLinkModule, isListenOnly) )
 		{
-			std::cout << "M17 connect packet for module " << ToLinkModule << " from " << Callsign << " at " << Ip << std::endl;
+			std::cout << "M17 " << (isListenOnly ? "LSTN" : "CONN") << " packet for module " << ToLinkModule << " from " << Callsign << " at " << Ip << std::endl;
 
 			// callsign authorized?
 			if ( g_GateKeeper.MayLink(Callsign, Ip, EProtocol::m17) && g_Reflector.IsValidModule(ToLinkModule) )
@@ -99,7 +109,7 @@ void CM17Protocol::Task(void)
 					Send("ACKN", Ip);
 
 					// create the client and append
-					g_Reflector.GetClients()->AddClient(std::make_shared<CM17Client>(Callsign, Ip, ToLinkModule));
+					g_Reflector.GetClients()->AddClient(std::make_shared<CM17Client>(Callsign, Ip, ToLinkModule, isListenOnly));
 					g_Reflector.ReleaseClients();
 				}
 				else
@@ -115,7 +125,6 @@ void CM17Protocol::Task(void)
 				// deny the request
 				Send("NACK", Ip);
 			}
-
 		}
 		else if ( IsValidDisconnectPacket(Buffer, Callsign) )
 		{
@@ -147,14 +156,10 @@ void CM17Protocol::Task(void)
 		}
 		else
 		{
-			uint8_t tag[] = { 'L', 'S', 'T', 'N' };
-			if ( Buffer.Compare(tag, 4) )	// we will ignore and not log a LSTN packet
-			{
-				// invalid packet
-				std::string title("Unknown M17 packet from ");
-				title += Ip.GetAddress();
-				Buffer.Dump(title);
-			}
+			// invalid packet
+			std::string title("Unknown M17 packet from ");
+			title += Ip.GetAddress();
+			Buffer.Dump(title);
 		}
 	}
 
@@ -317,15 +322,25 @@ void CM17Protocol::HandleKeepalives(void)
 ////////////////////////////////////////////////////////////////////////////////////////
 // packet decoding helpers
 
-bool CM17Protocol::IsValidConnectPacket(const CBuffer &Buffer, CCallsign &callsign, char &mod)
+bool CM17Protocol::IsValidConnectPacket(const CBuffer &Buffer, CCallsign &callsign, char &mod, bool &isListenOnly)
 {
-	uint8_t tag[] = { 'C', 'O', 'N', 'N' };
+	uint8_t conn[] { 'C', 'O', 'N', 'N' };
+	uint8_t lstn[] { 'L', 'S', 'T', 'N' };
 	bool valid = false;
-	if (11 == Buffer.size() && 0 == Buffer.Compare(tag, 4))
+	if (11 == Buffer.size())
 	{
 		callsign.CodeIn(Buffer.data() + 4);
 		mod = Buffer.data()[10];
-		valid = (callsign.IsValid() && IsLetter(mod));
+		if (callsign.IsValid() && IsLetter(mod))
+		{
+			if (0 == Buffer.Compare(conn, 4)) {
+				isListenOnly = false;
+				valid = true;
+			} else if (0 == Buffer.Compare(lstn, 4)) {
+				isListenOnly = true;
+				valid = true;
+			}
+		}
 	}
 	return valid;
 }
