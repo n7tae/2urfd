@@ -362,13 +362,6 @@ bool CM17Protocol::IsValidKeepAlivePacket(const CBuffer &Buffer, CCallsign &call
 
 bool CM17Protocol::IsValidDvPacket(const CBuffer &Buffer, const CIp &ip, std::unique_ptr<CDvHeaderPacket> &header, std::unique_ptr<CDvFramePacket> &frame)
 {
-	auto client = g_Reflector.GetClients()->FindClient(ip, EProtocol::m17);
-	g_Reflector.ReleaseClients();
-	if (client->IsListenOnly())
-	{
-		std::cout << "Listen-Only client " << client->GetCallsign() << " from " << ip.GetAddress() << " is trying to transmit!" << std::endl;
-		return false;
-	}
 	uint8_t tag[] = { 'M', '1', '7', ' ' };
 
 	if ( (Buffer.size() == sizeof(SM17Frame)) && (0 == Buffer.Compare(tag, sizeof(tag))) && (0x4U == (0x1CU & Buffer[19])) )
