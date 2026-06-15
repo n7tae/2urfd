@@ -1,7 +1,7 @@
 ///  Copyright © 2015 Jean-Luc Deltombe (LX3JL). All rights reserved.
 
 // urfd -- The universal reflector
-// Copyright © 2021 Thomas A. Early N7TAE
+// Copyright © 2021,2026 Thomas A. Early N7TAE
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,14 +29,14 @@
 
 union UCallsign
 {
-	char c[CALLSIGN_LEN];
 	uint64_t l;
+	char c[CALLSIGN_LEN];
 };
 
 union USuffix
 {
-	char c[CALLSUFFIX_LEN];
 	uint32_t u;
+	char c[CALLSUFFIX_LEN];
 };
 
 // functions for unordered containers
@@ -64,9 +64,8 @@ class CCallsign
 {
 public:
 	// constructors
-	CCallsign();
+	CCallsign() = default;
 	CCallsign(const UCallsign &cs);    // no id lookup
-	CCallsign(const CCallsign &cs);
 	CCallsign(const std::string &cs, uint32_t dmrid = 0, uint16_t nxdnid = 0);
 
 	// status
@@ -104,7 +103,6 @@ public:
 	bool HasSameCallsignWithWildcard(const CCallsign &) const;
 
 	// operators
-	CCallsign &operator = (const CCallsign &cs);
 	bool operator ==(const CCallsign &) const;
 	operator const char *() const;
 
@@ -124,10 +122,10 @@ protected:
 
 protected:
 	// data
-	UCallsign m_Callsign;
-	USuffix   m_Suffix;
-	char      m_Module;
-	uint32_t  m_uiDmrid;
-	uint16_t  m_uiNXDNid;
-	uint64_t  m_coded; // M17 encoded callsign
+	UCallsign m_Callsign { 0x2020202020202020ul };
+	USuffix   m_Suffix { 0x20202020u };
+	char      m_Module { ' ' };
+	uint32_t  m_uiDmrid {};
+	uint16_t  m_uiNXDNid {};
+	uint64_t  m_coded {}; // M17 encoded callsign
 };

@@ -1,7 +1,7 @@
 //  Copyright © 2015 Jean-Luc Deltombe (LX3JL). All rights reserved.
 
 // urfd -- The universal reflector
-// Copyright © 2021 Thomas A. Early N7TAE
+// Copyright © 2021,2026 Thomas A. Early N7TAE
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,29 +28,26 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CCallsign::CCallsign()
-{
-	// blank all
-	m_Callsign.l = 0x2020202020202020ul;
-	m_Suffix.u = 0x20202020u;
-	m_Module = ' ';
-	m_uiDmrid = 0;
-	m_coded = 0;
-}
-
 CCallsign::CCallsign(const std::string &cs, uint32_t dmrid, uint16_t nxdnid) : CCallsign()
 {
 	// and populate
+	const std::string m17chars(M17CHARACTERS);
 	m_uiDmrid = dmrid;
 	m_uiNXDNid = nxdnid;
 	auto len = cs.size();
 	if ( len > 0 )
 	{
 		// callsign valid
-		memcpy(m_Callsign.c, cs.c_str(), MIN(len, CALLSIGN_LEN-1));
+		for (int i=0; i=MIN(len, CALLSIGN_LEN-1); i++)
+		{
+			auto pos = m17chars.find(cs.at(i));
+			if (std::string::npos == pos)
+				pos = 0;
+			m_Callsign.c[i] = m17chars.at(pos);
+		}
 		if ( len >= CALLSIGN_LEN )
 		{
-			m_Module = cs.back();
+			SetCSModule(cs.back());
 		}
 
 		auto key = GetKey();
@@ -102,33 +99,13 @@ CCallsign::CCallsign(const std::string &cs, uint32_t dmrid, uint16_t nxdnid) : C
 		CSIn();
 }
 
-CCallsign::CCallsign(const CCallsign &cs)
-{
-	m_Callsign.l = cs.m_Callsign.l;
-	m_Suffix.u = cs.m_Suffix.u;
-	m_Module = cs.m_Module;
-	m_uiDmrid = cs.m_uiDmrid;
-	m_uiNXDNid = cs.m_uiNXDNid;
-	m_coded = cs.m_coded;
-}
-
 CCallsign::CCallsign(const UCallsign &ucs) : CCallsign()
 {
 	m_Callsign.l = ucs.l;
-}
-
-CCallsign &CCallsign::operator = (const CCallsign &cs)
-{
-	if (this != &cs)
-	{
-		m_Callsign.l = cs.m_Callsign.l;
-		m_Suffix.u = cs.m_Suffix.u;
-		m_Module = cs.m_Module;
-		m_uiDmrid = cs.m_uiDmrid;
-		m_uiNXDNid = cs.m_uiNXDNid;
-		m_coded = cs.m_coded;
-	}
-	return *this;
+	m_Module = ucs.c[7];
+	if (' ' != m_Module)
+		m_Callsign.c[7] = ' ';
+	CSIn();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -300,7 +277,10 @@ void CCallsign::SetNXDNid(const uint8_t *buffer, bool UpdateCallsign)
 
 void CCallsign::SetCSModule(char c)
 {
-	m_Module = c;
+	if ('A'<c or c>'Z')
+		m_Module = ' ';
+	else
+		m_Module = c;
 	CSIn();
 }
 
@@ -513,6 +493,8 @@ void CCallsign::CSIn()
 {
 	const std::string m17_alphabet(M17CHARACTERS);
 	auto pos = m17_alphabet.find(m_Module);
+	if (std::string::npos == pos)
+		pos = 0;
 	m_coded = pos;
 	m_coded *= 40;
 	for( int i=CALLSIGN_LEN-2; i>=0; i-- ) {
