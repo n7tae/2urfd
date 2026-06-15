@@ -324,10 +324,10 @@ bool CM17Protocol::IsValidConnectPacket(const CBuffer &Buffer, CCallsign &callsi
 		mod = Buffer.data()[10];
 		if (callsign.IsValid() && IsLetter(mod))
 		{
-			if (Buffer.Compare(conn, 4)) {
+			if (0 == Buffer.Compare(conn, 4)) {
 				isListenOnly = false;
 				return true;
-			} else if (Buffer.Compare(lstn, 4)) {
+			} else if (0 == Buffer.Compare(lstn, 4)) {
 				isListenOnly = true;
 				return true;
 			}
