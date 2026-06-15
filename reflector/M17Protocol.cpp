@@ -50,6 +50,7 @@ void CM17Protocol::Task(void)
 	CIp       Ip;
 	CCallsign Callsign;
 	char      ToLinkModule;
+	bool      IsListenOnly;
 	std::unique_ptr<CDvHeaderPacket> Header;
 	std::unique_ptr<CDvFramePacket>  Frame;
 
@@ -65,7 +66,7 @@ void CM17Protocol::Task(void)
 #endif
 	{
 		// crack the packet
-		if ( IsValidDvPacket(Buffer, Header, Frame) )
+		if ( IsValidDvPacket(Buffer, Ip, Header, Frame) )
 		{
 			// callsign muted?
 			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::m17, Header->GetRpt2Module()) )
@@ -85,9 +86,9 @@ void CM17Protocol::Task(void)
 				OnDvFramePacketIn(secondFrame, &Ip); // push two packet because we need a packet every 20 ms
 			}
 		}
-		else if ( IsValidConnectPacket(Buffer, Callsign, ToLinkModule) )
+		else if ( IsValidConnectPacket(Buffer, Callsign, ToLinkModule, IsListenOnly) )
 		{
-			std::cout << "M17 connect packet for module " << ToLinkModule << " from " << Callsign << " at " << Ip << std::endl;
+			std::cout << "M17 " << (IsListenOnly ? "LSTN" : "CONN") << " packet for module " << ToLinkModule << " from " << Callsign << " at " << Ip << std::endl;
 
 			// callsign authorized?
 			if ( g_GateKeeper.MayLink(Callsign, Ip, EProtocol::m17) && g_Reflector.IsValidModule(ToLinkModule) )
@@ -99,7 +100,7 @@ void CM17Protocol::Task(void)
 					Send("ACKN", Ip);
 
 					// create the client and append
-					g_Reflector.GetClients()->AddClient(std::make_shared<CM17Client>(Callsign, Ip, ToLinkModule));
+					g_Reflector.GetClients()->AddClient(std::make_shared<CM17Client>(Callsign, Ip, ToLinkModule, IsListenOnly));
 					g_Reflector.ReleaseClients();
 				}
 				else
@@ -147,14 +148,10 @@ void CM17Protocol::Task(void)
 		}
 		else
 		{
-			uint8_t tag[] = { 'L', 'S', 'T', 'N' };
-			if ( Buffer.Compare(tag, 4) )	// we will ignore and not log a LSTN packet
-			{
-				// invalid packet
-				std::string title("Unknown M17 packet from ");
-				title += Ip.GetAddress();
-				Buffer.Dump(title);
-			}
+			// invalid packet
+			std::string title("Unknown M17 packet from ");
+			title += Ip.GetAddress();
+			Buffer.Dump(title);
 		}
 	}
 
@@ -317,17 +314,26 @@ void CM17Protocol::HandleKeepalives(void)
 ////////////////////////////////////////////////////////////////////////////////////////
 // packet decoding helpers
 
-bool CM17Protocol::IsValidConnectPacket(const CBuffer &Buffer, CCallsign &callsign, char &mod)
+bool CM17Protocol::IsValidConnectPacket(const CBuffer &Buffer, CCallsign &callsign, char &mod, bool &isListenOnly)
 {
-	uint8_t tag[] = { 'C', 'O', 'N', 'N' };
-	bool valid = false;
-	if (11 == Buffer.size() && 0 == Buffer.Compare(tag, 4))
+	uint8_t conn[] = { 'C', 'O', 'N', 'N' };
+	uint8_t lstn[] = { 'L', 'S', 'T', 'N' };
+	if (11 == Buffer.size())
 	{
 		callsign.CodeIn(Buffer.data() + 4);
 		mod = Buffer.data()[10];
-		valid = (callsign.IsValid() && IsLetter(mod));
+		if (callsign.IsValid() && IsLetter(mod))
+		{
+			if (Buffer.Compare(conn, 4)) {
+				isListenOnly = false;
+				return true;
+			} else if (Buffer.Compare(lstn, 4)) {
+				isListenOnly = true;
+				return true;
+			}
+		}
 	}
-	return valid;
+	return false;
 }
 
 bool CM17Protocol::IsValidDisconnectPacket(const CBuffer &Buffer, CCallsign &callsign)
@@ -354,8 +360,15 @@ bool CM17Protocol::IsValidKeepAlivePacket(const CBuffer &Buffer, CCallsign &call
 	return valid;
 }
 
-bool CM17Protocol::IsValidDvPacket(const CBuffer &Buffer, std::unique_ptr<CDvHeaderPacket> &header, std::unique_ptr<CDvFramePacket> &frame)
+bool CM17Protocol::IsValidDvPacket(const CBuffer &Buffer, const CIp &ip, std::unique_ptr<CDvHeaderPacket> &header, std::unique_ptr<CDvFramePacket> &frame)
 {
+	auto client = g_Reflector.GetClients()->FindClient(ip, EProtocol::m17);
+	g_Reflector.ReleaseClients();
+	if (client->IsListenOnly())
+	{
+		std::cout << "Listen-Only client " << client->GetCallsign() << " from " << ip.GetAddress() << " is trying to transmit!" << std::endl;
+		return false;
+	}
 	uint8_t tag[] = { 'M', '1', '7', ' ' };
 
 	if ( (Buffer.size() == sizeof(SM17Frame)) && (0 == Buffer.Compare(tag, sizeof(tag))) && (0x4U == (0x1CU & Buffer[19])) )

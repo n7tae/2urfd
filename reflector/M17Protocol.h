@@ -60,10 +60,10 @@ protected:
 	void OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &, const CIp &);
 
 	// packet decoding helpers
-	bool IsValidConnectPacket(const CBuffer &, CCallsign &, char &);
+	bool IsValidConnectPacket(const CBuffer &, CCallsign &, char &, bool &);
 	bool IsValidDisconnectPacket(const CBuffer &, CCallsign &);
 	bool IsValidKeepAlivePacket(const CBuffer &, CCallsign &);
-	bool IsValidDvPacket(const CBuffer &, std::unique_ptr<CDvHeaderPacket> &, std::unique_ptr<CDvFramePacket> &);
+	bool IsValidDvPacket(const CBuffer &, const CIp &, std::unique_ptr<CDvHeaderPacket> &, std::unique_ptr<CDvFramePacket> &);
 
 	// packet encoding helpers
 	void EncodeKeepAlivePacket(CBuffer &);

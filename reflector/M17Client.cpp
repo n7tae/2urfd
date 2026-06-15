@@ -21,13 +21,10 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CM17Client::CM17Client()
-{
-}
-
-CM17Client::CM17Client(const CCallsign &callsign, const CIp &ip, char reflectorModule)
+CM17Client::CM17Client(const CCallsign &callsign, const CIp &ip, char reflectorModule, bool isListenOnly)
 	: CClient(callsign, ip, reflectorModule)
 {
+	m_IsListenOnly = isListenOnly;
 }
 
 CM17Client::CM17Client(const CM17Client &client)

@@ -23,8 +23,8 @@ class CM17Client : public CClient
 {
 public:
 	// constructors
-	CM17Client();
-	CM17Client(const CCallsign &, const CIp &, char);
+	CM17Client() : CClient() {}
+	CM17Client(const CCallsign &, const CIp &, char, bool);
 	CM17Client(const CM17Client &);
 
 	// destructor

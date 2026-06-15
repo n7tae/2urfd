@@ -33,12 +33,13 @@ class CClient
 {
 public:
 	// constructors
-	CClient();
 	CClient(const CCallsign &, const CIp &, char = ' ');
-	CClient(const CClient &);
 
-	// destructor
-	virtual ~CClient() {};
+	CClient() : m_IsListenOnly(false), m_ReflectorModule(' '), m_ModuleMastered(' '), m_ConnectTime(std::time(nullptr)), m_LastHeardTime(std::time(nullptr)) {}
+	CClient(const CClient &);
+	CClient operator =(const CClient &) = delete;
+	CClient(CClient &&) = delete;
+	CClient &operator =(CClient &&) = delete;
 
 	// operators
 	bool operator ==(const CClient &) const;
@@ -58,6 +59,7 @@ public:
 	void SetReflectorModule(char c)                      { m_ReflectorModule = c; }
 
 	// identity
+	bool IsListenOnly(void) const                        { return m_IsListenOnly; }
 	virtual EProtocol GetProtocol(void) const            { return EProtocol::none; }
 	virtual EProtoRev GetProtocolRevision(void) const    { return EProtoRev::ambe; }
 	virtual const char *GetProtocolName(void) const      { return "none"; }
@@ -79,16 +81,13 @@ public:
 	void JsonReport(nlohmann::json &report);
 
 protected:
-	// data
-	CCallsign   m_Callsign;
-	CIp         m_Ip;
-
-	// linked to
+	bool        m_IsListenOnly;
 	char        m_ReflectorModule;
-
-	// status
 	char        m_ModuleMastered;
-	CTimer      m_LastKeepaliveTime;
 	std::time_t m_ConnectTime;
 	std::time_t m_LastHeardTime;
+	// classes
+	CCallsign   m_Callsign;
+	CIp         m_Ip;
+	CTimer      m_LastKeepaliveTime;
 };
