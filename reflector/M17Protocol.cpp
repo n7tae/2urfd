@@ -66,7 +66,7 @@ void CM17Protocol::Task(void)
 #endif
 	{
 		// crack the packet
-		if ( IsValidDvPacket(Buffer, Ip, Header, Frame) )
+		if ( IsValidDvPacket(Buffer, Header, Frame) )
 		{
 			// callsign muted?
 			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::m17, Header->GetRpt2Module()) )
@@ -360,7 +360,7 @@ bool CM17Protocol::IsValidKeepAlivePacket(const CBuffer &Buffer, CCallsign &call
 	return valid;
 }
 
-bool CM17Protocol::IsValidDvPacket(const CBuffer &Buffer, const CIp &ip, std::unique_ptr<CDvHeaderPacket> &header, std::unique_ptr<CDvFramePacket> &frame)
+bool CM17Protocol::IsValidDvPacket(const CBuffer &Buffer, std::unique_ptr<CDvHeaderPacket> &header, std::unique_ptr<CDvFramePacket> &frame)
 {
 	uint8_t tag[] = { 'M', '1', '7', ' ' };
 
