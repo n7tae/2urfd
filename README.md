@@ -2,13 +2,27 @@
 
 A smaller and slightly faster *urfd* reflector. The sources are published under GPL Licenses.
 
+## NEW Version, 2.9.0
+
+### Everything is under one roof!
+
+This is the first subject, for now, **because it's very important if you are upgrading from an eariler version!** If you are installing this repo for the first time, you can ignore this section.
+
+-This is an important version update because this is the first version where the transcoder, *tcd* has been merged with the reflector, *urfd*, so now all the functions of the transcoding reflector are in a **single executable**. If you are upgrading from an earlier version to this version, you need to make sure you follow these steps in your build directory:
+1. `sudo make uninstall`
+2. `make clean`
+3. `git pull`  # this will ***highly*** affect the repo, moving file, eliminating several folders, deleting some source code (quite a bit actually), and added some new sources. If you don't do #1 and #2 first, you'll have to uninstall *tcd* manually, and you repo will be left with a lot of garbage that you will have to also clean up manually!
+4. `reflector/inicheck -q ./urfd.ini` # this might show you that you need at least one more configuration line. Use the example ini file in the `config` directory for comparison to your current ini file. Keep repeating this until there are no `ERROR` lines printed.
+5. `make` # this will complile a single program, *urfd* that has a built-in transcoder.
+6. `sudo make install`
+
 ## Some preliminaries
 
 This is based on the full-blown, do-anything *urfd* reflector hosted by [nostar](https://github.com/nostar/urfd), but this *urfd* does not support all protocols. Compared to the nostar version, it doesn't have DMR+, G3, and USRP. It also **requires** a local transcoder with *two* AMBE devices, one for DStar and the other for DMR/YSF/NXDN. Instances of this *urfd* reflector will **not interlink** with instances of the version available from nostar.
 
 ## Introduction
 
-This trimmed-down *urfd* supports DStar protocols (DPlus, DCS, DExtra), DMR protocols (MMDVMHost, NXDN, BrandMeister), M17, YSF, and P25 (Phase 1, using IMBE). Included in this repo is everything you need to build the hybrid transcoder, *tcd*. Please note this reflector only supports the tcd transcoder when run locally. As a locally transcoded reflector, urfd and tcd uses UNIX DGRAM sockets for inter-process communications. These kernel-base sockets are significantly faster than conventional UDP/IP sockets. It should be noted that tcd supports DVSI-3003 and DVSI-3000 devices, which it uses for AMBE vocoding. A pair of them of either kind is required.
+This trimmed-down *urfd* supports DStar protocols (DPlus, DCS, DExtra), DMR protocols (MMDVMHost, NXDN, BrandMeister), M17, YSF, and P25 (Phase 1, using IMBE). Please note this reflector will not work with an external transcoder.
 
 This build support *dual-stack* operation, so the server on which it's running, must have both an IPv4 and IPv6 routeable address if you are going to configure a dual-stack reflector.
 
@@ -42,13 +56,13 @@ sudo apt install git apache2 php build-essential nlohmann-json3-dev libcurl4-gnu
 
 **Ham-DHT**, a DHT network for hams, is implemented using a distributed hash table provided by OpenDHT.
 
-On Ubuntu 24.04 and Debian 12 or newer, you can install the OpenDHT developer's library directly:
+On Ubuntu 24.04 and Debian 12 or you can install the OpenDHT developer's library directly:
 
 ```
 sudo apt install libopendht-dev
 ```
 
-On older systems you may need to build the OpenDHT library...
+On older or newer systems you may need to build the OpenDHT library...
 
 OpenDHT is available [here](https://github./com/savoirfairelinux/opendht.git). Building and installing instructions are in the [OpenDHT Wiki](https://github.com/savoirfairelinux/opendht/wiki/Build-the-library). Pascal support and proxy-server support (RESTinio) is not required for urfd and so can be considered optional. With this in mind, this should work on Debian/Ubuntu-based systems:
 
@@ -97,7 +111,6 @@ This will create seven files:
 4. The `urfd.whitelist` file defines callsigns that are allowed to link and transmit. Both of these files support the asterisk as a wild-card. The supplied blacklist and whitelist file are empty, which will allow any callsign to link and transmit, blocking no one. Both files support a limited wildcard feature.
 5. The `urfd.interlink` file defines URF linking.
 6. The `urfd.service` file is a systemd file that will start and stop *urfd*. Importantly, it contains the only reference to where the *urfd* ini file is located. **Be sure** to set a fully qualified path to your `urfd.ini` file on the `ExecStart` line.
-7. The `tcd.service` file is a systemd file that will start and stop *tcd*. Importantly, it contains the only reference to where the *tcd* ini file is located. **Be sure** to set a fully qualified path to your `tcd.ini` file on the `ExecStart` line.
 
 ### Configuring your reflector
 
@@ -148,7 +161,7 @@ and uninstall your system:
 sudo make uninstall
 ```
 
-There is also an interactive script you can launch with `./radmin` you can use to install and uninstall your system, restart the reflector or transcoder process, or view the reflector or transcoder log in real time.
+There is also an interactive script you can launch with `./radmin` you can use to install and uninstall your system, restart the reflector, or view the reflector log in real time.
 
 
 ### Copy dashboard to /var/www
