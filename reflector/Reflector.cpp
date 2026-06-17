@@ -232,11 +232,6 @@ void CReflector::Stop(void)
 ////////////////////////////////////////////////////////////////////////////////////////
 // stream opening & closing
 
-bool CReflector::IsStreaming(char module)
-{
-	return false;
-}
-
 // clients MUST have bee locked by the caller so we can freely access it within the function
 std::shared_ptr<CPacketStream> CReflector::OpenStream(std::unique_ptr<CDvHeaderPacket> &DvHeader, std::shared_ptr<CClient>client)
 {

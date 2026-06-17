@@ -63,7 +63,6 @@ public:
 
 	// stream opening & closing
 	std::shared_ptr<CPacketStream> OpenStream(std::unique_ptr<CDvHeaderPacket> &, std::shared_ptr<CClient>);
-	bool IsStreaming(char);
 	void CloseStream(std::shared_ptr<CPacketStream>);
 
 	// get
