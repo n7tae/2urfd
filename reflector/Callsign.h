@@ -65,8 +65,8 @@ class CCallsign
 public:
 	// constructors
 	CCallsign();
+
 	CCallsign(const UCallsign &cs);    // no id lookup
-	CCallsign(const CCallsign &cs);
 	CCallsign(const std::string &cs, uint32_t dmrid = 0, uint16_t nxdnid = 0);
 
 	// status
@@ -75,6 +75,7 @@ public:
 	bool HasModule(void) const { return m_Module != ' '; }
 
 	// set
+	void Clear(void);
 	void SetCallsign(const std::string &s, bool updateids = true);
 	void SetCallsign(const uint8_t *, int, bool = true);
 	void SetDmrid(uint32_t, bool = true);
@@ -104,15 +105,15 @@ public:
 	bool HasSameCallsignWithWildcard(const CCallsign &) const;
 
 	// operators
-	CCallsign &operator = (const CCallsign &cs);
 	bool operator ==(const CCallsign &) const;
 	operator const char *() const;
 
 	// M17
 	void CodeIn(const uint8_t *code);
 	void CodeOut(uint8_t *out) const;
+	unsigned GetSize() const {return sizeof(CCallsign); }
 
-protected:
+private:
 	// M17
 	void CSIn();
 	// helper
@@ -122,12 +123,11 @@ protected:
 	bool IsLetterLC(char) const;
     bool IsSpecialChar(char) const;
 
-protected:
 	// data
 	UCallsign m_Callsign;
+	uint64_t  m_coded;
 	USuffix   m_Suffix;
-	char      m_Module;
 	uint32_t  m_uiDmrid;
 	uint16_t  m_uiNXDNid;
-	uint64_t  m_coded; // M17 encoded callsign
+	char      m_Module;
 };

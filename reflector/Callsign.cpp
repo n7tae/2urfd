@@ -31,6 +31,11 @@
 CCallsign::CCallsign()
 {
 	// blank all
+	Clear();
+}
+
+void CCallsign::Clear()
+{
 	m_Callsign.l = 0x2020202020202020ul;
 	m_Suffix.u = 0x20202020u;
 	m_Module = ' ';
@@ -102,33 +107,9 @@ CCallsign::CCallsign(const std::string &cs, uint32_t dmrid, uint16_t nxdnid) : C
 		CSIn();
 }
 
-CCallsign::CCallsign(const CCallsign &cs)
-{
-	m_Callsign.l = cs.m_Callsign.l;
-	m_Suffix.u = cs.m_Suffix.u;
-	m_Module = cs.m_Module;
-	m_uiDmrid = cs.m_uiDmrid;
-	m_uiNXDNid = cs.m_uiNXDNid;
-	m_coded = cs.m_coded;
-}
-
 CCallsign::CCallsign(const UCallsign &ucs) : CCallsign()
 {
 	m_Callsign.l = ucs.l;
-}
-
-CCallsign &CCallsign::operator = (const CCallsign &cs)
-{
-	if (this != &cs)
-	{
-		m_Callsign.l = cs.m_Callsign.l;
-		m_Suffix.u = cs.m_Suffix.u;
-		m_Module = cs.m_Module;
-		m_uiDmrid = cs.m_uiDmrid;
-		m_uiNXDNid = cs.m_uiNXDNid;
-		m_coded = cs.m_coded;
-	}
-	return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -513,11 +494,13 @@ void CCallsign::CSIn()
 {
 	const std::string m17_alphabet(M17CHARACTERS);
 	auto pos = m17_alphabet.find(m_Module);
+	if (std::string::npos == pos)
+		pos = 0;
 	m_coded = pos;
 	m_coded *= 40;
 	for( int i=CALLSIGN_LEN-2; i>=0; i-- ) {
 		pos = m17_alphabet.find(m_Callsign.c[i]);
-		if (pos == std::string::npos) {
+		if (std::string::npos == pos) {
 			pos = 0;
 		}
 		m_coded *= 40;

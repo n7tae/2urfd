@@ -24,28 +24,16 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 
-CClient::CClient()
-{
-	m_ReflectorModule = ' ';
-	m_ModuleMastered = ' ';
-	m_LastKeepaliveTime.start();
-	m_ConnectTime = std::time(nullptr);
-	m_LastHeardTime = std::time(nullptr);
-}
-
-CClient::CClient(const CCallsign &callsign, const CIp &ip, char reflectorModule)
+CClient::CClient(const CCallsign &callsign, const CIp &ip, char reflectorModule) : CClient()
 {
 	m_ReflectorModule = reflectorModule;
 	m_Callsign = callsign;
 	m_Ip = ip;
-	m_ModuleMastered = ' ';
-	m_LastKeepaliveTime.start();
-	m_ConnectTime = std::time(nullptr);
-	m_LastHeardTime = std::time(nullptr);
 }
 
 CClient::CClient(const CClient &client)
 {
+	m_IsListenOnly = client.m_IsListenOnly;
 	m_Callsign = client.m_Callsign;
 	m_Ip = client.m_Ip;
 	m_ReflectorModule = client.m_ReflectorModule;
@@ -79,14 +67,16 @@ bool CClient::operator ==(const CClient &client) const
 
 void CClient::WriteXml(std::ofstream &xmlFile)
 {
-	xmlFile << "<NODE>" << std::endl;
-	xmlFile << "\t<Callsign>" << m_Callsign << "</Callsign>" << std::endl;
-	xmlFile << "\t<IP>" << m_Ip.GetAddress() << "</IP>" << std::endl;
-	xmlFile << "\t<LinkedModule>" << m_ReflectorModule << "</LinkedModule>" << std::endl;
-	xmlFile << "\t<Protocol>" << GetProtocolName() << "</Protocol>" << std::endl;
-	xmlFile << "\t<ConnectTime>" << m_ConnectTime << "</ConnectTime>" << std::endl;
-	xmlFile << "\t<LastHeardTime>" << m_LastHeardTime << "</LastHeardTime>" << std::endl;
-	xmlFile << "</NODE>" << std::endl;
+	xmlFile <<
+	"<NODE>\n" <<
+	"\t<Callsign>"      << m_Callsign        << "</Callsign>\n" <<
+	"\t<IP>"            << m_Ip.GetAddress() << "</IP>\n" <<
+	"\t<LinkedModule>"  << m_ReflectorModule << "</LinkedModule>\n" <<
+	"\t<Protocol>"      << GetProtocolName() << "</Protocol>\n" <<
+	"\t<ListenOnly>"    << IsListenOnly()    << "</ListenOnly>\n" <<
+	"\t<ConnectTime>"   << m_ConnectTime     << "</ConnectTime>\n" <<
+	"\t<LastHeardTime>" << m_LastHeardTime   << "</LastHeardTime>\n" <<
+	"</NODE>"           << std::endl;
 }
 
 void CClient::JsonReport(nlohmann::json &report)
@@ -95,8 +85,11 @@ void CClient::JsonReport(nlohmann::json &report)
 	jclient["Callsign"] = m_Callsign.GetCS();
 	jclient["OnModule"] = std::string(1, m_ReflectorModule);
 	jclient["Protocol"] = GetProtocolName();
+	jclient["ListenOnly"] = IsListenOnly();
 	char s[100];
 	if (std::strftime(s, sizeof(s), "%FT%TZ", std::gmtime(&m_ConnectTime)))
 		jclient["ConnectTime"] = s;
+	if (std::strftime(s, sizeof(s), "%FT%TZ", std::gmtime(&m_LastHeardTime)))
+		jclient["LastHeardTime"] = s;
 	report["Clients"].push_back(jclient);
 }

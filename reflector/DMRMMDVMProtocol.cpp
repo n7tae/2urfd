@@ -676,9 +676,6 @@ bool CDmrmmdvmProtocol::IsValidDvFramePacket(const CIp &Ip, const CBuffer &Buffe
 			auto stream = GetStream(uiStreamId, &Ip);
 			if ( !stream )
 			{
- 				std::cout << std::showbase << std::hex;
- 				std::cout << "Late entry DMR voice frame, creating DMR header for DMR stream ID " << ntohl(uiStreamId) << std::noshowbase << std::dec << " on " << Ip << std::endl;
- 				std::cout << std::noshowbase << std::dec;
 				uint8_t cmd;
 
 				// link/unlink command ?
@@ -686,13 +683,19 @@ bool CDmrmmdvmProtocol::IsValidDvFramePacket(const CIp &Ip, const CBuffer &Buffe
 				{
 					cmd = CMD_UNLINK;
 				}
-				else if ( DmrDstIdToModule(uiDstId) != ' ' )
-				{
-					cmd = CMD_LINK;
-				}
 				else
 				{
-					cmd = CMD_NONE;
+					std::cout << std::showbase << std::hex;
+					std::cout << "Late entry DMR voice frame, creating DMR header for DMR stream ID " << ntohl(uiStreamId) << std::noshowbase << std::dec << " on " << Ip << std::endl;
+					std::cout << std::noshowbase << std::dec;
+					if ( DmrDstIdToModule(uiDstId) != ' ' )
+					{
+						cmd = CMD_LINK;
+					}
+					else
+					{
+						cmd = CMD_NONE;
+					}
 				}
 
 				// build DVHeader

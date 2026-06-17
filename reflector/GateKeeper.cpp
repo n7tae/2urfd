@@ -115,10 +115,9 @@ bool CGateKeeper::MayLink(const CCallsign &callsign, const CIp &ip, EProtocol pr
 
 bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EProtocol protocol, char module) const
 {
-	bool ok;
-
+	std::shared_ptr<CClient> client;
 	const std::string base(callsign.GetBase());
-
+	bool ok = false;
 	switch (protocol)
 	{
 	// repeaters, protocol specific
@@ -132,7 +131,12 @@ bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EP
 	case EProtocol::m17:
 	case EProtocol::p25:
 	case EProtocol::nxdn:
-		// first check is IP & callsigned listed OK
+		client = g_Reflector.GetClients()->FindClient(ip, protocol);
+		g_Reflector.ReleaseClients();
+		if (client and client->IsListenOnly()) {
+			std::cout << client->GetCallsign() << " @ " << ip << " is listen-only but is sending packets!" << std::endl;
+			return false;
+		}
 		ok = IsNodeListedOk(base);
 		// todo: then apply any protocol specific authorisation for the operation
 		break;
@@ -151,7 +155,7 @@ bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EP
 	}
 
 	// report
-	if ( !ok )
+	if ( not ok )
 	{
 		std::cout << "Gatekeeper blocking transmitting of " << callsign << " @ " << ip << " using protocol " << ProtocolName(protocol) << std::endl;
 	}

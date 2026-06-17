@@ -409,7 +409,7 @@ void CReflector::StateReportThread()
 		}
 
 		// json report
-		if (!  jsonpath.empty())
+		if (not jsonpath.empty())
 		{
 			nlohmann::json jreport;
 			JsonReport(jreport);

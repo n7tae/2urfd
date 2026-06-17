@@ -126,8 +126,8 @@ void CPeer::JsonReport(nlohmann::json &report)
 	jpeer["Protocol"] = GetProtocolName();
 	char s[100];
 	if (std::strftime(s, sizeof(s), "%FT%TZ", std::gmtime(&m_ConnectTime)))
-	{
 		jpeer["ConnectTime"] = s;
-	}
+	if (std::strftime(s, sizeof(s), "%FT%TZ", std::gmtime(&m_LastHeardTime)))
+		jpeer["LastHeardTime"] = s;
 	report["Peers"].push_back(jpeer);
 }
