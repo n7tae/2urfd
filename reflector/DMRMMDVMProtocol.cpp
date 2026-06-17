@@ -677,8 +677,8 @@ bool CDmrmmdvmProtocol::IsValidDvFramePacket(const CIp &Ip, const CBuffer &Buffe
 			if ( !stream )
 			{
 				std::cout << std::showbase << std::hex;
-				std::cout << "Late entry DMR voice frame, creating DMR header for DMR stream ID " << ntohl(uiStreamId) << std::noshowbase << std::dec << " on " << Ip << std::endl;
-				std::cout << std::noshowbase << std::dec;
+				std::cout << "Late entry DMR voice frame, creating DMR header for DMR stream ID " << ntohl(uiStreamId) << std::noshowbase << std::dec << " on " << Ip << " with DST " << uiDstId << std::endl;
+				
 				uint8_t cmd;
 
 				// link/unlink command ?
@@ -704,10 +704,10 @@ bool CDmrmmdvmProtocol::IsValidDvFramePacket(const CIp &Ip, const CBuffer &Buffe
 
 				// and packet
 				header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(uiSrcId, CCallsign("CQCQCQ"), rpt1, rpt2, uiStreamId, 0, 0));
-
 				if ( g_GateKeeper.MayTransmit(header->GetMyCallsign(), Ip, EProtocol::dmrmmdvm) )
 				{
 					// handle it
+					std::cout << "New header: rpt1=" << header->GetRpt1Callsign() << " rpt2=" << header->GetRpt2Callsign() << " my=" << header->GetMyCallsign() << " cmd=" << int(cmd) << std::endl;
 					OnDvHeaderPacketIn(header, Ip, cmd, uiCallType);
 				}
 			}
