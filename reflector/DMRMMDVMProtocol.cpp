@@ -654,6 +654,7 @@ bool CDmrmmdvmProtocol::IsValidDvHeaderPacket(const CBuffer &Buffer, std::unique
 
 bool CDmrmmdvmProtocol::IsValidDvFramePacket(const CIp &Ip, const CBuffer &Buffer, std::unique_ptr<CDvHeaderPacket> &header, std::array<std::unique_ptr<CDvFramePacket>, 3> &frames)
 {
+	static uint32_t lastsid = 0;
 	uint8_t tag[] = { 'D','M','R','D' };
 
 	if ( (Buffer.size() == 55) && (Buffer.Compare(tag, sizeof(tag)) == 0) )
@@ -676,9 +677,10 @@ bool CDmrmmdvmProtocol::IsValidDvFramePacket(const CIp &Ip, const CBuffer &Buffe
 			auto stream = GetStream(uiStreamId, &Ip);
 			if ( !stream )
 			{
-				std::cout << std::showbase << std::hex;
-				std::cout << "Late entry DMR voice frame, creating DMR header for DMR stream ID " << ntohl(uiStreamId) << std::noshowbase << std::dec << " on " << Ip << " with DST " << uiDstId << std::endl;
-				
+				if (uiStreamId != lastsid) {
+					std::cout << std::showbase << std::hex << "Late entry DMR voice frame, creating DMR header for DMR stream ID " << ntohl(uiStreamId) << std::noshowbase << std::dec << " on " << Ip << " TG " << uiDstId << std::endl;
+					lastsid = uiStreamId;
+				}
 				uint8_t cmd;
 
 				// link/unlink command ?
@@ -707,7 +709,6 @@ bool CDmrmmdvmProtocol::IsValidDvFramePacket(const CIp &Ip, const CBuffer &Buffe
 				if ( g_GateKeeper.MayTransmit(header->GetMyCallsign(), Ip, EProtocol::dmrmmdvm) )
 				{
 					// handle it
-					std::cout << "New header: rpt1=" << header->GetRpt1Callsign() << " rpt2=" << header->GetRpt2Callsign() << " my=" << header->GetMyCallsign() << " cmd=" << int(cmd) << std::endl;
 					OnDvHeaderPacketIn(header, Ip, cmd, uiCallType);
 				}
 			}
