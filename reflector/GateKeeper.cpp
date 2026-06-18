@@ -121,7 +121,6 @@ bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EP
 	switch (protocol)
 	{
 	// repeaters, protocol specific
-	case EProtocol::any:
 	case EProtocol::dextra:
 	case EProtocol::dplus:
 	case EProtocol::dcs:
@@ -145,12 +144,6 @@ bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EP
 	case EProtocol::urf:
 	case EProtocol::bm:
 		ok = IsPeerListedOk(base, module);
-		break;
-
-	// unsupported
-	case EProtocol::none:
-	default:
-		ok = false;
 		break;
 	}
 
@@ -270,28 +263,41 @@ bool CGateKeeper::IsPeerListedOk(const std::string &callsign, const CIp &ip, cha
 
 const std::string CGateKeeper::ProtocolName(const EProtocol p) const
 {
+	const char *rval;
 	switch (p) {
-		case EProtocol::any:
-			return "ANY";
 		case EProtocol::dcs:
-			return "DCS";
+			rval = "DCS";
+			break;
 		case EProtocol::dextra:
-			return "DExtra";
+			rval = "DExtra";
+			break;
 		case EProtocol::dmrmmdvm:
-			return "MMDVM DMR";
+			rval = "DMR-MMDVM";
+			break;
 		case EProtocol::dmrplus:
-			return "DMR+";
+			rval = "DMR+";
+			break;
 		case EProtocol::urf:
-			return "URF";
+			rval = "URF";
+			break;
 		case EProtocol::ysf:
-			return "YSF";
+			rval = "YSF";
+			break;
 		case EProtocol::p25:
-			return "P25";
+			rval = "P25";
+			break;
 		case EProtocol::nxdn:
-			return "NXDN";
+			rval = "NXDN";
+			break;
 		case EProtocol::bm:
-			return "Brandmeister";
-		default:
-			return "NONE";
+			rval = "Brandmeister";
+			break;
+		case EProtocol::m17:
+			rval = "M17";
+			break;
+		case EProtocol::dplus:
+			rval = "DPlus";
+			break;
 	}
+	return rval;
 }

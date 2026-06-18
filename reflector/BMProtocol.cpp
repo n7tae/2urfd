@@ -71,7 +71,7 @@ void CBMProtocol::Task(void)
 		else if ( IsValidDvHeaderPacket(Buffer, Header) )
 		{
 			// callsign allowed?
-			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip) )
+			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::bm) )
 			{
 				OnDvHeaderPacketIn(Header, Ip);
 			}

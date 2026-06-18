@@ -112,7 +112,7 @@ void CNXDNProtocol::Task(void)
 				OnDvHeaderPacketIn(Header, Ip);
 			}
 		}
-		else if ( IsValidDvLastFramePacket(Ip, Buffer) )
+		else if ( IsValidDvLastFramePacket(Buffer) )
 		{
 			m_uiStreamId = 0;
 		}
@@ -463,7 +463,7 @@ bool CNXDNProtocol::IsValidDvFramePacket(const CIp &Ip, const CBuffer &Buffer, s
 	return false;
 }
 
-bool CNXDNProtocol::IsValidDvLastFramePacket(const CIp &Ip, const CBuffer &Buffer)
+bool CNXDNProtocol::IsValidDvLastFramePacket(const CBuffer &Buffer)
 {
 	if(!memcmp(Buffer.data(), "NXDND", 5) && (Buffer.size() == 43) && (Buffer.data()[10] == NXDN_LICH_USC_SACCH_NS) && ((Buffer.data()[9U] & 0x08) == 0x08) )
 	{

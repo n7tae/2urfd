@@ -27,9 +27,9 @@ DBUTIL = dbutil
 include ../urfd.mk
 
 ifeq ($(debug), true)
-CFLAGS = -ggdb3 -DDEBUG -W -Werror -I../common -std=c++17 -MMD -MD
+CFLAGS = -ggdb3 -DDEBUG -Wall -Wextra -Werror -I../common -std=c++17 -MMD -MD
 else
-CFLAGS = -W -Werror -std=c++17 -I../common -MMD -MD
+CFLAGS = -Wall -Wextra -Werror -std=c++17 -I../common -MMD -MD
 endif
 
 LDFLAGS=-pthread -lcurl

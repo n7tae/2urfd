@@ -306,8 +306,6 @@ void CController::AudiotoCodec2(std::shared_ptr<CTranscoderPacket> packet)
 // push the packet onto both the dstar and the dmr queue.
 void CController::Codec2toAudio(std::shared_ptr<CTranscoderPacket> packet)
 {
-	uint8_t ambe2[9];
-	uint8_t imbe[11];
 	const auto m = packet->GetModule();
 
 	if (packet->IsSecond())

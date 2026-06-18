@@ -410,6 +410,7 @@ bool CConfigure::ReadData(const std::string &path)
 					case ESection::dmrid:   pdb = &g_Keys.dmriddb;   break;
 					case ESection::nxdnid:  pdb = &g_Keys.nxdniddb;  break;
 					case ESection::ysffreq: pdb = &g_Keys.ysftxrxdb; break;
+					default: break;
 				}
 				if (0 == key.compare(JURL))
 					data[pdb->url] = value;
@@ -797,7 +798,6 @@ void CConfigure::badParam(const std::string &key) const
 
 bool CConfigure::checkModules(std::string &m) const
 {
-	bool rval = false; // return true on error
 	for (unsigned i=0; i<m.size(); i++)
 		if (islower(m[i]))
 			m[i] = toupper(m[i]);

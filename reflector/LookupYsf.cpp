@@ -52,7 +52,6 @@ void CLookupYsf::UpdateContent(std::stringstream &ss, Eaction action)
 		cs.SetCallsign(cs_str, false);
 		auto ltx = atoll(tx_str.c_str());
 		auto lrx = atoll(rx_str.c_str());
-		unsigned x = sizeof(lrx);
 		if (ltx > 40000000 && ltx < 0x100000000 && lrx > 40000000 && lrx < 0x100000000 && cs.IsValid())
 		{
 			if (Eaction::parse == action)

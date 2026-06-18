@@ -290,12 +290,10 @@ void CDextraProtocol::HandleKeepalives(void)
 			// no, disconnect all clients
 			CBuffer disconnect;
 			EncodeDisconnectPacket(&disconnect, peer->GetReflectorModules()[0]);
-			CClients *clients = g_Reflector.GetClients();
-			for ( auto cit=peer->cbegin(); cit!=peer->cend(); cit++ )
+			for ( auto pit=peer->cbegin(); pit!=peer->cend(); pit++ )
 			{
-				Send(disconnect, (*cit)->GetIp());
+				Send(disconnect, (*pit)->GetIp());
 			}
-			g_Reflector.ReleaseClients();
 
 			// remove it
 			std::cout << "DExtra peer " << peer->GetCallsign() << " keepalive timeout" << std::endl;

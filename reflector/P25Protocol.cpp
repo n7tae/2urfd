@@ -76,7 +76,6 @@ void CP25Protocol::Task(void)
 	CBuffer   Buffer;
 	CIp       Ip;
 	CCallsign Callsign;
-	char      ToLinkModule;
 	std::unique_ptr<CDvHeaderPacket> Header;
 	std::unique_ptr<CDvFramePacket>  Frame;
 
@@ -92,7 +91,7 @@ void CP25Protocol::Task(void)
 #endif
 	{
 		// crack the packet
-		if ( IsValidDvPacket(Ip, Buffer, Frame) )
+		if ( IsValidDvPacket(Buffer, Frame) )
 		{
 			if( !m_uiStreamId && IsValidDvHeaderPacket(Ip, Buffer, Header) )
 			{
@@ -303,7 +302,7 @@ bool CP25Protocol::IsValidDisconnectPacket(const CBuffer &Buffer, CCallsign *cal
 	return valid;
 }
 
-bool CP25Protocol::IsValidDvPacket(const CIp &Ip, const CBuffer &Buffer, std::unique_ptr<CDvFramePacket> &frame)
+bool CP25Protocol::IsValidDvPacket(const CBuffer &Buffer, std::unique_ptr<CDvFramePacket> &frame)
 {
 	if ( (Buffer.size() >= 14) )
 	{

@@ -47,7 +47,7 @@ public:
 
 	// authorizations
 	bool MayLink(const CCallsign &, const CIp &, const EProtocol, char * = nullptr) const;
-	bool MayTransmit(const CCallsign &, const CIp &, EProtocol = EProtocol::any, char = ' ') const;
+	bool MayTransmit(const CCallsign &, const CIp &, EProtocol, char = ' ') const;
 
 protected:
 	// thread

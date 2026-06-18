@@ -56,7 +56,7 @@ bool CBmPeer::IsAlive(void) const
 ////////////////////////////////////////////////////////////////////////////////////////
 // revision helper
 
-EProtoRev CBmPeer::GetProtocolRevision(const CVersion &version)
+EProtoRev CBmPeer::GetProtocolRevision(const CVersion *)
 {
 	return EProtoRev::ambe;
 }

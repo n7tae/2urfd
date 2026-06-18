@@ -92,7 +92,7 @@ void CPacketStream::Push(std::unique_ptr<CPacket> Packet)
 		// trancoder will push it after transcoding
 		// is completed
 		//auto pPacket = static_cast<CDvFramePacket *>(Packet.release());
-		m_CodecStream->Push(std::move(std::unique_ptr<CDvFramePacket>(static_cast<CDvFramePacket *>(Packet.release()))));
+		m_CodecStream->Push(std::unique_ptr<CDvFramePacket>(static_cast<CDvFramePacket *>(Packet.release())));
 	}
 	else
 	{

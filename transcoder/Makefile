@@ -5,9 +5,9 @@ include ../urfd.mk
 GCC = g++
 
 ifeq ($(debug), true)
-CFLAGS = -ggdb3 -W -Werror -Icodec2 -Iimbe -I../common -MMD -MD -std=c++17
+CFLAGS = -ggdb3 -Wall -Wextra -Werror -Icodec2 -Iimbe -I../common -MMD -MD -std=c++17
 else
-CFLAGS = -W -Werror -Icodec2 -Iimbe -I../common -MMD -MD -std=c++17
+CFLAGS = -Wall -Wextra -Werror -Icodec2 -Iimbe -I../common -MMD -MD -std=c++17
 endif
 
 LDFLAGS = -lftd2xx -pthread

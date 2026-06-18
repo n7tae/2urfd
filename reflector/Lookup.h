@@ -44,6 +44,13 @@ public:
 	bool Utility(Eaction action, Esource source);
 
 protected:
+	std::atomic<bool> keep_running;
+	std::future<void> m_Future;
+	std::mutex        m_Mutex;
+	ERefreshType      m_Type;
+	unsigned          m_Refresh;
+	std::string       m_Path, m_Url;
+	std::time_t       m_LastLoadTime;
 	std::time_t GetLastModTime();
 	virtual void LoadParameters() = 0;
 	virtual void ClearContents()  = 0;
@@ -54,12 +61,5 @@ protected:
 	bool LoadContentFile(std::stringstream &ss);
 	virtual void UpdateContent(std::stringstream &ss, Eaction action) = 0;
 
-	std::mutex        m_Mutex;
-	ERefreshType      m_Type;
-	unsigned          m_Refresh;
-	std::string       m_Path, m_Url;
-	std::time_t       m_LastLoadTime;
 
-	std::atomic<bool> keep_running;
-	std::future<void> m_Future;
 };

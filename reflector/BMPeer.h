@@ -44,5 +44,5 @@ public:
 	const char *GetProtocolName(void) const     { return "XLX"; }
 
 	// revision helper
-	static EProtoRev GetProtocolRevision(const CVersion &);
+	EProtoRev GetProtocolRevision(const CVersion *);
 };

@@ -227,7 +227,8 @@ void CDvFramePacket::SetDvData(const uint8_t *DvData)
 
 void CDvFramePacket::SetCodecData(const STCPacket *pack)
 {
-	memcpy(&m_TCPack, pack, sizeof(STCPacket));
+	//memcpy(&m_TCPack, pack, sizeof(STCPacket));
+	m_TCPack = *pack;
 }
 
 void CDvFramePacket::SetTCParams(uint32_t seq)

@@ -60,9 +60,9 @@ public:
 
 	// identity
 	bool IsListenOnly(void) const                        { return m_IsListenOnly; }
-	virtual EProtocol GetProtocol(void) const            { return EProtocol::none; }
+	virtual EProtocol GetProtocol(void) const            = 0;
 	virtual EProtoRev GetProtocolRevision(void) const    { return EProtoRev::ambe; }
-	virtual const char *GetProtocolName(void) const      { return "none"; }
+	virtual const char *GetProtocolName(void) const      = 0;
 	virtual bool IsNode(void) const                      { return false; }
 	virtual bool IsPeer(void) const                      { return false; }
 	virtual bool IsDextraDongle(void) const              { return false; }

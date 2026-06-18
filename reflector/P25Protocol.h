@@ -61,7 +61,7 @@ protected:
 	// packet decoding helpers
 	bool IsValidConnectPacket(const CBuffer &, CCallsign *);
 	bool IsValidDisconnectPacket(const CBuffer &, CCallsign *);
-	bool IsValidDvPacket(const CIp &, const CBuffer &, std::unique_ptr<CDvFramePacket> &);
+	bool IsValidDvPacket(const CBuffer &, std::unique_ptr<CDvFramePacket> &);
 	bool IsValidDvHeaderPacket(const CIp &, const CBuffer &, std::unique_ptr<CDvHeaderPacket> &);
 
 	// packet encoding helpers

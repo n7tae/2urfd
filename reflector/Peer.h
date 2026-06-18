@@ -47,9 +47,9 @@ public:
 	// set
 
 	// identity
-	virtual EProtocol GetProtocol(void) const           { return EProtocol::none; }
-	virtual EProtoRev GetProtocolRevision(void) const   { return EProtoRev::original; }
-	virtual const char *GetProtocolName(void) const     { return "NONE"; }
+	virtual EProtocol GetProtocol(void) const           = 0;
+	virtual EProtoRev GetProtocolRevision(const CVersion *) { return EProtoRev::original; };
+	virtual const char *GetProtocolName(void) const     = 0;
 
 	// status
 	virtual bool IsAMaster(void) const;

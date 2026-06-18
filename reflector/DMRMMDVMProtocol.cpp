@@ -39,8 +39,8 @@
 
 static uint8_t g_DmrSyncBSVoice[]    = { 0x07,0x55,0xFD,0x7D,0xF7,0x5F,0x70 };
 static uint8_t g_DmrSyncBSData[]     = { 0x0D,0xFF,0x57,0xD7,0x5D,0xF5,0xD0 };
-static uint8_t g_DmrSyncMSVoice[]    = { 0x07,0xF7,0xD5,0xDD,0x57,0xDF,0xD0 };
 static uint8_t g_DmrSyncMSData[]     = { 0x0D,0x5D,0x7F,0x77,0xFD,0x75,0x70 };
+//static uint8_t g_DmrSyncMSVoice[]    = { 0x07,0xF7,0xD5,0xDD,0x57,0xDF,0xD0 };
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -563,7 +563,7 @@ bool CDmrmmdvmProtocol::IsValidOptionPacket(const CBuffer &Buffer, CCallsign *ca
 	return valid;
 }
 
-bool CDmrmmdvmProtocol::IsValidRssiPacket(const CBuffer &Buffer, CCallsign *callsign, int *rssi)
+bool CDmrmmdvmProtocol::IsValidRssiPacket(const CBuffer &Buffer, CCallsign */*callsign*/, int */*rssi*/)
 {
 	uint8_t tag[] = { 'R','P','T','I','N','T','R' };
 
@@ -636,7 +636,6 @@ bool CDmrmmdvmProtocol::IsValidDvHeaderPacket(const CBuffer &Buffer, std::unique
 				}
 
 				// build DVHeader
-				CCallsign csMY = CCallsign("", uiSrcId);
 				CCallsign rpt1 = CCallsign("", uiRptrId);
 				rpt1.SetCSModule(MMDVM_MODULE_ID);
 				CCallsign rpt2 = m_ReflectorCallsign;
@@ -698,7 +697,6 @@ bool CDmrmmdvmProtocol::IsValidDvFramePacket(const CIp &Ip, const CBuffer &Buffe
 				}
 
 				// build DVHeader
-				CCallsign csMY = CCallsign("", uiSrcId);
 				CCallsign rpt1 = CCallsign("", uiRptrId);
 				rpt1.SetCSModule(MMDVM_MODULE_ID);
 				CCallsign rpt2 = m_ReflectorCallsign;
@@ -821,14 +819,14 @@ void CDmrmmdvmProtocol::EncodeKeepAlivePacket(CBuffer *Buffer, std::shared_ptr<C
 	Buffer->Append((uint8_t *)&uiDmrId, 4);
 }
 
-void CDmrmmdvmProtocol::EncodeAckPacket(CBuffer *Buffer, const CCallsign &Callsign)
+void CDmrmmdvmProtocol::EncodeAckPacket(CBuffer *Buffer, const CCallsign &/*Callsign*/)
 {
 	uint8_t tag[] = { 'R','P','T','A','C','K' };
 
 	Buffer->Set(tag, sizeof(tag));
 }
 
-void CDmrmmdvmProtocol::EncodeConnectAckPacket(CBuffer *Buffer, const CCallsign &Callsign, uint32_t AuthSeed)
+void CDmrmmdvmProtocol::EncodeConnectAckPacket(CBuffer *Buffer, const CCallsign &/*Callsign*/, uint32_t AuthSeed)
 {
 	uint8_t tag[] = { 'R','P','T','A','C','K' };
 
@@ -836,14 +834,14 @@ void CDmrmmdvmProtocol::EncodeConnectAckPacket(CBuffer *Buffer, const CCallsign 
 	Buffer->Append(AuthSeed);
 }
 
-void CDmrmmdvmProtocol::EncodeNackPacket(CBuffer *Buffer, const CCallsign &Callsign)
+void CDmrmmdvmProtocol::EncodeNackPacket(CBuffer *Buffer, const CCallsign &/*Callsign*/)
 {
 	uint8_t tag[] = { 'M','S','T','N','A','K' };
 
 	Buffer->Set(tag, sizeof(tag));
 }
 
-void CDmrmmdvmProtocol::EncodeClosePacket(CBuffer *Buffer, std::shared_ptr<CClient>Client)
+void CDmrmmdvmProtocol::EncodeClosePacket(CBuffer *Buffer, std::shared_ptr<CClient>/*Client*/)
 {
 	uint8_t tag[] = { 'M','S','T','C','L' };
 

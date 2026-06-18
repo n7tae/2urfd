@@ -201,6 +201,8 @@ int main(int argc, char *argv[])
 		case Edb::ysf:
 		g_LYtr.Utility(action, source);
 		break;
+		default:
+		break;
 	}
 
 	return EXIT_SUCCESS;

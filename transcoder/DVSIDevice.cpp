@@ -565,7 +565,6 @@ void CDVDevice::dump(const char *title, const void *pointer, int length) const
 void CDVDevice::FeedDevice()
 {
 	const std::string modules(g_Conf.GetTCMods());
-	const auto n = modules.size();
 	while (keep_running)
 	{
 		auto packet = input_queue.pop();	// blocks until there is something to pop, unless shutting down

@@ -85,7 +85,7 @@ void CURFProtocol::Task(void)
 		else if ( IsValidDvHeaderPacket(Buffer, Header) )
 		{
 			// callsign allowed?
-			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip) )
+			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::urf) )
 			{
 				OnDvHeaderPacketIn(Header, Ip);
 			}
@@ -99,7 +99,8 @@ void CURFProtocol::Task(void)
 			{
 				// acknowledge connecting request
 				// following is version dependent
-				if (EProtoRev::original == CURFPeer::GetProtocolRevision(Version))
+				auto peer = g_Reflector.GetPeers()->FindPeer(Ip, EProtocol::urf);
+				if (peer and (EProtoRev::original == peer->GetProtocolRevision(&Version)))
 				{
 					// acknowledge the request
 					EncodeConnectAckPacket(&Buffer, Modules);
@@ -110,6 +111,7 @@ void CURFProtocol::Task(void)
 					EncodeConnectNackPacket(&Buffer);
 					Send(Buffer, Ip);
 				}
+				g_Reflector.ReleasePeers();
 			}
 			else
 			{
