@@ -222,8 +222,6 @@ void CReflector::Stop(void)
 	// kill the DHT
 	node.cancelPut(refhash, toUType(EUrfdValueID::Config));
 	node.cancelPut(refhash, toUType(EUrfdValueID::Peers));
-	node.cancelPut(refhash, toUType(EUrfdValueID::Clients));
-	node.cancelPut(refhash, toUType(EUrfdValueID::Users));
 	node.shutdown({}, true);
 	node.join();
 #endif
@@ -619,64 +617,6 @@ void CReflector::PutDHTPeers()
 		true	// permanent!
 	);
 }
-
-// void CReflector::PutDHTClients()
-// {
-// 	const std::string cs(g_Configure.GetString(g_Keys.names.callsign));
-// 	SUrfdClients1 c;
-// 	time(&c.timestamp);
-// 	c.sequence = clients_put_count++;
-// 	auto clients = GetClients();
-// 	for (auto cit=clients->cbegin(); cit!=clients->cend(); cit++)
-// 	{
-// 		c.list.emplace_back((*cit)->GetCallsign().GetCS(), std::string((*cit)->GetIp().GetAddress()), (*cit)->GetReflectorModule(), (*cit)->GetConnectTime(), (*cit)->GetLastHeardTime());
-// 	}
-// 	ReleaseClients();
-
-// 	auto nv = std::make_shared<dht::Value>(c);
-// 	nv->user_type.assign(URFD_CLIENTS_1);
-// 	nv->id = toUType(EUrfdValueID::Clients);
-
-// 	node.putSigned(
-// 		refhash,
-// 		nv,
-// #ifdef DEBUG
-// 		[](bool success){ std::cout << "PutDHTClients() " << (success ? "successful" : "unsuccessful") << std::endl; },
-// #else
-// 		[](bool success){ if (! success) std::cout << "PutDHTClients() unsuccessful" << std::endl; },
-// #endif
-// 		false	// not permanent!
-// 	);
-// }
-
-// void CReflector::PutDHTUsers()
-// {
-// 	const std::string cs(g_Configure.GetString(g_Keys.names.callsign));
-// 	SUrfdUsers1 u;
-// 	time(&u.timestamp);
-// 	u.sequence = users_put_count++;
-// 	auto users = GetUsers();
-// 	for (auto uit=users->cbegin(); uit!=users->cend(); uit++)
-// 	{
-// 		u.list.emplace_back((*uit).GetCallsign(), std::string((*uit).GetViaNode()), (*uit).GetOnModule(), (*uit).GetViaPeer(), (*uit).GetLastHeardTime());
-// 	}
-// 	ReleaseUsers();
-
-// 	auto nv = std::make_shared<dht::Value>(u);
-// 	nv->user_type.assign(URFD_USERS_1);
-// 	nv->id = toUType(EUrfdValueID::Users);
-
-// 	node.putSigned(
-// 		refhash,
-// 		nv,
-// #ifdef DEBUG
-// 		[](bool success){ std::cout << "PutDHTUsers() " << (success ? "successful" : "unsuccessful") << std::endl; },
-// #else
-// 		[](bool success){ if (! success) std::cout << "PutDHTUsers() unsuccessful" << std::endl; },
-// #endif
-// 		false	// not permanent
-// 	);
-// }
 
 void CReflector::PutDHTConfig()
 {

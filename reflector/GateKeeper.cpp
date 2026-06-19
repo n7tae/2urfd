@@ -81,7 +81,6 @@ bool CGateKeeper::MayLink(const CCallsign &callsign, const CIp &ip, EProtocol pr
 	case EProtocol::dextra:
 	case EProtocol::dplus:
 	case EProtocol::dcs:
-	case EProtocol::dmrplus:
 	case EProtocol::dmrmmdvm:
 	case EProtocol::ysf:
 	case EProtocol::m17:
@@ -124,7 +123,6 @@ bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EP
 	case EProtocol::dextra:
 	case EProtocol::dplus:
 	case EProtocol::dcs:
-	case EProtocol::dmrplus:
 	case EProtocol::dmrmmdvm:
 	case EProtocol::ysf:
 	case EProtocol::m17:
@@ -273,9 +271,6 @@ const std::string CGateKeeper::ProtocolName(const EProtocol p) const
 			break;
 		case EProtocol::dmrmmdvm:
 			rval = "DMR-MMDVM";
-			break;
-		case EProtocol::dmrplus:
-			rval = "DMR+";
 			break;
 		case EProtocol::urf:
 			rval = "URF";
