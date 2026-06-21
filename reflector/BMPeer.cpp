@@ -32,16 +32,16 @@ CBmPeer::CBmPeer()
 {
 }
 
-CBmPeer::CBmPeer(const CCallsign &callsign, const CIp &ip, const char *modules, const CVersion &version)
+CBmPeer::CBmPeer(const CCallsign &callsign, const CIp &ip, const std::string &modules, const CVersion &version)
 	: CPeer(callsign, ip, modules, version)
 {
 	std::cout << "Adding BM peer" << std::endl;
 
 	// and construct all xlx clients
-	for ( unsigned i = 0; i < ::strlen(modules); i++ )
+	for ( const auto c : modules )
 	{
 		// create and append to vector
-		m_Clients.push_back(std::make_shared<CBmClient>(callsign, ip, modules[i]));
+		m_Clients.push_back(std::make_shared<CBmClient>(callsign, ip, c));
 	}
 }
 

@@ -31,7 +31,7 @@ CURFPeer::CURFPeer()
 {
 }
 
-CURFPeer::CURFPeer(const CCallsign &callsign, const CIp &ip, const char *modules, const CVersion &version)
+CURFPeer::CURFPeer(const CCallsign &callsign, const CIp &ip, const std::string &modules, const CVersion &version)
 	: CPeer(callsign, ip, modules, version)
 {
 	// get protocol revision
@@ -39,10 +39,10 @@ CURFPeer::CURFPeer(const CCallsign &callsign, const CIp &ip, const char *modules
 	//std::cout << "Adding URF peer with protocol revision " << protrev << std::endl;
 
 	// and construct all xlx clients
-	for ( unsigned i = 0; i < ::strlen(modules); i++ )
+	for ( const auto c : modules )
 	{
 		// create and append to vector
-		m_Clients.push_back(std::make_shared<CURFClient>(callsign, ip, modules[i], protrev));
+		m_Clients.push_back(std::make_shared<CURFClient>(callsign, ip, c, protrev));
 	}
 }
 
@@ -52,12 +52,4 @@ CURFPeer::CURFPeer(const CCallsign &callsign, const CIp &ip, const char *modules
 bool CURFPeer::IsAlive(void) const
 {
 	return (m_LastKeepaliveTime.time() < URF_KEEPALIVE_TIMEOUT);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////
-// revision helper
-
-EProtoRev CURFPeer::GetProtocolRevision(const CVersion */*version*/)
-{
-	return EProtoRev::original;
 }

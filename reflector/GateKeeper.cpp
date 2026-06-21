@@ -70,7 +70,7 @@ void CGateKeeper::Close(void)
 ////////////////////////////////////////////////////////////////////////////////////////
 // authorisations
 
-bool CGateKeeper::MayLink(const CCallsign &callsign, const CIp &ip, EProtocol protocol, char *modules) const
+bool CGateKeeper::MayLink(const CCallsign &callsign, const CIp &ip, EProtocol protocol, const std::string &modules) const
 {
 	bool ok;
 	const std::string base(callsign.GetBase());
@@ -237,7 +237,7 @@ bool CGateKeeper::IsPeerListedOk(const std::string &callsign, char module) const
 	return ok;
 }
 
-bool CGateKeeper::IsPeerListedOk(const std::string &callsign, const CIp &ip, char *modules) const
+bool CGateKeeper::IsPeerListedOk(const std::string &callsign, const CIp &ip, const std::string &modules) const
 {
 	bool ok = true;
 

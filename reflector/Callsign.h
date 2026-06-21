@@ -73,6 +73,7 @@ public:
 	bool IsValid(void) const;
 	bool HasSuffix(void) const;
 	bool HasModule(void) const { return m_Module != ' '; }
+	bool IsURF(void) const;
 
 	// set
 	void Clear(void);

@@ -29,7 +29,7 @@ class CPeer
 public:
 	// constructors
 	CPeer();
-	CPeer(const CCallsign &, const CIp &, const char *, const CVersion &);
+	CPeer(const CCallsign &, const CIp &, const std::string &, const CVersion &);
 	CPeer(const CPeer &) = delete;
 
 	// destructor
@@ -41,7 +41,7 @@ public:
 	// get
 	const CCallsign &GetCallsign(void) const            { return m_Callsign; }
 	const CIp &GetIp(void) const                        { return m_Ip; }
-	char *GetReflectorModules(void)                     { return m_ReflectorModules; }
+	const std::string &GetReflectorModules(void)        { return m_ReflectorModules; }
 	std::time_t GetConnectTime(void) const              { return m_ConnectTime; }
 
 	// set
@@ -75,7 +75,7 @@ protected:
 	// data
 	CCallsign             m_Callsign;
 	CIp                   m_Ip;
-	char                  m_ReflectorModules[27];
+	std::string           m_ReflectorModules;
 	CVersion              m_Version;
 	std::list<std::shared_ptr<CClient>> m_Clients;
 

@@ -26,7 +26,7 @@ class CURFPeer : public CPeer
 public:
 	// constructors
 	CURFPeer();
-	CURFPeer(const CCallsign &, const CIp &, const char *, const CVersion &);
+	CURFPeer(const CCallsign &, const CIp &, const std::string &, const CVersion &);
 	CURFPeer(const CURFPeer &) = delete;
 
 	// status
@@ -35,7 +35,4 @@ public:
 	// identity
 	EProtocol GetProtocol(void) const          { return EProtocol::urf; }
 	const char *GetProtocolName(void) const    { return "URF"; }
-
-	// revision helper
-	EProtoRev GetProtocolRevision(const CVersion *);
 };

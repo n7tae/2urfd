@@ -168,7 +168,7 @@ bool CInterlinkMap::IsCallsignListed(const std::string &callsign, char module) c
 		return item->second.HasModuleListed(module);
 }
 
-bool CInterlinkMap::IsCallsignListed(const std::string &callsign, const CIp &ip, const char *modules) const
+bool CInterlinkMap::IsCallsignListed(const std::string &callsign, const CIp &ip, const std::string &modules) const
 {
 	const auto item = m_InterlinkMap.find(callsign);
 	if (m_InterlinkMap.cend() != item)

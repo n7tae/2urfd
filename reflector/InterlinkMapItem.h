@@ -46,7 +46,7 @@ public:
 	// compare
 	bool HasSameIp(const CIp &ip);
 	bool HasModuleListed(char) const;
-	bool CheckListedModules(const char*) const;
+	bool CheckListedModules(const std::string &) const;
 
 	// get
 	const CIp &GetIp(void) const              { return m_Ip; }

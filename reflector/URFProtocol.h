@@ -48,20 +48,20 @@ protected:
 	void OnDvFramePacketIn(std::unique_ptr<CDvFramePacket> &, const CIp * = nullptr);
 
 	// packet decoding helpers
-	bool IsValidKeepAlivePacket(const CBuffer &, CCallsign *);
-	bool IsValidConnectPacket(const CBuffer &, CCallsign *, char *, CVersion *);
-	bool IsValidDisconnectPacket(const CBuffer &, CCallsign *);
-	bool IsValidAckPacket(const CBuffer &, CCallsign *, char *, CVersion *);
-	bool IsValidNackPacket(const CBuffer &, CCallsign *);
+	bool IsValidKeepAlivePacket(const CBuffer &, CCallsign &);
+	bool IsValidConnectPacket(const CBuffer &, CCallsign &, std::string &, CVersion &);
+	bool IsValidDisconnectPacket(const CBuffer &, CCallsign &);
+	bool IsValidAckPacket(const CBuffer &, CCallsign &, std::string &, CVersion &);
+	bool IsValidNackPacket(const CBuffer &, CCallsign &);
 	bool IsValidDvHeaderPacket(const CBuffer &, std::unique_ptr<CDvHeaderPacket> &);
 	bool IsValidDvFramePacket(const CBuffer &, std::unique_ptr<CDvFramePacket> &);
 
 	// packet encoding helpers
-	void EncodeKeepAlivePacket(CBuffer *);
-	void EncodeConnectPacket(CBuffer *, const char *);
-	void EncodeDisconnectPacket(CBuffer *);
-	void EncodeConnectAckPacket(CBuffer *, const char *);
-	void EncodeConnectNackPacket(CBuffer *Buffer);
+	void EncodeKeepAlivePacket(CBuffer &);
+	void EncodeConnectPacket(CBuffer &, const std::string &);
+	void EncodeDisconnectPacket(CBuffer &);
+	void EncodeConnectAckPacket(CBuffer &, const std::string &);
+	void EncodeConnectNackPacket(CBuffer &);
 	bool EncodeDvHeaderPacket(const CDvHeaderPacket &, CBuffer &) const;
 	bool EncodeDvFramePacket(const CDvFramePacket &, CBuffer &) const;
 

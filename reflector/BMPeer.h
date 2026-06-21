@@ -33,7 +33,7 @@ class CBmPeer : public CPeer
 public:
 	// constructors
 	CBmPeer();
-	CBmPeer(const CCallsign &, const CIp &, const char *, const CVersion &);
+	CBmPeer(const CCallsign &, const CIp &, const std::string &, const CVersion &);
 	CBmPeer(const CBmPeer &) = delete;
 
 	// status

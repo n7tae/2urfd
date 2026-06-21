@@ -72,30 +72,9 @@ bool CInterlinkMapItem::HasSameIp(const CIp &ip)
 	return ip == m_Ip;
 }
 
-bool CInterlinkMapItem::CheckListedModules(const char *mods) const
+bool CInterlinkMapItem::CheckListedModules(const std::string &mods) const
 {
-	if (mods == nullptr)
-		return false;
-
-	// make sure every mods character is matched in m_Mods
-	const auto count = m_Mods.size();
-	bool found[count];
-	for (unsigned i=0; i<count; i++)
-		found[i] = false;
-	for (auto p=mods; *p; p++)
-	{
-		auto pos = m_Mods.find(*p);
-		if (pos == m_Mods.npos)
-			return false;
-		else
-			found[pos] = true;
-	}
-	for (unsigned i=0; i<count; i++)
-	{
-		if (! found[i])
-			return false;
-	}
-	return true;
+	return mods == m_Mods;
 }
 
 #ifndef NO_DHT

@@ -46,7 +46,7 @@ public:
 	void ReleaseInterlinkMap(void) { m_InterlinkMap.Unlock(); }
 
 	// authorizations
-	bool MayLink(const CCallsign &, const CIp &, const EProtocol, char * = nullptr) const;
+	bool MayLink(const CCallsign &, const CIp &, const EProtocol, const std::string & = std::string()) const;
 	bool MayTransmit(const CCallsign &, const CIp &, EProtocol, char = ' ') const;
 
 protected:
@@ -56,7 +56,7 @@ protected:
 	// operation helpers
 	bool IsNodeListedOk(const std::string &) const;
 	bool IsPeerListedOk(const std::string &, char) const;
-	bool IsPeerListedOk(const std::string &, const CIp &, char *) const;
+	bool IsPeerListedOk(const std::string &, const CIp &, const std::string &) const;
 
 protected:
 	// data

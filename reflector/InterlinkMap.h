@@ -54,7 +54,7 @@ public:
 
 	// compare
 	bool IsCallsignListed(const std::string &, const char) const;
-	bool IsCallsignListed(const std::string &, const CIp &ip, const char*) const;
+	bool IsCallsignListed(const std::string &, const CIp &, const std::string &) const;
 
 	// pass-through
 	bool empty() const { return m_InterlinkMap.empty(); }

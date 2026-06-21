@@ -431,6 +431,18 @@ CCallsign::operator const char *() const
 ////////////////////////////////////////////////////////////////////////////////////////
 // helper
 
+bool CCallsign::IsURF() const
+{
+	bool rval = (0 == memcmp(m_Callsign.c, "URF", 3));
+	if (rval) {
+		for (int i=3; rval and i<6; i++) {
+			char c = m_Callsign.c[i];
+			rval = rval and (IsNumber(c) or IsLetter(c));
+		}
+	}
+	return rval;
+}
+
 bool CCallsign::IsNumber(char c) const
 {
 	return ((c >= '0') && (c <= '9'));

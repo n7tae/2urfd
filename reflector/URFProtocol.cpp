@@ -45,36 +45,36 @@ bool CURFProtocol::Initialize(const char *type, const EProtocol ptype, const uin
 
 void CURFProtocol::Task(void)
 {
-	CBuffer   Buffer;
-	CIp       Ip;
-	CCallsign Callsign;
-	char      Modules[27];
-	CVersion  Version;
-	std::unique_ptr<CDvHeaderPacket> Header;
-	std::unique_ptr<CDvFramePacket>  Frame;
-	std::unique_ptr<CDvFramePacket>  LastFrame;
+	CIp ip;
+	CBuffer buffer;
+	CVersion version;
+	CCallsign callsign;
+	std::string modules;
+	std::unique_ptr<CDvFramePacket> frame;
+	std::unique_ptr<CDvFramePacket> lastFrame;
+	std::unique_ptr<CDvHeaderPacket> header;
 
 	// any incoming packet ?
 #if XLX_IPV6==true
 #if XLX_IPV4==true
-	if ( ReceiveDS(Buffer, Ip, 20) )
+	if ( ReceiveDS(buffer, ip, 20) )
 #else
-	if ( Receive6(Buffer, Ip, 20) )
+	if ( Receive6(buffer, ip, 20) )
 #endif
 #else
-	if ( Receive4(Buffer, Ip, 20) )
+	if ( Receive4(buffer, ip, 20) )
 #endif
 	{
 		// crack the packet
-		if ( IsValidDvFramePacket(Buffer, Frame) )
+		if ( IsValidDvFramePacket(buffer, frame) )
 		{
-			OnDvFramePacketIn(Frame, &Ip);
+			OnDvFramePacketIn(frame, &ip);
 		}
-		else if ( IsValidKeepAlivePacket(Buffer, &Callsign) )
+		else if ( IsValidKeepAlivePacket(buffer, callsign) )
 		{
 			// find peer
 			CPeers *peers = g_Reflector.GetPeers();
-			std::shared_ptr<CPeer>peer = peers->FindPeer(Ip, EProtocol::urf);
+			std::shared_ptr<CPeer>peer = peers->FindPeer(ip, EProtocol::urf);
 			if ( peer != nullptr )
 			{
 				// keep it alive
@@ -82,58 +82,45 @@ void CURFProtocol::Task(void)
 			}
 			g_Reflector.ReleasePeers();
 		}
-		else if ( IsValidDvHeaderPacket(Buffer, Header) )
+		else if ( IsValidDvHeaderPacket(buffer, header) )
 		{
 			// callsign allowed?
-			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::urf) )
+			if ( g_GateKeeper.MayTransmit(header->GetMyCallsign(), ip, EProtocol::urf) )
 			{
-				OnDvHeaderPacketIn(Header, Ip);
+				OnDvHeaderPacketIn(header, ip);
 			}
 		}
-		else if ( IsValidConnectPacket(Buffer, &Callsign, Modules, &Version) )
+		else if ( IsValidConnectPacket(buffer, callsign, modules, version) )
 		{
-			std::cout << "URF (" << Version.GetMajor() << "." << Version.GetMinor() << "." << Version.GetRevision() << ") connect packet for modules " << Modules << " from " << Callsign <<  " at " << Ip << std::endl;
+			std::cout << "URF (" << version.GetMajor() << "." << version.GetMinor() << "." << version.GetRevision() << ") connect packet for modules " << modules << " from " << callsign <<  " at " << ip << std::endl;
 
 			// callsign authorized?
-			if ( g_GateKeeper.MayLink(Callsign, Ip, EProtocol::urf, Modules) )
+			if ( g_GateKeeper.MayLink(callsign, ip, EProtocol::urf, modules) )
 			{
-				// acknowledge connecting request
-				// following is version dependent
-				auto peer = g_Reflector.GetPeers()->FindPeer(Ip, EProtocol::urf);
-				if (peer and (EProtoRev::original == peer->GetProtocolRevision(&Version)))
-				{
-					// acknowledge the request
-					EncodeConnectAckPacket(&Buffer, Modules);
-					Send(Buffer, Ip);
-				}
-				else
-				{
-					EncodeConnectNackPacket(&Buffer);
-					Send(Buffer, Ip);
-				}
-				g_Reflector.ReleasePeers();
+				EncodeConnectAckPacket(buffer, modules);
+				Send(buffer, ip);
 			}
 			else
 			{
 				// deny the request
-				EncodeConnectNackPacket(&Buffer);
-				Send(Buffer, Ip);
+				EncodeConnectNackPacket(buffer);
+				Send(buffer, ip);
 			}
 		}
-		else if ( IsValidAckPacket(Buffer, &Callsign, Modules, &Version)  )
+		else if ( IsValidAckPacket(buffer, callsign, modules, version)  )
 		{
-			std::cout << "URF ack packet for modules " << Modules << " from " << Callsign << " at " << Ip << std::endl;
+			std::cout << "URF ack packet for modules " << modules << " from " << callsign << " at " << ip << std::endl;
 
 			// callsign authorized?
-			if ( g_GateKeeper.MayLink(Callsign, Ip, EProtocol::urf, Modules) )
+			if ( g_GateKeeper.MayLink(callsign, ip, EProtocol::urf, modules) )
 			{
 				// already connected ?
 				CPeers *peers = g_Reflector.GetPeers();
-				if ( peers->FindPeer(Callsign, Ip, EProtocol::urf) == nullptr )
+				if ( nullptr == peers->FindPeer(callsign, ip, EProtocol::urf) )
 				{
 					// create the new peer
 					// this also create one client per module
-					std::shared_ptr<CPeer>peer = std::make_shared<CURFPeer>(Callsign, Ip, Modules, Version);
+					std::shared_ptr<CPeer>peer = std::make_shared<CURFPeer>(callsign, ip, modules, version);
 
 					// append the peer to reflector peer list
 					// this also add all new clients to reflector client list
@@ -142,13 +129,13 @@ void CURFProtocol::Task(void)
 				g_Reflector.ReleasePeers();
 			}
 		}
-		else if ( IsValidDisconnectPacket(Buffer, &Callsign) )
+		else if ( IsValidDisconnectPacket(buffer, callsign) )
 		{
-			std::cout << "URF disconnect packet from " << Callsign << " at " << Ip << std::endl;
+			std::cout << "URF disconnect packet from " << callsign << " at " << ip << std::endl;
 
 			// find peer
 			CPeers *peers = g_Reflector.GetPeers();
-			std::shared_ptr<CPeer>peer = peers->FindPeer(Ip, EProtocol::urf);
+			std::shared_ptr<CPeer>peer = peers->FindPeer(ip, EProtocol::urf);
 			if ( peer != nullptr )
 			{
 				// remove it from reflector peer list
@@ -158,15 +145,15 @@ void CURFProtocol::Task(void)
 			}
 			g_Reflector.ReleasePeers();
 		}
-		else if ( IsValidNackPacket(Buffer, &Callsign) )
+		else if ( IsValidNackPacket(buffer, callsign) )
 		{
-			std::cout << "URF nack packet from " << Callsign << " at " << Ip << std::endl;
+			std::cout << "URF nack packet from " << callsign << " at " << ip << std::endl;
 		}
 		else
 		{
 			std::string title("Unknown URF packet from ");
-			title += Ip.GetAddress();
-			Buffer.Dump(title);
+			title += ip.GetAddress();
+			buffer.Dump(title);
 		}
 	}
 
@@ -223,7 +210,7 @@ void CURFProtocol::HandleQueue(void)
 				while ( (client = clients->FindNextClient(EProtocol::urf, it)) != nullptr )
 				{
 					// is this client busy ?
-					if ( !client->IsAMaster() && (client->GetReflectorModule() == packet->GetPacketModule()) )
+					if ( !client->IsAMaster() and (client->GetReflectorModule() == packet->GetPacketModule()) )
 					{
 						// no, send the packet
 						// this is protocol revision dependent
@@ -248,7 +235,7 @@ void CURFProtocol::HandleKeepalives(void)
 	// event if the client is currently streaming
 	// so, send keepalives to all
 	CBuffer keepalive;
-	EncodeKeepAlivePacket(&keepalive);
+	EncodeKeepAlivePacket(keepalive);
 
 	// iterate on peers
 	CPeers *peers = g_Reflector.GetPeers();
@@ -270,7 +257,7 @@ void CURFProtocol::HandleKeepalives(void)
 		{
 			// no, disconnect
 			CBuffer disconnect;
-			EncodeDisconnectPacket(&disconnect);
+			EncodeDisconnectPacket(disconnect);
 			Send(disconnect, peer->GetIp());
 
 			// remove it
@@ -301,7 +288,7 @@ void CURFProtocol::HandlePeerLinks(void)
 		if (nullptr == ilmap->FindMapItem(peer->GetCallsign().GetBase()))
 		{
 			// send disconnect packet
-			EncodeDisconnectPacket(&buffer);
+			EncodeDisconnectPacket(buffer);
 			Send(buffer, peer->GetIp());
 			std::cout << "Sending disconnect packet to URF peer " << peer->GetCallsign() << std::endl;
 			// remove client
@@ -316,7 +303,7 @@ void CURFProtocol::HandlePeerLinks(void)
 		const auto cs = it->first;
 		CCallsign callsign;
 		callsign.SetCallsign(cs, false);
-		if ((0 == cs.substr(0, 3).compare("URF")) && (nullptr==peers->FindPeer(callsign, EProtocol::urf)))
+		if ((0 == cs.substr(0, 3).compare("URF")) and (nullptr==peers->FindPeer(callsign, EProtocol::urf)))
 		{
 #ifndef NO_DHT
 			it->second.UpdateIP(g_Configure.GetString(g_Keys.ip.ipv6address).empty());
@@ -350,7 +337,7 @@ void CURFProtocol::HandlePeerLinks(void)
 
 #endif
 					// send connect packet to re-initiate peer link
-					EncodeConnectPacket(&buffer, it->second.GetModules().c_str());
+					EncodeConnectPacket(buffer, it->second.GetModules().c_str());
 					Send(buffer, it->second.GetIp());
 					std::cout << "Sent connect packet to URF peer " << cs << " @ " << it->second.GetIp() << " for modules " << it->second.GetModules() << std::endl;
 #ifndef NO_DHT
@@ -430,91 +417,88 @@ void CURFProtocol::OnDvFramePacketIn(std::unique_ptr<CDvFramePacket> &DvFrame, c
 ////////////////////////////////////////////////////////////////////////////////////////
 // packet decoding helpers
 
-bool CURFProtocol::IsValidKeepAlivePacket(const CBuffer &Buffer, CCallsign *callsign)
+bool CURFProtocol::IsValidKeepAlivePacket(const CBuffer &Buffer, CCallsign &callsign)
 {
 	bool valid = false;
 	uint8_t magic[] = { 'P','I','N','G' };
-	if ((10 == Buffer.size()) && (0 == Buffer.Compare(magic, 4)))
+	if ((10 == Buffer.size()) and (0 == Buffer.Compare(magic, 4)))
 	{
-		callsign->CodeIn(Buffer.data()+4);
-		valid = callsign->IsValid();
+		callsign.CodeIn(Buffer.data()+4);
+		valid = callsign.IsValid();
 	}
 	return valid;
 }
 
 
-bool CURFProtocol::IsValidConnectPacket(const CBuffer &Buffer, CCallsign *callsign, char *modules, CVersion *version)
+bool CURFProtocol::IsValidConnectPacket(const CBuffer &Buffer, CCallsign &cs, std::string &modules, CVersion &version)
 {
-	bool valid = false;
-	uint8_t magic[] = { 'C','O','N','N' };
-	if ((Buffer.size() == 40) && (0 == Buffer.Compare(magic, 4)) && (Buffer.data()[36] == 0))
+	if ((Buffer.size() == 40) and (0 == memcmp(Buffer.data(), "CONN", 4)) and (0 == Buffer.at(36)))
 	{
-		callsign->CodeIn(Buffer.data()+4);
-		valid = callsign->IsValid();
-		*version = CVersion(Buffer.at(37), Buffer.at(38), Buffer.at(39));
-		if (valid)
-		{
-			memcpy(modules, Buffer.data()+10, 27);
-			for ( unsigned i = 0; i < strlen(modules); i++ )
-			{
-				auto moduleok = g_Reflector.IsValidModule(modules[i]);
-				if (! moduleok)
-				{
-					valid = false;
-					std::cout << "Requested module '" << modules[i] << "' is not confgured\n";
+		cs.CodeIn(Buffer.data()+4);
+		if (cs.IsURF()) {
+			version = CVersion(Buffer.at(37), Buffer.at(38), Buffer.at(39));
+			if (2 == version.GetMajor()) {
+				modules.assign((const char *)Buffer.data()+10);
+				for (const char c : modules) {
+					if (not g_Reflector.IsValidModule(c)) {
+						std::cout << "CONN from " << cs << " requested module '" << c << "' is not confgured" << std::endl;
+						return false;
+					}
 				}
+				return true;
+			} else {
+				std::cout << "CONN from " << cs << " has wrong version: " << version << std::endl;
 			}
+		} else {
+			std::cout << "CONN from " << cs << " is not a urfd" << std::endl;
 		}
 	}
-	return valid;
+	return false;
 }
 
-bool CURFProtocol::IsValidDisconnectPacket(const CBuffer &Buffer, CCallsign *callsign)
+bool CURFProtocol::IsValidDisconnectPacket(const CBuffer &Buffer, CCallsign &callsign)
 {
 	bool valid = false;
 	uint8_t magic[] = { 'D','I','S','C' };
-	if ((Buffer.size() == 10) && (0 == Buffer.Compare(magic, 4)))
+	if ((Buffer.size() == 10) and (0 == Buffer.Compare(magic, 4)))
 	{
-		callsign->CodeIn(Buffer.data()+4);
-		valid = callsign->IsValid();
+		callsign.CodeIn(Buffer.data()+4);
+		valid = callsign.IsValid();
 	}
 	return valid;
 }
 
-bool CURFProtocol::IsValidAckPacket(const CBuffer &Buffer, CCallsign *callsign, char *modules, CVersion *version)
+bool CURFProtocol::IsValidAckPacket(const CBuffer &buffer, CCallsign &cs, std::string &mods, CVersion &version)
 {
 	bool valid = false;
-	uint8_t magic[] = { 'A','C','K','N' };
-	if ((Buffer.size() == 40) && (0 == Buffer.Compare(magic, 4)) && (Buffer.data()[36] == 0))
+	if ((buffer.size() == 40) and (0 == memcmp(buffer.data(), "ACKN", 4)) and (0 == buffer.at(36)))
 	{
-		callsign->CodeIn(Buffer.data()+4);
-		valid = callsign->IsValid();
-		*version = CVersion(Buffer.at(37), Buffer.at(38), Buffer.at(39));
-		memcpy(modules, Buffer.data()+10, 27);
-		for ( unsigned i = 0; i < strlen(modules); i++ )
+		cs.CodeIn(buffer.data()+4);
+		valid = cs.IsURF();
+		version = CVersion(buffer.at(37), buffer.at(38), buffer.at(39));
+		mods.assign((const char *)buffer.data()+10);
+		for ( const char c : mods )
 		{
-			valid = valid && (g_Reflector.IsValidModule(modules[i]));
+			valid = valid and (g_Reflector.IsValidModule(c));
 		}
 	}
 	return valid;
 }
 
-bool CURFProtocol::IsValidNackPacket(const CBuffer &Buffer, CCallsign *callsign)
+bool CURFProtocol::IsValidNackPacket(const CBuffer &buffer, CCallsign &cs)
 {
 	bool valid = false;
-	uint8_t magic[] = { 'N','A','C','K' };
-	if ((Buffer.size() == 10) && (0 == Buffer.Compare(magic, 4)))
+	if ((buffer.size() == 10) and (0 == memcmp(buffer, "NACK", 4)))
 	{
-		callsign->CodeIn(Buffer.data()+4);
-		valid = callsign->IsValid();
+		cs.CodeIn(buffer.data()+4);
+		valid = cs.IsURF();
 	}
 	return valid;
 }
 
 bool CURFProtocol::IsValidDvHeaderPacket(const CBuffer &Buffer, std::unique_ptr<CDvHeaderPacket> &header)
 {
-	uint8_t magic[] = { 'U', 'R', 'F', 'H' };
-	if (Buffer.size()==CDvHeaderPacket::GetNetworkSize() && 0==Buffer.Compare(magic, 4))
+	if (Buffer.size()==CDvHeaderPacket::GetNetworkSize() and 0==memcmp(Buffer.data(), "URFH", 4))
 	{
 		header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(Buffer));
 		if (header)
@@ -530,8 +514,7 @@ bool CURFProtocol::IsValidDvHeaderPacket(const CBuffer &Buffer, std::unique_ptr<
 
 bool CURFProtocol::IsValidDvFramePacket(const CBuffer &Buffer, std::unique_ptr<CDvFramePacket> &dvframe)
 {
-	uint8_t magic[] = { 'U', 'R', 'F', 'F' };
-	if (Buffer.size()==CDvFramePacket::GetNetworkSize() && 0==Buffer.Compare(magic, 4))
+	if (Buffer.size()==CDvFramePacket::GetNetworkSize() and 0==memcmp(Buffer.data(), "URFF", 4))
 	{
 		dvframe = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(Buffer));
 		if (dvframe)
@@ -560,52 +543,52 @@ bool CURFProtocol::EncodeDvFramePacket(const CDvFramePacket &packet, CBuffer &bu
 	return true;
 }
 
-void CURFProtocol::EncodeKeepAlivePacket(CBuffer *Buffer)
+void CURFProtocol::EncodeKeepAlivePacket(CBuffer &Buffer)
 {
-	Buffer->Set("PING");
-	Buffer->resize(10);
-	g_Reflector.GetCallsign().CodeOut(Buffer->data()+4);
+	Buffer.Set("PING");
+	Buffer.resize(10);
+	g_Reflector.GetCallsign().CodeOut(Buffer.data()+4);
 }
 
-void CURFProtocol::EncodeConnectPacket(CBuffer *Buffer, const char *Modules)
+void CURFProtocol::EncodeConnectPacket(CBuffer &Buffer, const std::string &Modules)
 {
 	// tag
-	Buffer->Set("CONN");
+	Buffer.Set("CONN");
 	// our callsign
-	Buffer->resize(37);
-	g_Reflector.GetCallsign().CodeOut(Buffer->data()+4);
+	Buffer.resize(37);
+	g_Reflector.GetCallsign().CodeOut(Buffer.data()+4);
 	// our version
-	Buffer->ReplaceAt(10, (uint8_t *)Modules, strlen(Modules));
-	Buffer->Append((uint8_t)g_Version.GetMajor());
-	Buffer->Append((uint8_t)g_Version.GetMinor());
-	Buffer->Append((uint8_t)g_Version.GetRevision());
+	Buffer.ReplaceAt(10, (uint8_t *)Modules.c_str(), Modules.size());
+	Buffer.Append((uint8_t)g_Version.GetMajor());
+	Buffer.Append((uint8_t)g_Version.GetMinor());
+	Buffer.Append((uint8_t)g_Version.GetRevision());
 }
 
-void CURFProtocol::EncodeDisconnectPacket(CBuffer *Buffer)
+void CURFProtocol::EncodeDisconnectPacket(CBuffer &Buffer)
 {
-	Buffer->Set("DISC");
+	Buffer.Set("DISC");
 	// our callsign
-	Buffer->resize(10);
-	g_Reflector.GetCallsign().CodeOut(Buffer->data()+4);
+	Buffer.resize(10);
+	g_Reflector.GetCallsign().CodeOut(Buffer.data()+4);
 }
 
-void CURFProtocol::EncodeConnectAckPacket(CBuffer *Buffer, const char *Modules)
+void CURFProtocol::EncodeConnectAckPacket(CBuffer &Buffer, const std::string &Modules)
 {
-	Buffer->Set("ACKN");
+	Buffer.Set("ACKN");
 	// our callsign
-	Buffer->resize(37);
-	g_Reflector.GetCallsign().CodeOut(Buffer->data()+4);
+	Buffer.resize(37);
+	g_Reflector.GetCallsign().CodeOut(Buffer.data()+4);
 	// the shared modules
-	Buffer->ReplaceAt(10, (uint8_t *)Modules, strlen(Modules));
+	Buffer.ReplaceAt(10, (uint8_t *)Modules.c_str(), Modules.size());
 	// our version
-	Buffer->Append((uint8_t)g_Version.GetMajor());
-	Buffer->Append((uint8_t)g_Version.GetMinor());
-	Buffer->Append((uint8_t)g_Version.GetRevision());
+	Buffer.Append((uint8_t)g_Version.GetMajor());
+	Buffer.Append((uint8_t)g_Version.GetMinor());
+	Buffer.Append((uint8_t)g_Version.GetRevision());
 }
 
-void CURFProtocol::EncodeConnectNackPacket(CBuffer *Buffer)
+void CURFProtocol::EncodeConnectNackPacket(CBuffer &Buffer)
 {
-	Buffer->Set("NACK");
-	Buffer->resize(10);
-	g_Reflector.GetCallsign().CodeOut(Buffer->data()+4);
+	Buffer.Set("NACK");
+	Buffer.resize(10);
+	g_Reflector.GetCallsign().CodeOut(Buffer.data()+4);
 }
