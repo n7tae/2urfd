@@ -17,18 +17,18 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "Global.h"
-#include "Peers.h"
+#include "URFPeers.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // constructor
 
 
-CPeers::CPeers() {}
+CURFPeers::CURFPeers() {}
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // destructors
 
-CPeers::~CPeers()
+CURFPeers::~CURFPeers()
 {
 	m_Mutex.lock();
 	m_Peers.clear();
@@ -38,7 +38,7 @@ CPeers::~CPeers()
 ////////////////////////////////////////////////////////////////////////////////////////
 // manage peers
 
-void CPeers::AddPeer(std::shared_ptr<CPeer> peer)
+void CURFPeers::AddPeer(std::shared_ptr<CURFPeer> peer)
 {
 	// first check if peer already exists
 	for ( auto it=begin(); it!=end(); it++ )
@@ -69,7 +69,7 @@ void CPeers::AddPeer(std::shared_ptr<CPeer> peer)
 	g_Reflector.OnPeersChanged();
 }
 
-void CPeers::RemovePeer(std::shared_ptr<CPeer> peer)
+void CURFPeers::RemovePeer(std::shared_ptr<CURFPeer> peer)
 {
 	// look for the client
 	for ( auto pit=begin(); pit!=end(); /*increment done in body */ )
@@ -105,7 +105,7 @@ void CPeers::RemovePeer(std::shared_ptr<CPeer> peer)
 ////////////////////////////////////////////////////////////////////////////////////////
 // find peers
 
-std::shared_ptr<CPeer> CPeers::FindPeer(const CIp &Ip, const EProtocol Protocol)
+std::shared_ptr<CURFPeer> CURFPeers::FindPeer(const CIp &Ip, const EProtocol Protocol)
 {
 	for ( auto it=begin(); it!=end(); it++ )
 	{
@@ -118,7 +118,7 @@ std::shared_ptr<CPeer> CPeers::FindPeer(const CIp &Ip, const EProtocol Protocol)
 	return nullptr;
 }
 
-std::shared_ptr<CPeer> CPeers::FindPeer(const CCallsign &Callsign, const CIp &Ip, const EProtocol Protocol)
+std::shared_ptr<CURFPeer> CURFPeers::FindPeer(const CCallsign &Callsign, const CIp &Ip, const EProtocol Protocol)
 {
 	for ( auto it=begin(); it!=end(); it++ )
 	{
@@ -131,7 +131,7 @@ std::shared_ptr<CPeer> CPeers::FindPeer(const CCallsign &Callsign, const CIp &Ip
 	return nullptr;
 }
 
-std::shared_ptr<CPeer> CPeers::FindPeer(const CCallsign &Callsign, const EProtocol Protocol)
+std::shared_ptr<CURFPeer> CURFPeers::FindPeer(const CCallsign &Callsign, const EProtocol Protocol)
 {
 	for ( auto it=begin(); it!=end(); it++ )
 	{
@@ -148,7 +148,7 @@ std::shared_ptr<CPeer> CPeers::FindPeer(const CCallsign &Callsign, const EProtoc
 ////////////////////////////////////////////////////////////////////////////////////////
 // iterate on peers
 
-std::shared_ptr<CPeer> CPeers::FindNextPeer(const EProtocol Protocol, std::list<std::shared_ptr<CPeer>>::iterator &it)
+std::shared_ptr<CURFPeer> CURFPeers::FindNextPeer(const EProtocol Protocol, std::list<std::shared_ptr<CURFPeer>>::iterator &it)
 {
 	while ( it!=end() )
 	{

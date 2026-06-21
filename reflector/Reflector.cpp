@@ -546,7 +546,7 @@ void CReflector::WriteXmlFile(std::ofstream &xmlFile)
 	// linked peers
 	xmlFile << "<" << cs << "linked peers>" << std::endl;
 	// lock
-	CPeers *peers = GetPeers();
+	CURFPeers *peers = GetPeers();
 	// iterate on peers
 	for ( auto pit=peers->cbegin(); pit!=peers->cend(); pit++ )
 	{

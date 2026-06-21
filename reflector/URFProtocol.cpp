@@ -73,8 +73,8 @@ void CURFProtocol::Task(void)
 		else if ( IsValidKeepAlivePacket(buffer, callsign) )
 		{
 			// find peer
-			CPeers *peers = g_Reflector.GetPeers();
-			std::shared_ptr<CPeer>peer = peers->FindPeer(ip, EProtocol::urf);
+			CURFPeers *peers = g_Reflector.GetPeers();
+			std::shared_ptr<CURFPeer>peer = peers->FindPeer(ip, EProtocol::urf);
 			if ( peer != nullptr )
 			{
 				// keep it alive
@@ -115,12 +115,12 @@ void CURFProtocol::Task(void)
 			if ( g_GateKeeper.MayLink(callsign, ip, EProtocol::urf, modules) )
 			{
 				// already connected ?
-				CPeers *peers = g_Reflector.GetPeers();
+				CURFPeers *peers = g_Reflector.GetPeers();
 				if ( nullptr == peers->FindPeer(callsign, ip, EProtocol::urf) )
 				{
 					// create the new peer
 					// this also create one client per module
-					std::shared_ptr<CPeer>peer = std::make_shared<CURFPeer>(callsign, ip, modules, version);
+					std::shared_ptr<CURFPeer>peer = std::make_shared<CURFPeer>(callsign, ip, modules, version);
 
 					// append the peer to reflector peer list
 					// this also add all new clients to reflector client list
@@ -134,8 +134,8 @@ void CURFProtocol::Task(void)
 			std::cout << "URF disconnect packet from " << callsign << " at " << ip << std::endl;
 
 			// find peer
-			CPeers *peers = g_Reflector.GetPeers();
-			std::shared_ptr<CPeer>peer = peers->FindPeer(ip, EProtocol::urf);
+			CURFPeers *peers = g_Reflector.GetPeers();
+			std::shared_ptr<CURFPeer>peer = peers->FindPeer(ip, EProtocol::urf);
 			if ( peer != nullptr )
 			{
 				// remove it from reflector peer list
@@ -238,9 +238,9 @@ void CURFProtocol::HandleKeepalives(void)
 	EncodeKeepAlivePacket(keepalive);
 
 	// iterate on peers
-	CPeers *peers = g_Reflector.GetPeers();
+	CURFPeers *peers = g_Reflector.GetPeers();
 	auto pit = peers->begin();
-	std::shared_ptr<CPeer>peer = nullptr;
+	std::shared_ptr<CURFPeer>peer = nullptr;
 	while ( (peer = peers->FindNextPeer(EProtocol::urf, pit)) != nullptr )
 	{
 		// send keepalive
@@ -277,12 +277,12 @@ void CURFProtocol::HandlePeerLinks(void)
 
 	// get the list of peers
 	auto ilmap = g_GateKeeper.GetInterlinkMap();
-	CPeers *peers = g_Reflector.GetPeers();
+	CURFPeers *peers = g_Reflector.GetPeers();
 
 	// check if all our connected peers are still listed by gatekeeper
 	// if not, disconnect
 	auto pit = peers->begin();
-	std::shared_ptr<CPeer>peer = nullptr;
+	std::shared_ptr<CURFPeer>peer = nullptr;
 	while (nullptr != (peer = peers->FindNextPeer(EProtocol::urf, pit)))
 	{
 		if (nullptr == ilmap->FindMapItem(peer->GetCallsign().GetBase()))

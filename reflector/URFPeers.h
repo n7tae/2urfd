@@ -18,16 +18,16 @@
 
 #pragma once
 
-#include "Peer.h"
+#include "URFPeer.h"
 
-class CPeers
+class CURFPeers
 {
 public:
 	// constructors
-	CPeers();
+	CURFPeers();
 
 	// destructors
-	virtual ~CPeers();
+	virtual ~CURFPeers();
 
 	// locks
 	void Lock(void)   { m_Mutex.lock(); }
@@ -35,25 +35,25 @@ public:
 
 	// manage peers
 	int  GetSize(void) const { return (int)m_Peers.size(); }
-	void AddPeer(std::shared_ptr<CPeer>);
-	void RemovePeer(std::shared_ptr<CPeer>);
+	void AddPeer(std::shared_ptr<CURFPeer>);
+	void RemovePeer(std::shared_ptr<CURFPeer>);
 
 	// pass-through
-	std::list<std::shared_ptr<CPeer>>::iterator begin()              { return m_Peers.begin(); }
-	std::list<std::shared_ptr<CPeer>>::iterator end()                { return m_Peers.end(); }
-	std::list<std::shared_ptr<CPeer>>::const_iterator cbegin() const { return m_Peers.cbegin(); }
-	std::list<std::shared_ptr<CPeer>>::const_iterator cend() const   { return m_Peers.cend(); }
+	std::list<std::shared_ptr<CURFPeer>>::iterator begin()              { return m_Peers.begin(); }
+	std::list<std::shared_ptr<CURFPeer>>::iterator end()                { return m_Peers.end(); }
+	std::list<std::shared_ptr<CURFPeer>>::const_iterator cbegin() const { return m_Peers.cbegin(); }
+	std::list<std::shared_ptr<CURFPeer>>::const_iterator cend() const   { return m_Peers.cend(); }
 
 	// find peers
-	std::shared_ptr<CPeer> FindPeer(const CIp &, const EProtocol);
-	std::shared_ptr<CPeer> FindPeer(const CCallsign &, const CIp &, const EProtocol);
-	std::shared_ptr<CPeer> FindPeer(const CCallsign &, const EProtocol);
+	std::shared_ptr<CURFPeer> FindPeer(const CIp &, const EProtocol);
+	std::shared_ptr<CURFPeer> FindPeer(const CCallsign &, const CIp &, const EProtocol);
+	std::shared_ptr<CURFPeer> FindPeer(const CCallsign &, const EProtocol);
 
 	// iterate on peers
-	std::shared_ptr<CPeer> FindNextPeer(const EProtocol, std::list<std::shared_ptr<CPeer>>::iterator &);
+	std::shared_ptr<CURFPeer> FindNextPeer(const EProtocol, std::list<std::shared_ptr<CURFPeer>>::iterator &);
 
 protected:
 	// data
 	std::mutex         m_Mutex;
-	std::list<std::shared_ptr<CPeer>> m_Peers;
+	std::list<std::shared_ptr<CURFPeer>> m_Peers;
 };

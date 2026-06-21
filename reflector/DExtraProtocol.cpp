@@ -250,57 +250,21 @@ void CDextraProtocol::HandleKeepalives(void)
 			// yes, just tickle it
 			client->Alive();
 		}
-		// otherwise check if still with us
-		else if ( !client->IsAlive() )
+		// check if still with us
+		if ( !client->IsAlive() )
 		{
-			CPeers *peers = g_Reflector.GetPeers();
-			std::shared_ptr<CPeer>peer = peers->FindPeer(client->GetCallsign(), client->GetIp(), EProtocol::dextra);
-			if ( peer != nullptr && peer->GetReflectorModules()[0] == client->GetReflectorModule() )
-			{
-				// no, but this is a peer client, so it will be handled below
-			}
-			else
-			{
-				// no, disconnect
-				CBuffer disconnect;
-				EncodeDisconnectPacket(&disconnect, client->GetReflectorModule());
-				Send(disconnect, client->GetIp());
+			// no, disconnect
+			CBuffer disconnect;
+			EncodeDisconnectPacket(&disconnect, client->GetReflectorModule());
+			Send(disconnect, client->GetIp());
 
-				// remove it
-				std::cout << "DExtra client " << client->GetCallsign() << " keepalive timeout" << std::endl;
-				clients->RemoveClient(client);
-			}
-			g_Reflector.ReleasePeers();
+			// remove it
+			std::cout << "DExtra client " << client->GetCallsign() << " keepalive timeout" << std::endl;
+			clients->RemoveClient(client);
 		}
 
 	}
 	g_Reflector.ReleaseClients();
-
-	// iterate on peers
-	CPeers *peers = g_Reflector.GetPeers();
-	auto pit = peers->begin();
-	std::shared_ptr<CPeer>peer = nullptr;
-	while ( (peer = peers->FindNextPeer(EProtocol::dextra, pit)) != nullptr )
-	{
-		// keepalives are sent between clients
-
-		// some client busy or still with us ?
-		if ( !peer->IsAMaster() && !peer->IsAlive() )
-		{
-			// no, disconnect all clients
-			CBuffer disconnect;
-			EncodeDisconnectPacket(&disconnect, peer->GetReflectorModules()[0]);
-			for ( auto pit=peer->cbegin(); pit!=peer->cend(); pit++ )
-			{
-				Send(disconnect, (*pit)->GetIp());
-			}
-
-			// remove it
-			std::cout << "DExtra peer " << peer->GetCallsign() << " keepalive timeout" << std::endl;
-			peers->RemovePeer(peer);
-		}
-	}
-	g_Reflector.ReleasePeers();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

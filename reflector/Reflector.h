@@ -22,7 +22,7 @@
 
 #include "Users.h"
 #include "Clients.h"
-#include "Peers.h"
+#include "URFPeers.h"
 #include "Protocols.h"
 #include "PacketStream.h"
 
@@ -58,7 +58,7 @@ public:
 	void      ReleaseClients(void)                  { m_Clients.Unlock(); }
 
 	// peers
-	CPeers   *GetPeers(void)                        { m_Peers.Lock(); return &m_Peers; }
+	CURFPeers   *GetPeers(void)                     { m_Peers.Lock(); return &m_Peers; }
 	void      ReleasePeers(void)                    { m_Peers.Unlock(); }
 
 	// stream opening & closing
@@ -111,7 +111,7 @@ protected:
 	// objects
 	CUsers     m_Users;            // sorted list of lastheard stations
 	CClients   m_Clients;          // list of linked repeaters/nodes/peers's modules
-	CPeers     m_Peers;            // list of linked peers
+	CURFPeers  m_Peers;            // list of linked peers
 	CProtocols m_Protocols;        // list of supported protocol handlers
 
 	// queues
