@@ -34,7 +34,6 @@
 #define JAUTOLINKMODULE          "AutoLinkModule"
 #define JBLACKLISTPATH           "BlacklistPath"
 #define JBOOTSTRAP               "Bootstrap"
-#define JBRANDMEISTER            "Brandmeister"
 #define JCALLSIGN                "Callsign"
 #define JCOUNTRY                 "Country"
 #define JDASHBOARDURL            "DashboardUrl"
@@ -51,7 +50,6 @@
 #define JDPLUS                   "DPlus"
 #define JDSTARGAININ             "DStarGainIn"
 #define JDSTARGAINOUT            "DStarGainOut"
-#define JENABLE                  "Enable"
 #define JENABLEDGID              "EnableDGID"
 #define JFILES                   "Files"
 #define JFILEPATH                "FilePath"
@@ -176,8 +174,6 @@ bool CConfigure::ReadData(const std::string &path)
 				section = ESection::mmdvm;
 			else if (0 == hname.compare(JNXDN))
 				section = ESection::nxdn;
-			else if (0 == hname.compare(JBRANDMEISTER))
-				section = ESection::bm;
 			else if (0 == hname.compare(JYSF))
 				section = ESection::ysf;
 			else if (0 == hname.compare(JDCS))
@@ -305,14 +301,6 @@ bool CConfigure::ReadData(const std::string &path)
 					data[g_Keys.tc.dstargainin] = getInt(value, "Transcoder DStar Gain In", -24, 24, 16);
 				else if (0 == key.compare(JDSTARGAINOUT))
 					data[g_Keys.tc.dstargainout] = getInt(value, "Transcoder DStar Gain Out", -24, 24, -16);
-				else
-					badParam(key);
-				break;
-			case ESection::bm:
-				if (0 == key.compare(JPORT))
-					data[g_Keys.bm.port] = getUnsigned(value, "Brandmeister Port", 1024, 65535, 10002);
-				else if (0 == key.compare(JENABLE))
-					data[g_Keys.bm.enable] = IS_TRUE(value[0]);
 				else
 					badParam(key);
 				break;
@@ -645,15 +633,6 @@ bool CConfigure::ReadData(const std::string &path)
 	isDefined(ErrorLevel::fatal, JDPLUS, JPORT, g_Keys.dplus.port, rval);
 	isDefined(ErrorLevel::fatal, JM17, JPORT, g_Keys.m17.port, rval);
 	isDefined(ErrorLevel::fatal, JURF, JPORT, g_Keys.urf.port, rval);
-
-	// BM
-	if (isDefined(ErrorLevel::fatal, JBRANDMEISTER, JENABLE, g_Keys.bm.enable, rval))
-	{
-		if (GetBoolean(g_Keys.bm.enable))
-		{
-			isDefined(ErrorLevel::fatal, JBRANDMEISTER, JPORT, g_Keys.bm.port, rval);
-		}
-	}
 
 	// MMDVM
 	isDefined(ErrorLevel::fatal, JMMDVM, JPORT, g_Keys.mmdvm.port, rval);

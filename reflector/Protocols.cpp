@@ -24,7 +24,6 @@
 #include "DMRMMDVMProtocol.h"
 #include "YSFProtocol.h"
 #include "M17Protocol.h"
-#include "BMProtocol.h"
 #include "P25Protocol.h"
 #include "NXDNProtocol.h"
 #include "Protocols.h"
@@ -60,13 +59,6 @@ bool CProtocols::Init(void)
 		m_Protocols.emplace_back(std::unique_ptr<CDmrmmdvmProtocol>(new CDmrmmdvmProtocol));
 		if (! m_Protocols.back()->Initialize(nullptr, EProtocol::dmrmmdvm, uint16_t(g_Configure.GetUnsigned(g_Keys.mmdvm.port)), DMR_IPV4, DMR_IPV6))
 			return false;
-
-		if (g_Configure.GetBoolean(g_Keys.bm.enable))
-		{
-			m_Protocols.emplace_back(std::unique_ptr<CBMProtocol>(new CBMProtocol));
-			if (! m_Protocols.back()->Initialize("XLX", EProtocol::bm, uint16_t(g_Configure.GetUnsigned(g_Keys.bm.port)), DMR_IPV4, DMR_IPV6))
-				return false;
-		}
 
 		m_Protocols.emplace_back(std::unique_ptr<CYsfProtocol>(new CYsfProtocol));
 		if (! m_Protocols.back()->Initialize("YSF", EProtocol::ysf, uint16_t(g_Configure.GetUnsigned(g_Keys.ysf.port)), YSF_IPV4, YSF_IPV6))

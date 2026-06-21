@@ -4,7 +4,7 @@ A smaller and slightly faster *urfd* reflector. The sources are published under 
 
 ## Some preliminaries
 
-This is based on the full-blown, do-anything *urfd* reflector hosted by [nostar](https://github.com/nostar/urfd), but this *urfd* does not support all protocols. Compared to the nostar version, it doesn't have DMR+, G3, and USRP. It also **requires** a local transcoder with *two* AMBE devices, one for DStar and the other for DMR/YSF/NXDN. Instances of this *urfd* reflector will **not interlink** with instances of the version available from nostar.
+This is based on the full-blown, do-anything *urfd* reflector hosted by [nostar](https://github.com/nostar/urfd), but this *urfd* does not support all protocols. Compared to the nostar version, it doesn't have Brandmeister, DMR+, G3, and USRP. It also **requires** a local transcoder with *two* AMBE devices, one for DStar and the other for DMR/YSF/NXDN. Instances of this *urfd* reflector will **not interlink** with instances of the version available from nostar.
 
 ## Introduction
 

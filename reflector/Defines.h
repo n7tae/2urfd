@@ -46,7 +46,6 @@
 #define DSTAR_IPV4 true
 #define DMR_IPV4 true
 #define YSF_IPV4 true
-#define XLX_IPV4 true
 #define M17_IPV4 true
 #define P25_IPV4 true
 #define NXDN_IPV4 true
@@ -56,7 +55,6 @@
 #define DSTAR_IPV6 true	// QnetGateway can use IPv6
 #define DMR_IPV6 false
 #define YSF_IPV6 false
-#define XLX_IPV6 false
 #define M17_IPV6 true
 #define P25_IPV6 false
 #define NXDN_IPV6 false
@@ -64,7 +62,7 @@
 
 // protocols ---------------------------------------------------
 
-enum class EProtocol { dextra, dplus, dcs, bm, urf, dmrmmdvm, nxdn, p25, ysf, m17 };
+enum class EProtocol { dextra, dplus, dcs, urf, dmrmmdvm, nxdn, p25, ysf, m17 };
 
 // DExtra
 #define DEXTRA_KEEPALIVE_PERIOD         3                                   // in seconds
@@ -78,11 +76,6 @@ enum class EProtocol { dextra, dplus, dcs, bm, urf, dmrmmdvm, nxdn, p25, ysf, m1
 // DCS
 #define DCS_KEEPALIVE_PERIOD            1                                   // in seconds
 #define DCS_KEEPALIVE_TIMEOUT           (DCS_KEEPALIVE_PERIOD*30)           // in seconds
-
-// XLX, used for BM
-#define BM_KEEPALIVE_PERIOD             1                                   // in seconds
-#define BM_KEEPALIVE_TIMEOUT            (BM_KEEPALIVE_PERIOD*30)           // in seconds
-#define BM_RECONNECT_PERIOD             5                                   // in seconds
 
 // URF
 #define URF_KEEPALIVE_PERIOD            1                                   // in seconds

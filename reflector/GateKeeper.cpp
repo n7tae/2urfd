@@ -90,8 +90,7 @@ bool CGateKeeper::MayLink(const CCallsign &callsign, const CIp &ip, EProtocol pr
 		ok = IsNodeListedOk(base);
 		break;
 
-	// URF and BM interlinks
-	case EProtocol::bm:
+	// URF interlinks
 	case EProtocol::urf:
 		ok = IsPeerListedOk(base, ip, modules);
 		break;
@@ -140,7 +139,6 @@ bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EP
 
 	// URF interlinks
 	case EProtocol::urf:
-	case EProtocol::bm:
 		ok = IsPeerListedOk(base, module);
 		break;
 	}
@@ -283,9 +281,6 @@ const std::string CGateKeeper::ProtocolName(const EProtocol p) const
 			break;
 		case EProtocol::nxdn:
 			rval = "NXDN";
-			break;
-		case EProtocol::bm:
-			rval = "Brandmeister";
 			break;
 		case EProtocol::m17:
 			rval = "M17";
