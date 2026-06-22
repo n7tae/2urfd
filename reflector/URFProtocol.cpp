@@ -55,8 +55,8 @@ void CURFProtocol::Task(void)
 	std::unique_ptr<CDvHeaderPacket> header;
 
 	// any incoming packet ?
-#if XLX_IPV6==true
-#if XLX_IPV4==true
+#if URF_IPV6==true
+#if URF_IPV4==true
 	if ( ReceiveDS(buffer, ip, 20) )
 #else
 	if ( Receive6(buffer, ip, 20) )
