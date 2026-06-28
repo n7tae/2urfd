@@ -120,12 +120,14 @@ bool CLookup::LoadContentFile(std::stringstream &ss, bool from_bkup)
 	return rval;
 }
 
-void CLookup::BackupHttp(std::stringstream &ss)
+void CLookup::BackupHttp(std::stringstream &ss) const
 {
 	std::ofstream file(m_Bkup, std::ios::trunc);
 	if (file)
 	{
 		file << ss.rdbuf();
+		ss.clear();
+		ss.seekg(0);
 		file.close();
 	}
 }

@@ -54,7 +54,7 @@ protected:
 	std::time_t GetLastModTime();
 	virtual void LoadParameters() = 0;
 	virtual void ClearContents()  = 0;
-	void BackupHttp(std::stringstream &ss);
+	void BackupHttp(std::stringstream &ss) const;
 	void Thread();
 
 	// refresh
