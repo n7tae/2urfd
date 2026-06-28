@@ -33,7 +33,7 @@ void CLookup::LookupClose()
 std::time_t CLookup::GetLastModTime()
 {
 	struct stat fileStat;
-	if(0 == stat(m_Path.c_str(), &fileStat))
+	if(0 == stat(m_File.c_str(), &fileStat))
 	{
 		return fileStat.st_mtime;
 	}
@@ -64,6 +64,12 @@ void CLookup::Thread()
 			// if SIG_INT was received at this point in time,
 			// in might take a bit more than 10 seconds to soft close
 			http_loaded = LoadContentHttp(ss);
+			if (http_loaded) {
+				BackupHttp(ss);
+			} else {
+				std::cout << "Loading backup data from " << m_Bkup << '!' << std::endl;
+				http_loaded = LoadContentFile(ss, true);
+			}
 		}
 
 		// load the file if http was loaded or if we haven't loaded since the last mod time
@@ -71,7 +77,7 @@ void CLookup::Thread()
 		{
 			if (http_loaded || m_LastLoadTime < GetLastModTime())
 			{
-				file_loaded = LoadContentFile(ss);
+				file_loaded = LoadContentFile(ss, false);
 				time(&m_LastLoadTime);
 			}
 		}
@@ -101,10 +107,10 @@ bool CLookup::LoadContentHttp(std::stringstream &ss)
 	return CURLE_OK == code;
 }
 
-bool CLookup::LoadContentFile(std::stringstream &ss)
+bool CLookup::LoadContentFile(std::stringstream &ss, bool from_bkup)
 {
 	bool rval = false;
-    std::ifstream file(m_Path);
+    std::ifstream file(from_bkup ? m_Bkup : m_File);
     if ( file )
     {
         ss << file.rdbuf();
@@ -114,11 +120,21 @@ bool CLookup::LoadContentFile(std::stringstream &ss)
 	return rval;
 }
 
+void CLookup::BackupHttp(std::stringstream &ss)
+{
+	std::ofstream file(m_Bkup, std::ios::trunc);
+	if (file)
+	{
+		file << ss.rdbuf();
+		file.close();
+	}
+}
+
 bool CLookup::Utility(Eaction action, Esource source)
 {
 	std::stringstream ss;
 	LoadParameters();
-	auto rval = (Esource::http == source) ? LoadContentHttp(ss) : LoadContentFile(ss);
+	auto rval = (Esource::http == source) ? LoadContentHttp(ss) : LoadContentFile(ss, false);
 	if (rval)
 		UpdateContent(ss, action);
 	return rval;

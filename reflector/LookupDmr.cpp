@@ -33,8 +33,11 @@ void CLookupDmr::LoadParameters()
 {
 	m_Type = g_Configure.GetRefreshType(g_Keys.dmriddb.mode);
 	m_Refresh = g_Configure.GetUnsigned(g_Keys.dmriddb.refreshmin);
-	m_Path.assign(g_Configure.GetString(g_Keys.dmriddb.filepath));
 	m_Url.assign(g_Configure.GetString(g_Keys.dmriddb.url));
+	m_File.assign(g_Configure.GetString(g_Keys.files.dbfolder));
+	m_Bkup.assign(m_File);
+	m_File.append(g_Configure.GetString(g_Keys.dmriddb.file));
+	m_Bkup.append(g_Configure.GetString(g_Keys.dmriddb.bkup));
 }
 
 uint32_t CLookupDmr::FindDmrid(const UCallsign &ucs) const

@@ -54,11 +54,11 @@ struct SJsonKeys {
 	ysf { "YSFPort", "YSFAutoLinkMod", "EnableDGID", "YSFDefaultTxFreq", "YSFDefaultRxFreq",
 		{ "ysfrefdbid", "ysfrefdbname", "ysfrefdbdesc" } };
 
-	struct DB { const std::string url, mode, refreshmin, filepath; }
-	dmriddb   {  "dmrIdDbUrl",  "dmrIdDbMode",  "dmrIdDbRefresh",  "dmrIdDbFilePath" },
-	nxdniddb  { "nxdnIdDbUrl", "nxdnIdDbMode", "nxdnIdDbRefresh", "nxdnIdDbFilePath" },
-	ysftxrxdb {  "ysfIdDbUrl",  "ysfIdDbMode",  "ysfIdDbRefresh",  "ysfIdDbFilePath" };
+	struct DB { const std::string url, mode, refreshmin, file, bkup; }
+	dmriddb   {  "dmrIdDbUrl",  "dmrIdDbMode",  "dmrIdDbRefresh",  "dmrIdDbFile",  "dmrIdDbBkup" },
+	nxdniddb  { "nxdnIdDbUrl", "nxdnIdDbMode", "nxdnIdDbRefresh", "nxdnIdDbFile", "nxdnIdDpBkup" },
+	ysftxrxdb {  "ysfIdDbUrl",  "ysfIdDbMode",  "ysfIdDbRefresh",  "ysfIdDbFile",  "ysfIdDbBkup" };
 
-	struct FILES { const std::string pid, xml, json, white, black, interlink, dht; }
-	files { "pidFilePath", "xmlFilePath", "jsonFilePath", "whitelistFilePath", "blacklistFilePath", "interlinkFilePath", "dhtSavePath" };
+	struct FILES { const std::string dbfolder, pid, xml, json, white, black, interlink, dht; }
+	files { "dbFolderPath", "pidFilePath", "xmlFilePath", "jsonFilePath", "whitelistFilePath", "blacklistFilePath", "interlinkFilePath", "dhtSavePath" };
 };

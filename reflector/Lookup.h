@@ -49,16 +49,17 @@ protected:
 	std::mutex        m_Mutex;
 	ERefreshType      m_Type;
 	unsigned          m_Refresh;
-	std::string       m_Path, m_Url;
+	std::string       m_File, m_Bkup, m_Url;
 	std::time_t       m_LastLoadTime;
 	std::time_t GetLastModTime();
 	virtual void LoadParameters() = 0;
 	virtual void ClearContents()  = 0;
+	void BackupHttp(std::stringstream &ss);
 	void Thread();
 
 	// refresh
 	bool LoadContentHttp(std::stringstream &ss);
-	bool LoadContentFile(std::stringstream &ss);
+	bool LoadContentFile(std::stringstream &ss, bool from_backup);
 	virtual void UpdateContent(std::stringstream &ss, Eaction action) = 0;
 
 

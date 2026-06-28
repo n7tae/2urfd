@@ -37,6 +37,7 @@
 #define JCALLSIGN                "Callsign"
 #define JCOUNTRY                 "Country"
 #define JDASHBOARDURL            "DashboardUrl"
+#define JDBFOLDER                "DBFolder"
 #define JDCS                     "DCS"
 #define JDEFAULTID               "DefaultId"
 #define JDEFAULTRXFREQ           "DefaultRxFreq"
@@ -52,7 +53,8 @@
 #define JDSTARGAINOUT            "DStarGainOut"
 #define JENABLEDGID              "EnableDGID"
 #define JFILES                   "Files"
-#define JFILEPATH                "FilePath"
+#define JFILENAME                "Filename"
+#define JBACKUP                  "Backup"
 #define JINTERLINKPATH           "InterlinkPath"
 #define JIPADDRESS               "IPAddress"
 #define JIPADDRESSES             "IP Addresses"
@@ -414,13 +416,17 @@ bool CConfigure::ReadData(const std::string &path)
 				}
 				else if (0 == key.compare(JREFRESHMIN))
 					data[pdb->refreshmin] = getUnsigned(value, JREFRESHMIN, 15, 14400, 180);
-				else if (0 == key.compare(JFILEPATH))
-					data[pdb->filepath] = value;
+				else if (0 == key.compare(JFILENAME))
+					data[pdb->file] = value;
+				else if (0 == key.compare(JBACKUP))
+					data[pdb->bkup] = value;
 				else
 					badParam(key);
 				break;
 			case ESection::files:
-				if (0 == key.compare(JPIDPATH))
+				if (0 == key.compare(JDBFOLDER))
+					data[g_Keys.files.dbfolder] = value;
+				else if (0 == key.compare(JPIDPATH))
 					data[g_Keys.files.pid] = value;
 				else if (0 == key.compare(JXMLPATH))
 					data[g_Keys.files.xml] = value;
@@ -673,10 +679,23 @@ bool CConfigure::ReadData(const std::string &path)
 				isDefined(ErrorLevel::fatal, item.first, JURL,        item.second->url,        rval);
 				isDefined(ErrorLevel::fatal, item.first, JREFRESHMIN, item.second->refreshmin, rval);
 			}
-			if (ERefreshType::http != GetRefreshType(item.second->mode))
-			{
-				if (isDefined(ErrorLevel::fatal, item.first, JFILEPATH,   item.second->filepath,   rval))
-					checkFile(item.first, JFILEPATH, data[item.second->filepath]);
+			if (isDefined(ErrorLevel::fatal, JFILES, JDBFOLDER, g_Keys.files.dbfolder, rval)) {
+				checkFile(JFILES, JDBFOLDER, data[g_Keys.files.dbfolder]);
+				const std::string dbfolder(data[g_Keys.files.dbfolder]);
+				if (ERefreshType::http != GetRefreshType(item.second->mode))
+				{
+					if (isDefined(ErrorLevel::fatal, item.first, JFILENAME,   item.second->file,   rval)) {
+						const std::string filepath(dbfolder + data[item.second->file].get<std::string>());
+						checkFile(item.first, JFILENAME, filepath);
+					}
+				}
+				if (ERefreshType::file != GetRefreshType(item.second->mode))
+				{
+					if (isDefined(ErrorLevel::fatal, item.first, JFILENAME,   item.second->bkup,   rval)) {
+						const std::string filepath(dbfolder + data[item.second->bkup].get<std::string>());
+						checkFile(item.first, JFILENAME, filepath);
+					}
+				}
 			}
 		}
 	}

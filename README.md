@@ -92,12 +92,12 @@ cp ../config/* .
 
 This will create seven files:
 1. The `urfd.mk` file contains compile-time options for *urfd*. If you change the `BINDIR`, you'll need to update how the two service files start *urfd* and *tcd*. After you've edited this file build everything by typing `make`.
-2. The `urfd.ini` file contains the run-time options for *urfd* and will be discussed below.
+2. The `urfd.ini` file contains the run-time options for both *urfd* and *tcd* and is briefly discussed in the next section.
 3. The `urfd.blacklist` file defines callsigns that are blocked from linking or transmitting.
 4. The `urfd.whitelist` file defines callsigns that are allowed to link and transmit. Both of these files support the asterisk as a wild-card. The supplied blacklist and whitelist file are empty, which will allow any callsign to link and transmit, blocking no one. Both files support a limited wildcard feature.
 5. The `urfd.interlink` file defines URF linking.
 6. The `urfd.service` file is a systemd file that will start and stop *urfd*. Importantly, it contains the only reference to where the *urfd* ini file is located. **Be sure** to set a fully qualified path to your `urfd.ini` file on the `ExecStart` line.
-7. The `tcd.service` file is a systemd file that will start and stop *tcd*. Importantly, it contains the only reference to where the *tcd* ini file is located. **Be sure** to set a fully qualified path to your `tcd.ini` file on the `ExecStart` line.
+7. The `tcd.service` file is a systemd file that will start and stop *tcd*. Importantly, it contains the only reference to where the ini file is located. **Be sure** to set a fully qualified path to your `urfd.ini` file on the `ExecStart` line.
 
 ### Configuring your reflector
 
@@ -111,8 +111,13 @@ There are three databases needed by *urfd*:
 1. The *DMR ID* database maps a DMR ID to a callsign and *vis versa*.
 2. The *NXDN ID* database maps a NXDN ID to a callsign and *vis versa*.
 3. The *YSF Tx/Rx* database maps a callsign to a transmit/receive RF frequencies.
-These databases can come from a URL or a file, or both. If you specify "both", then the specified file will be read after the URL. Using "both" is what you want if you need to supply some custom values for your setup, but still want the latest values from the web.
-
+Each of these databases have the following parameters:
+- **Mode** is exactly one of threee values: `http`, `file`, or `both`. `file` means that the database will contain only data from a specified file. `http` means that the database will be obtained from data fould at the specifed URL. If you specify "both", then a specified file will be read after curling the URL for the needed data. Using "both" is what you want if you need to supply some custom values for your setup, but still want the latest values from the web.
+- **URL** is the http or https URL where the data is found. If the internal *curl* command successfully found the data, a backup of the data will be saved locally. If the *curl* command was unsuccessful, then the previously saved backup data will be loaded.
+- **RefreshMin** is the delay in minutes before URL data is again obtained.
+- **Filename** is the name of the properly formated file that you will supply for the database. This data will be reread whenever the file changes, within about 10 seconds.
+- **Backup** is the name of the file where the URL data will be backed up. It is not uncommon for a database server to be unavaiable when *urfd* tries to *curl* an http source.
+The full pathname for both the Filename and Backup files are obtained by prepending each name with the folder defined in **`\[Files\] DBFolder**.
 The files section specifies specific locations of important runtime configurations. The DHTSavePath is important for allowing *urfd* to quickly and reliably connect to the **Ham-DHT** network. The first time you boot up *urfd* it will make its initial connection to the network through any single, already operating node that you specify got the **\[Names\] Bootstrap** item. As *urfd* operates over time, it will establish connections to several other operating nodes that are "close" (as defined by some criteria). This is a fundamental characteristic of a DHT network. When you shutdown *urfd*, it will save the current connection state that your reflector has developed using the file path you specified in DHTSavePath. The next time you boot up *urfd*, if this file exists, it will be read and used to quickly connect your reflector to the network at its position that was saved.
 
 ### Helper apps
@@ -122,17 +127,22 @@ There are two, very useful helper applications, *inicheck* and *dbutil*. Both ap
 The *inicheck* app will use the exact same code that urfd uses to validate your `urfd.ini` file. Do `reflector/inicheck -q urfd.ini` to check your infile for errors. If you see any messages containing `ERROR`, that means that *urfd* won't start. You'll have to fix the errors described in the message(s). If you only see messages containing `WARNING`, *urfd* will start, but it may not perform as expected. You will have to decide if the warning should be fixed. Use *inicheck** and be sure to fix any problem(s) before trying to install and run you transcoding reflector.
 
 The *dbutil* app can be used for several tasks relating to the three databases that *urfd* uses. The usage is: `reflector/dbutil DATABASE SOURCE ACTION INIFILE`, where:
-- DATABASE is "dmr", "nxdn" or "ysf"
-- SOURCE is "html" or "file"
-- ACTION is "parse" or "errors"
+- DATABASE is `dmr`, `nxdn` or `ysf`.
+- SOURCE is `html` or `file`.
+- ACTION is `parse` or `error`.
 - INIFILE is the path to the infile that defines the location of the http and file sources for these three databases.
-One at a time, *dbutil* can work with any of the three DATABASEs. It can read either the http or the file SOURCE. It can either show you the data entries that are syntactically correct or incorrect (ACTION). Using the "parse" ACTION, you can create a file that can be subsequently read by urfd:
+One at a time, *dbutil* can work with any of the three DATABASEs. It can read either the http or the file SOURCE. It can either show you the data entries that are syntactically correct or incorrect (ACTION). Using the "parse" ACTION, you can see if your URL is working. For example:
 
 ```
-reflector/dbutil dmr html parse urfd.ini > /home/user/urfd/dmrid.dat
+reflector/dbutil dmr html parse urfd.ini
 ```
 
-You can then set the appropriate section in your urfd.ini file to read from this file, instead of reading from the url. This can save some time during startup. You can then offload the task of periodically updating these files to other Linux tools, like crontab.
+Or using the ACTION `error` you can check your supplied **Filename** database file for correct formatting:
+
+```
+reflector/dbutil ysf file error urfd.ini
+```
+
 
 ### Installing your system
 
