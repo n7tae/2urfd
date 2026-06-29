@@ -71,19 +71,20 @@ void CM17Protocol::Task(void)
 			// callsign muted?
 			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::m17, Header->GetRpt2Module()) )
 			{
-				OnDvHeaderPacketIn(Header, Ip);
+				if (OnDvHeaderPacketIn(Header, Ip))
+				{
+					// xrf needs a voice frame every 20 ms and an M17 frame is 40 ms, so we need a duplicate
+					auto secondFrame = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(*Frame.get()));
 
-				// xrf needs a voice frame every 20 ms and an M17 frame is 40 ms, so we need a duplicate
-				auto secondFrame = std::unique_ptr<CDvFramePacket>(new CDvFramePacket(*Frame.get()));
+					// This is not a second packet, so clear the last packet status, since the real last packet it the secondFrame
+					if (Frame->IsLastPacket())
+						Frame->SetLastPacket(false);
 
-				// This is not a second packet, so clear the last packet status, since the real last packet it the secondFrame
-				if (Frame->IsLastPacket())
-					Frame->SetLastPacket(false);
-
-				// push the "first" packet
-				OnDvFramePacketIn(Frame, &Ip);
-				// push the "second" packet
-				OnDvFramePacketIn(secondFrame, &Ip); // push two packet because we need a packet every 20 ms
+					// push the "first" packet
+					OnDvFramePacketIn(Frame, &Ip);
+					// push the "second" packet
+					OnDvFramePacketIn(secondFrame, &Ip); // push two packet because we need a packet every 20 ms
+				}
 			}
 		}
 		else if ( IsValidConnectPacket(Buffer, Callsign, ToLinkModule, IsListenOnly) )
@@ -175,7 +176,7 @@ void CM17Protocol::Task(void)
 ////////////////////////////////////////////////////////////////////////////////////////
 // streams helpers
 
-void CM17Protocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header, const CIp &Ip)
+bool CM17Protocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header, const CIp &Ip)
 {
 	// find the stream
 	auto stream = GetStream(Header->GetStreamId(), &Ip);
@@ -187,32 +188,33 @@ void CM17Protocol::OnDvHeaderPacketIn(std::unique_ptr<CDvHeaderPacket> &Header, 
 	}
 	else
 	{
+		// find this client
+		auto client = g_Reflector.GetClients()->FindClient(Ip, EProtocol::m17);
+		g_Reflector.ReleaseClients();
+		if (not client)
+			return false;
+		if (client->IsListenOnly())
+			return false;
 		// no stream open yet, open a new one
 		CCallsign my(Header->GetMyCallsign());
 		my.SetSuffix("M17");
 		CCallsign rpt1(Header->GetRpt1Callsign());
 		CCallsign rpt2(Header->GetRpt2Callsign());
 
-		// find this client
-		std::shared_ptr<CClient>client = g_Reflector.GetClients()->FindClient(Ip, EProtocol::m17);
-		if ( client )
+		// get client callsign
+		rpt1 = client->GetCallsign();
+		// and try to open the stream
+		if ( (stream = g_Reflector.OpenStream(Header, client)) != nullptr )
 		{
-			// get client callsign
-			rpt1 = client->GetCallsign();
-			// and try to open the stream
-			if ( (stream = g_Reflector.OpenStream(Header, client)) != nullptr )
-			{
-				// keep the handle
-				m_Streams[stream->GetStreamId()] = stream;
-			}
+			// keep the handle
+			m_Streams[stream->GetStreamId()] = stream;
 		}
-		// release
-		g_Reflector.ReleaseClients();
 
 		// update last heard
 		g_Reflector.GetUsers()->Hearing(my, rpt1, rpt2);
 		g_Reflector.ReleaseUsers();
 	}
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

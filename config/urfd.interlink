@@ -12,9 +12,6 @@
 #    URF270 158.64.26.132 EF
 #    URF280 ABC
 #
-#  Brandmeister links use three params, no port is specified. Example:
-#    BM3104 162.248.88.117 E
-#
-#  note: Remote URFD must list this in its interlink file
-#        for the link to be established.
-#############################################################################
+#  note: Remote URFD must list this reflector in its interlink file for the
+#        link to be established.
+##############################################################################

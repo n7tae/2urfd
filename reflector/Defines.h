@@ -62,7 +62,7 @@
 
 // protocols ---------------------------------------------------
 
-enum class EProtocol { dextra, dplus, dcs, urf, dmrmmdvm, nxdn, p25, ysf, m17 };
+enum class EProtocol { dcs, dextra, dmrmmdvm, dplus, m17, nxdn, p25, urf, ysf };
 
 // DExtra
 #define DEXTRA_KEEPALIVE_PERIOD         3                                   // in seconds

@@ -72,85 +72,30 @@ void CGateKeeper::Close(void)
 
 bool CGateKeeper::MayLink(const CCallsign &callsign, const CIp &ip, EProtocol protocol, const std::string &modules) const
 {
-	bool ok;
-	const std::string base(callsign.GetBase());
-
-	switch (protocol)
-	{
-	// repeaters
-	case EProtocol::dextra:
-	case EProtocol::dplus:
-	case EProtocol::dcs:
-	case EProtocol::dmrmmdvm:
-	case EProtocol::ysf:
-	case EProtocol::m17:
-	case EProtocol::p25:
-	case EProtocol::nxdn:
-		// is callsign listed OK
-		ok = IsNodeListedOk(base);
-		break;
-
-	// URF interlinks
-	case EProtocol::urf:
-		ok = IsPeerListedOk(base, ip, modules);
-		break;
-
-	// unsupported
-	default:
-		ok = false;
-		break;
+	if (EProtocol::urf != protocol) {
+		if (IsNodeListedOk(callsign.GetBase()))
+			return true;	// repeaters
+	} else {
+		if (IsPeerListedOk(callsign.GetBase(), ip, modules))
+			return true;		// reflectors
 	}
 
-	// report
-	if ( ! ok )
-	{
-		std::cout << "Gatekeeper blocking linking of " << callsign << " @ " << ip << " using protocol " << ProtocolName(protocol) << std::endl;
-	}
-
-	// done
-	return ok;
+	std::cout << "Gatekeeper blocking linking of " << callsign << " @ " << ip.GetAddress() << " using protocol " << ProtocolName(protocol) << std::endl;
+	return false;
 }
 
 bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EProtocol protocol, char module) const
 {
-	std::shared_ptr<CClient> client;
-	const std::string base(callsign.GetBase());
-	bool ok = false;
-	switch (protocol)
-	{
-	// repeaters, protocol specific
-	case EProtocol::dextra:
-	case EProtocol::dplus:
-	case EProtocol::dcs:
-	case EProtocol::dmrmmdvm:
-	case EProtocol::ysf:
-	case EProtocol::m17:
-	case EProtocol::p25:
-	case EProtocol::nxdn:
-		client = g_Reflector.GetClients()->FindClient(ip, protocol);
-		g_Reflector.ReleaseClients();
-		if (client and client->IsListenOnly()) {
-			std::cout << client->GetCallsign() << " @ " << ip << " is listen-only but is sending packets!" << std::endl;
-			return false;
-		}
-		ok = IsNodeListedOk(base);
-		// todo: then apply any protocol specific authorisation for the operation
-		break;
-
-	// URF interlinks
-	case EProtocol::urf:
-		ok = IsPeerListedOk(base, module);
-		break;
+	if (EProtocol::urf != protocol) {
+		if (IsNodeListedOk(callsign.GetBase()))
+			return true;
+	} else {
+		if (IsPeerListedOk(callsign.GetBase(), module))
+			return true;
 	}
 
-	// report
-	if ( not ok )
-	{
-		std::cout << "Gatekeeper blocking transmitting of " << callsign << " @ " << ip << " using protocol " << ProtocolName(protocol) << std::endl;
-	}
-
-	// done
-	return ok;
+	std::cout << "Gatekeeper blocking transmitting of " << callsign << " @ " << ip << " using protocol " << ProtocolName(protocol) << std::endl;
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -257,37 +202,27 @@ bool CGateKeeper::IsPeerListedOk(const std::string &callsign, const CIp &ip, con
 	return ok;
 }
 
-const std::string CGateKeeper::ProtocolName(const EProtocol p) const
+const char *CGateKeeper::ProtocolName(const EProtocol p) const
 {
-	const char *rval;
 	switch (p) {
 		case EProtocol::dcs:
-			rval = "DCS";
-			break;
+			return "DCS";
 		case EProtocol::dextra:
-			rval = "DExtra";
-			break;
+			return "DExtra";
 		case EProtocol::dmrmmdvm:
-			rval = "DMR-MMDVM";
-			break;
-		case EProtocol::urf:
-			rval = "URF";
-			break;
-		case EProtocol::ysf:
-			rval = "YSF";
-			break;
-		case EProtocol::p25:
-			rval = "P25";
-			break;
-		case EProtocol::nxdn:
-			rval = "NXDN";
-			break;
-		case EProtocol::m17:
-			rval = "M17";
-			break;
+			return "MMDVM DMR";
 		case EProtocol::dplus:
-			rval = "DPlus";
-			break;
+			return "DPlus";
+		case EProtocol::m17:
+			return "M17";
+		case EProtocol::nxdn:
+			return "NXDN";
+		case EProtocol::p25:
+			return "P25";
+		case EProtocol::urf:
+			return "URF";
+		case EProtocol::ysf:
+			return "YSF";
 	}
-	return rval;
+	return "UNKNOWN Protocol";
 }

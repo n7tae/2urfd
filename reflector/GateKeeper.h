@@ -37,16 +37,16 @@ public:
 	// destructor
 	virtual ~CGateKeeper();
 
-	const std::string ProtocolName(EProtocol) const;
 	// init & clode
 	bool Init(void);
 	void Close(void);
 
+	const char *ProtocolName(EProtocol) const;
 	CInterlinkMap *GetInterlinkMap(void) { m_InterlinkMap.Lock(); return &m_InterlinkMap; }
 	void ReleaseInterlinkMap(void) { m_InterlinkMap.Unlock(); }
 
 	// authorizations
-	bool MayLink(const CCallsign &, const CIp &, const EProtocol, const std::string & = std::string()) const;
+	bool MayLink(const CCallsign &, const CIp &, const EProtocol, const std::string & = {}) const;
 	bool MayTransmit(const CCallsign &, const CIp &, EProtocol, char = ' ') const;
 
 protected:
