@@ -608,7 +608,7 @@ bool CConfigure::ReadData(const std::string &path)
 	}
 
 	// Transcoder section
-	if (isDefined(ErrorLevel::fatal, JTRANSCODER, JTRANSCODED, g_Keys.tc.tcmodules, rval))
+	if (isDefined(ErrorLevel::mild, JTRANSCODER, JTRANSCODED, g_Keys.tc.tcmodules, rval))
 	{
 		const auto tcmods(data[g_Keys.tc.tcmodules].get<std::string>());
 

@@ -55,7 +55,7 @@ bool CReflector::Start(void)
 	const auto cs(g_Configure.GetString(g_Keys.names.callsign));
 	m_Callsign.SetCallsign(cs, false);
 	m_Modules.assign(g_Configure.GetString(g_Keys.modules.modules));
-	std::string tcmods(g_Configure.GetString(g_Keys.tc.tcmodules));
+	m_TCmodules.assign(g_Configure.Contains(g_Keys.tc.tcmodules) ? g_Configure.GetString(g_Keys.tc.tcmodules) : "");
 
 #ifndef NO_DHT
 	// start the dht instance
@@ -126,7 +126,7 @@ bool CReflector::Start(void)
 		if (stream)
 		{
 			// if it's a transcoded module, then we need to initialize the codec stream
-			if (std::string::npos != tcmods.find(c))
+			if (std::string::npos != m_TCmodules.find(c))
 			{
 				if (stream->InitCodecStream())
 					return true;
@@ -626,8 +626,8 @@ void CReflector::PutDHTConfig()
 	cfg.callsign.assign(cs);
 	cfg.ipv4addr.assign(g_Configure.GetString(g_Keys.ip.ipv4address));
 	cfg.ipv6addr.assign(g_Configure.GetString(g_Keys.ip.ipv6address));
-	cfg.modules.assign(g_Configure.GetString(g_Keys.modules.modules));
-	cfg.transcodedmods.assign(g_Configure.GetString(g_Keys.tc.tcmodules));
+	cfg.modules.assign(m_Modules);
+	cfg.transcodedmods.assign(m_TCmodules);
 	cfg.url.assign(g_Configure.GetString(g_Keys.names.url));
 	cfg.email.assign(g_Configure.GetString(g_Keys.names.email));
 	cfg.country.assign(g_Configure.GetString(g_Keys.names.country));

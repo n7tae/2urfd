@@ -62,4 +62,22 @@ $(DBUTIL) : Main.cpp $(DBUTILOBJS)
 clean :
 	$(RM) ../common/*.o ../common/*.o *.o *.d $(EXE) $(INICHECK) $(DBUTIL)
 
+.PHONY : install
+install :
+	# Reflector Install...
+	cp -f urfd $(BINDIR)
+	cp -f ../urfd.service /etc/systemd/system/
+	systemctl enable urfd
+	systemctl daemon-reload
+	systemctl start urfd
+
+.PHONY : uninstall
+uninstall :
+	# Uninstall Reflector...
+	systemctl stop urfd
+	systemctl disable urfd
+	$(RM) /etc/systemd/system/urfd.service
+	systemctl daemon-reload
+	$(RM) $(BINDIR)/urfd
+
 -include $(DEPS)

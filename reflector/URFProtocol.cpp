@@ -298,6 +298,7 @@ void CURFProtocol::HandlePeerLinks(void)
 
 	// check if all ours peers listed by interlink file are connected
 	// if not, connect or reconnect
+	const std::string tcmods(g_Configure.Contains(g_Keys.tc.tcmodules) ? g_Configure.GetString(g_Keys.tc.tcmodules) : "" );
 	for ( auto it=ilmap->begin(); it!=ilmap->end(); it++ )
 	{
 		const auto cs = it->first;
@@ -325,7 +326,7 @@ void CURFProtocol::HandlePeerLinks(void)
 							ok = false;
 							std::cerr << it->first << " has no module '" << c << "'" << std::endl;
 						}
-						else if ((std::string::npos == it->second.GetTCMods().find(c)) != (std::string::npos == g_Configure.GetString(g_Keys.tc.tcmodules).find(c)))
+						else if ((std::string::npos == it->second.GetTCMods().find(c)) != (std::string::npos == tcmods.find(c)))
 						{	// are the transcoding states on both sides mismatched?
 							ok = false;
 							std::cerr << "The transcode states for module '" << c << "' don't match for this reflector and " << it->first << std::endl;
