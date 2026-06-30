@@ -84,17 +84,18 @@ bool CGateKeeper::MayLink(const CCallsign &callsign, const CIp &ip, EProtocol pr
 	return false;
 }
 
-bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EProtocol protocol, char module) const
+bool CGateKeeper::MayTransmit(const CCallsign &callsign, const CIp &ip, const EProtocol protocol) const
 {
-	if (EProtocol::urf != protocol) {
-		if (IsNodeListedOk(callsign.GetBase()))
+	if (IsNodeListedOk(callsign.GetBase()))
 			return true;
+	auto client = g_Reflector.GetClients()->FindClient(ip, protocol);
+	g_Reflector.ReleaseClients();
+	std::cout << "GateKeeper blocking user " << callsign;
+	if (client) {
+		std::cout << " on client " << client->GetCallsign() << " @ " << ip << " using protocol " << ProtocolName(protocol) << std::endl;
 	} else {
-		if (IsPeerListedOk(callsign.GetBase(), module))
-			return true;
+		std::cout << " on UNKNOWN CLIENT!" << std::endl;
 	}
-
-	std::cout << "Gatekeeper blocking transmitting of " << callsign << " @ " << ip << " using protocol " << ProtocolName(protocol) << std::endl;
 	return false;
 }
 

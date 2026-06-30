@@ -67,7 +67,7 @@ void CDcsProtocol::Task(void)
 		if ( IsValidDvPacket(Buffer, Header, Frame) )
 		{
 			// callsign muted?
-			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::dcs, Header->GetRpt2Module()) )
+			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::dcs) )
 			{
 				OnDvHeaderPacketIn(Header, Ip);
 

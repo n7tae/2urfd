@@ -72,7 +72,7 @@ void CDextraProtocol::Task(void)
 		else if ( IsValidDvHeaderPacket(Buffer, Header) )
 		{
 			// callsign muted?
-			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::dextra, Header->GetRpt2Module()) )
+			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::dextra) )
 			{
 				OnDvHeaderPacketIn(Header, Ip);
 			}

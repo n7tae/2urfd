@@ -69,7 +69,7 @@ void CM17Protocol::Task(void)
 		if ( IsValidDvPacket(Buffer, Header, Frame) )
 		{
 			// callsign muted?
-			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::m17, Header->GetRpt2Module()) )
+			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::m17) )
 			{
 				if (OnDvHeaderPacketIn(Header, Ip))
 				{

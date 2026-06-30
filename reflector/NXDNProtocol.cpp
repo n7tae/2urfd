@@ -106,7 +106,7 @@ void CNXDNProtocol::Task(void)
 		else if ( IsValidDvHeaderPacket(Ip, Buffer, Header) )
 		{
 			// node linked and callsign muted?
-			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::nxdn, Header->GetRpt2Module())  )
+			if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::nxdn)  )
 			{
 				// handle it
 				OnDvHeaderPacketIn(Header, Ip);
@@ -409,7 +409,7 @@ bool CNXDNProtocol::IsValidDvFramePacket(const CIp &Ip, const CBuffer &Buffer, s
 			rpt2.SetCSModule(' ');
 			header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, m_uiStreamId, false));
 
-			if ( g_GateKeeper.MayTransmit(header->GetMyCallsign(), Ip, EProtocol::nxdn, header->GetRpt2Module())  )
+			if ( g_GateKeeper.MayTransmit(header->GetMyCallsign(), Ip, EProtocol::nxdn)  )
 			{
 				OnDvHeaderPacketIn(header, Ip);
 			}

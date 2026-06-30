@@ -128,7 +128,7 @@ void CYsfProtocol::Task(void)
 			else if ( IsValidDvHeaderPacket(Ip, Fich, Buffer, Header, Frames) )
 			{
 				// node linked and callsign muted?
-				if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::ysf, Header->GetRpt2Module())  )
+				if ( g_GateKeeper.MayTransmit(Header->GetMyCallsign(), Ip, EProtocol::ysf)  )
 				{
 					// handle it
 					OnDvHeaderPacketIn(Header, Ip, Fich.getSQ());
@@ -546,7 +546,7 @@ bool CYsfProtocol::IsValidDvFramePacket(const CIp &Ip, const CYSFFICH &Fich, con
 			rpt2.SetCSModule(' ');
 			header = std::unique_ptr<CDvHeaderPacket>(new CDvHeaderPacket(csMY, CCallsign("CQCQCQ"), rpt1, rpt2, uiStreamId, Fich.getFN()));
 
-			if ( g_GateKeeper.MayTransmit(header->GetMyCallsign(), Ip, EProtocol::ysf, header->GetRpt2Module())  )
+			if ( g_GateKeeper.MayTransmit(header->GetMyCallsign(), Ip, EProtocol::ysf)  )
 			{
 				OnDvHeaderPacketIn(header, Ip, Fich.getSQ());
 			}
