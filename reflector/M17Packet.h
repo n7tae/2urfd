@@ -51,7 +51,7 @@ using SLinkPacket = struct __attribute__((__packed__)) link_tag {
 	uint8_t magic[4];
 	uint8_t fromcs[6];
 	uint8_t mod;
-}; // 37 bytes
+}; // 11 bytes
 
 class CM17Packet
 {
