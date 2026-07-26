@@ -352,9 +352,8 @@ bool CM17Protocol::IsValidDisconnectPacket(const CBuffer &Buffer, CCallsign &cal
 
 bool CM17Protocol::IsValidKeepAlivePacket(const CBuffer &Buffer, CCallsign &callsign)
 {
-	uint8_t tag[] = { 'P', 'O', 'N', 'G' };
 	bool valid = false;
-	if ( (Buffer.size() == 10) && (0 == Buffer.Compare(tag, 4)) )
+	if ( (Buffer.size() == 10) and ('P' == Buffer[0]) and (('I' == Buffer[1]) or ('O' == Buffer[1])) and ('N' == Buffer[2]) and ('G' ==Buffer[3]) )
 	{
 		callsign.CodeIn(Buffer.data() + 4);
 		valid = callsign.IsValid();
